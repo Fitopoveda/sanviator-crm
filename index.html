@@ -1691,8 +1691,8 @@ function renderCampusParticipants() {
           <div style="display:flex;justify-content:space-between;align-items:flex-start;">
             <div>
               <div class="cp-name">${p.nombre} ${p.apellidos}</div>
-              <div class="cp-meta">🎂 ${p.nacimiento||'—'} &nbsp;|&nbsp; 👕 ${p.talla||'—'}</div>
-              <div class="cp-meta">🏟️ ${p.club||'—'}</div>
+              <div class="cp-meta">👕 ${p.talla||'—'} &nbsp;|&nbsp; ${p.deporte}</div>
+              ${hasAlergia ? `<div class="cp-meta" style="color:#c62828;font-weight:600;">⚠️ ${p.alergias}</div>` : ''}
             </div>
             <span class="cp-badge equipo-color" style="background:${color}">${p.equipo}</span>
           </div>
@@ -1724,10 +1724,19 @@ function openCampusDetail(id) {
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
-      <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">Fecha nac.</div><div style="font-weight:600;">${p.nacimiento||'—'}</div></div>
       <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">Talla</div><div style="font-weight:600;">${p.talla||'—'}</div></div>
-      <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">Club</div><div style="font-weight:600;">${p.club||'—'}</div></div>
       <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">Deporte</div><div style="font-weight:600;">${p.deporte}</div></div>
+      <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">📞 Tlf. Contacto</div><div style="font-weight:600;">${(()=>{const t=String(p.apellidos||'');return t.match(/\d{6,}/)?t:(p.telefono||'—');})()}</div></div>
+      <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">🛏️ Nº Habitación</div>
+        <div style="font-weight:600;display:flex;align-items:center;gap:6px;">
+          <span id="hab-val-${p.id}">${(()=>{const h=JSON.parse(localStorage.getItem('sv_campus_habitaciones')||'{}');return h[p.id]||'—';})()}</span>
+          <span style="cursor:pointer;font-size:11px;color:var(--azul);border:1px solid var(--azul);border-radius:4px;padding:1px 5px;" onclick="editHabitacion(${p.id})">✏️ Editar</span>
+        </div>
+      </div>
+    </div>
+    <div style="background:${(()=>{const a=p.alergias||'';const noAl=['ninguna','no','nada','nan',''];return a.length>1&&!noAl.some(x=>a.toLowerCase().trim()===x)?'#fce4ec':'#f0f4f0';})()};border-radius:8px;padding:12px;margin-bottom:14px;border-left:4px solid ${(()=>{const a=p.alergias||'';const noAl=['ninguna','no','nada','nan',''];return a.length>1&&!noAl.some(x=>a.toLowerCase().trim()===x)?'#c62828':'#aaa';})()};">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:${(()=>{const a=p.alergias||'';const noAl=['ninguna','no','nada','nan',''];return a.length>1&&!noAl.some(x=>a.toLowerCase().trim()===x)?'#c62828':'var(--gris-medio)';})()};font-weight:700;margin-bottom:4px;">⚠️ Alergias</div>
+      <div style="font-size:13px;font-weight:600;">${p.alergias&&p.alergias.length>1?p.alergias:'Sin alergias conocidas'}</div>
     </div>
     <div style="background:#fff3e0;border-radius:8px;padding:12px;margin-bottom:12px;">
       <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:6px;">💰 Pagos — Total: ${p.total}€</div>
@@ -1736,7 +1745,6 @@ function openCampusDetail(id) {
         ${pendiente > 0 ? `<span style="background:#fce4ec;color:#c62828;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;">Pendiente: ${pendiente.toFixed(0)}€</span>` : '<span style="background:#e8f5e9;color:#1b7a3c;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;">✅ Al corriente</span>'}
       </div>
     </div>
-    ${p.alergias && p.alergias.length > 2 ? `<div style="background:#fce4ec;border-radius:8px;padding:12px;margin-bottom:10px;border-left:4px solid #c62828;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#c62828;font-weight:700;margin-bottom:4px;">⚠️ Alergias</div><div style="font-size:13px;">${p.alergias}</div></div>` : ''}
     ${p.medicacion && p.medicacion.length > 2 && p.medicacion.toLowerCase() !== 'nan' ? `<div style="background:#fff3e0;border-radius:8px;padding:12px;margin-bottom:10px;border-left:4px solid #f97316;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#f97316;font-weight:700;margin-bottom:4px;">💊 Medicación</div><div style="font-size:13px;">${p.medicacion}</div></div>` : ''}
     ${p.observaciones && p.observaciones.length > 2 ? `<div style="background:var(--gris-bg);border-radius:8px;padding:12px;border-left:4px solid var(--azul);"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--azul);font-weight:700;margin-bottom:4px;">📝 Observaciones</div><div style="font-size:13px;">${p.observaciones}</div></div>` : ''}
   `;
@@ -1804,6 +1812,18 @@ function addCampusComment(playerId) {
       </div>`).join('');
   }
   showToast('💬 Comentario añadido');
+}
+
+function editHabitacion(playerId) {
+  const habs = JSON.parse(localStorage.getItem('sv_campus_habitaciones') || '{}');
+  const current = habs[playerId] || '';
+  const nueva = prompt('Nº de habitación:', current);
+  if(nueva === null) return;
+  habs[playerId] = nueva.trim();
+  localStorage.setItem('sv_campus_habitaciones', JSON.stringify(habs));
+  const el = document.getElementById('hab-val-' + playerId);
+  if(el) el.textContent = nueva.trim() || '—';
+  showToast('🛏️ Habitación guardada');
 }
 
 function saveCampusPhoto(playerId) {
