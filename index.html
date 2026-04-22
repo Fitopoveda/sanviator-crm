@@ -1032,7 +1032,8 @@ function setView(v){
   document.getElementById('view-kanban').style.display=v==='kanban'?'block':'none';
   document.getElementById('btn-table').classList.toggle('active',v==='table');
   document.getElementById('btn-kanban').classList.toggle('active',v==='kanban');
-  renderView();
+  // Defer heavy render so browser paints the layout change first
+  setTimeout(renderView, 0);
 }
 
 function renderView(){ currentView==='table'?renderTable():renderKanban(); }
@@ -1093,7 +1094,7 @@ function renderKanban(){
     return new Date(b.fecha||0) - new Date(a.fecha||0);
   });
   filtered.forEach(i=>{const c=i.categoria||'Senior';if(cols[c])cols[c].push(i);else cols['Senior'].push(i);});
-  document.getElementById('kanban-board').innerHTML=CAT_ORDER.filter(c=>cols[c].length>0).map(cat=>{
+  const html=CAT_ORDER.filter(c=>cols[c].length>0).map(cat=>{
     return `<div class="kanban-col">
       <div class="kanban-col-header">
         <span class="kanban-col-title" style="color:${CAT_COLORS[cat]}">${cat}</span>
@@ -1104,6 +1105,7 @@ function renderKanban(){
       </div>
     </div>`;
   }).join('');
+  requestAnimationFrame(()=>{ document.getElementById('kanban-board').innerHTML=html; });
 }
 
 function kanbanCard(i,canEdit){
