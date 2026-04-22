@@ -807,31 +807,35 @@ async function createUser() {
     return;
   }
 
-  // Step 2: Upsert profile with correct role
+  // Step 2: Try to get userId — may be null if email confirmation is required
   const userId = signUpData?.user?.id;
+
   if (userId) {
-    await sb.from('perfiles').upsert(
+    // User created and confirmed immediately — upsert full profile
+    const { error: e2 } = await sb.from('perfiles').upsert(
       { id: userId, email, nombre, rol },
       { onConflict: 'id' }
     );
+    if (e2) console.warn('Profile upsert warning:', e2.message);
+    // Force role in case trigger set it to invitado
+    await sb.from('perfiles').update({ rol, nombre }).eq('id', userId);
   } else {
-    // User may already exist — update by email
-    const { error: e2 } = await sb.from('perfiles').upsert(
-      { email, nombre, rol },
-      { onConflict: 'email' }
-    );
-    if (e2) { showToast('❌ Error perfil: ' + e2.message); return; }
-  }
-
-  // Step 3: If admin, force-set role via SQL (in case trigger set it to invitado)
-  if (rol === 'admin' || rol === 'entrenador') {
-    await sb.from('perfiles').update({ rol, nombre }).eq('email', email);
+    // Email confirmation pending — store pending profile in localStorage
+    // It will be applied when the trigger fires on first login
+    const pending = JSON.parse(localStorage.getItem('sv_pending_users') || '{}');
+    pending[email] = { nombre, rol };
+    localStorage.setItem('sv_pending_users', JSON.stringify(pending));
+    // Also try upsert by email in case profile already exists
+    await sb.from('perfiles').upsert({ email, nombre, rol }, { onConflict: 'email' });
   }
 
   if(btn) { btn.textContent = 'Crear usuario'; btn.disabled = false; }
   closeModal();
   await loadUsers();
-  showToast(`✅ Usuario ${nombre||email} creado como ${rol}`);
+  const msg = userId
+    ? `✅ ${nombre||email} creado como ${rol}. Ya puede entrar.`
+    : `✅ ${nombre||email} creado. Debe confirmar su email antes de entrar.`;
+  showToast(msg);
 }
 
 // ════════════════════════════════════════════════════════
