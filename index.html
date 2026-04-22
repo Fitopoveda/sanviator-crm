@@ -127,8 +127,10 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
 .kanban-col-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:1px;}
 .kanban-count{background:var(--negro);color:var(--amarillo);border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700;}
 .kanban-cards{padding:10px;display:flex;flex-direction:column;gap:8px;min-height:80px;}
-.kanban-card{background:var(--gris-bg);border-radius:8px;border:1px solid var(--gris-claro);padding:11px 12px;cursor:pointer;transition:all 0.15s;}
+.kanban-card{background:var(--gris-bg);border-radius:8px;border:1px solid var(--gris-claro);padding:11px 12px;cursor:pointer;transition:all 0.15s;position:relative;}
 .kanban-card:hover{border-color:var(--amarillo);background:var(--blanco);box-shadow:0 2px 8px rgba(0,0,0,0.08);transform:translateY(-1px);}
+.kanban-card.nuevo-inscrito{border-color:#c0392b;border-width:2px;background:var(--blanco);}
+.kanban-card.nuevo-inscrito.contactado{border-color:var(--gris-claro);border-width:1px;background:var(--gris-bg);}
 .kanban-card-name{font-weight:700;font-size:13px;margin-bottom:4px;}
 .kanban-card-meta{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;}
 .kanban-card-actions{display:flex;gap:5px;align-items:center;margin-top:7px;border-top:1px solid var(--gris-claro);padding-top:7px;flex-wrap:wrap;}
@@ -1005,6 +1007,14 @@ function renderKanban(){
   const filtered=getFiltered();
   const cols={};
   CAT_ORDER.forEach(c=>cols[c]=[]);
+  // Sort: new inscribed (fromSheets, not club) first, then by date desc
+  filtered.sort((a,b)=>{
+    const aNew = !a.esDelClub && a.fromSheets;
+    const bNew = !b.esDelClub && b.fromSheets;
+    if(aNew && !bNew) return -1;
+    if(!aNew && bNew) return 1;
+    return new Date(b.fecha||0) - new Date(a.fecha||0);
+  });
   filtered.forEach(i=>{const c=i.categoria||'Senior';if(cols[c])cols[c].push(i);else cols['Senior'].push(i);});
   document.getElementById('kanban-board').innerHTML=CAT_ORDER.filter(c=>cols[c].length>0).map(cat=>{
     return `<div class="kanban-col">
@@ -1024,8 +1034,17 @@ function kanbanCard(i,canEdit){
   const asLabel=i.asiste===true?'✅ Asiste':i.asiste===false?'❌ No asiste':'⬜ Asistencia';
   const waNum=(i.telefono||'').replace(/[^0-9]/g,'');
   const waMsg = generarMensajeWA(i);
-  return `<div class="kanban-card" onclick="openDetail('${i.id}')">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+  const _esNuevoInscrito = !i.esDelClub && i.fromSheets;
+  const _cardClass = _esNuevoInscrito ? (i.estado==='Nuevo' ? 'kanban-card nuevo-inscrito' : 'kanban-card nuevo-inscrito contactado') : 'kanban-card';
+  return `<div class="${_cardClass}" onclick="openDetail('${i.id}')">
+    ${(() => {
+      const esNuevoInscrito = !i.esDelClub && i.fromSheets;
+      const esNuevoEstado = i.estado === 'Nuevo';
+      return esNuevoInscrito ? `<div style="position:absolute;top:8px;right:8px;">
+        <span style="background:${esNuevoEstado?'#c0392b':'var(--gris-medio)'};color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;" title="${esNuevoEstado?'Nuevo inscrito — pendiente de contactar':'Inscrito contactado'}">★</span>
+      </div>` : '';
+    })()}
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;padding-right:${!i.esDelClub&&i.fromSheets?'22px':'0'};">
       <div class="kanban-card-name">${i.nombre}</div>
       ${i.equipo?`<span class="equipo-badge">${i.equipo}</span>`:''}
     </div>
