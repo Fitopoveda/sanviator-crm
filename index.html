@@ -1117,95 +1117,98 @@ const EQUIPO_COLORS = {
 };
 
 function renderEquipos(){
-  const canEdit = currentPerfil?.rol !== 'invitado';
-  const filtered = getFiltered();
-  const byCat = {};
-  CAT_ORDER.forEach(c => byCat[c] = []);
-  filtered.forEach(i => {
-    const cat = i.categoria || 'Senior';
+  var canEdit = currentPerfil && currentPerfil.rol !== 'invitado';
+  var filtered = getFiltered();
+  var byCat = {};
+  CAT_ORDER.forEach(function(c){ byCat[c] = []; });
+  filtered.forEach(function(i){
+    var cat = i.categoria || 'Senior';
     if(byCat[cat]) byCat[cat].push(i);
     else byCat['Senior'].push(i);
   });
-  const board = document.getElementById('equipos-board');
-  const cats = CAT_ORDER.filter(c => byCat[c].length > 0);
+  var board = document.getElementById('equipos-board');
+  var cats = CAT_ORDER.filter(function(c){ return byCat[c].length > 0; });
   if(!cats.length){
     board.innerHTML = '<p style="text-align:center;color:var(--gris-medio);padding:40px;">Sin jugadores</p>';
     return;
   }
+
+  function renderCard(i, color){
+    var esExterno = !i.esDelClub;
+    var esNuevo = i.estado === 'Nuevo';
+    var star = esExterno
+      ? '<span style="color:' + (esNuevo ? '#c0392b' : '#555') + ';font-size:13px;margin-left:4px;">&#9733;</span>'
+      : '';
+    var eqColor = EQUIPO_COLORS[i.equipo] || 'transparent';
+    var opts = '<option value=""' + ((!i.equipo || i.equipo === '') ? ' selected' : '') + '>&#8212;</option>';
+    ['A','B','C','D','E'].forEach(function(e){
+      opts += '<option value="' + e + '"' + (i.equipo === e ? ' selected' : '') + '>' + e + '</option>';
+    });
+    opts += '<option value="Descartado"' + (i.equipo === 'Descartado' ? ' selected' : '') + '>&#10060;</option>';
+    var rightSide = canEdit
+      ? '<select class="equipo-select" data-id="' + i.id + '" onclick="event.stopPropagation()" onchange="setEquipo(this.dataset.id,this.value);setTimeout(renderEquipos,400);" style="font-size:11px;">' + opts + '</select>'
+      : (i.equipo ? '<span class="equipo-badge" style="background:' + eqColor + ';color:#fff;">' + i.equipo + '</span>' : '');
+    return '<div class="equipos-card" data-id="' + i.id + '" onclick="openDetail(this.dataset.id)">'
+      + '<div class="avatar" style="width:34px;height:34px;font-size:12px;background:' + color + ';flex-shrink:0;">' + initials(i.nombre) + '</div>'
+      + '<div class="equipos-card-info">'
+        + '<div class="equipos-card-name">' + i.nombre + star + '</div>'
+        + '<div class="equipos-card-meta">' + badgeDeporte(i.deporte)
+          + '<span class="badge badge-' + (i.genero === 'Femenino' ? 'f' : 'm') + '" style="font-size:10px;">' + (i.genero === 'Femenino' ? '&#9792;' : '&#9794;') + '</span>'
+          + badgeEstado(i.estado)
+        + '</div>'
+      + '</div>'
+      + rightSide
+      + '</div>';
+  }
+
   board.innerHTML = cats.map(function(cat){
-    const jugadores = byCat[cat];
-    const color = CAT_COLORS[cat] || '#888';
-    const sinEquipo = jugadores.filter(function(i){ return !i.equipo || i.equipo === ''; });
-    const equiposUsados = jugadores.map(function(i){ return i.equipo; }).filter(function(e){ return e && e !== ''; });
-    const uniq = equiposUsados.filter(function(e,idx,arr){ return arr.indexOf(e)===idx; });
+    var jugadores = byCat[cat];
+    var color = CAT_COLORS[cat] || '#888';
+    var sinEquipo = jugadores.filter(function(i){ return !i.equipo || i.equipo === ''; });
+    var allEqs = jugadores.map(function(i){ return i.equipo; }).filter(function(e){ return e && e !== ''; });
+    var uniq = allEqs.filter(function(e, idx, arr){ return arr.indexOf(e) === idx; });
     uniq.sort(function(a,b){
-      if(a==='Descartado') return 1;
-      if(b==='Descartado') return -1;
+      if(a === 'Descartado') return 1;
+      if(b === 'Descartado') return -1;
       return a.localeCompare(b);
     });
 
-    function renderCard(i){
-      const esExterno = !i.esDelClub;
-      const esNuevo = i.estado === 'Nuevo';
-      const star = esExterno ? '<span style="color:'+(esNuevo?'#c0392b':'#555')+';font-size:13px;margin-left:4px;">&#9733;</span>' : '';
-      const eqColor = EQUIPO_COLORS[i.equipo] || 'transparent';
-      const selectHtml = canEdit
-        ? '<select class="equipo-select" onclick="event.stopPropagation()" onchange="setEquipo(''+i.id+'',this.value);setTimeout(renderEquipos,400);" style="font-size:11px;">'
-          + '<option value=""'+((!i.equipo||i.equipo==='')?'selected':'')+'>&#8212;</option>'
-          + ['A','B','C','D','E'].map(function(e){ return '<option value="'+e+'"'+(i.equipo===e?' selected':'')+'>'+e+'</option>'; }).join('')
-          + '<option value="Descartado"'+(i.equipo==='Descartado'?' selected':'')+'>&#10060;</option>'
-          + '</select>'
-        : (i.equipo ? '<span class="equipo-badge" style="background:'+eqColor+';color:#fff;">'+i.equipo+'</span>' : '');
-      return '<div class="equipos-card" onclick="openDetail(''+i.id+'')">'
-        + '<div class="avatar" style="width:34px;height:34px;font-size:12px;background:'+color+';flex-shrink:0;">'+initials(i.nombre)+'</div>'
-        + '<div class="equipos-card-info">'
-          + '<div class="equipos-card-name">'+i.nombre+star+'</div>'
-          + '<div class="equipos-card-meta">'+badgeDeporte(i.deporte)
-            +'<span class="badge badge-'+(i.genero==='Femenino'?'f':'m')+'" style="font-size:10px;">'+(i.genero==='Femenino'?'&#9792;':'&#9794;')+'</span>'
-            +badgeEstado(i.estado)
-          +'</div>'
-        +'</div>'
-        + selectHtml
-        +'</div>';
-    }
-
-    const sinHtml = sinEquipo.length
+    var sinHtml = sinEquipo.length
       ? '<div class="equipos-group equipos-sin-equipo">'
-          +'<div class="equipos-group-header">'
-            +'<span class="equipos-group-label" style="color:var(--gris-medio);">Sin asignar</span>'
-            +'<span class="equipos-group-count">'+sinEquipo.length+'</span>'
-          +'</div>'
-          +'<div class="equipos-grid">'+sinEquipo.map(renderCard).join('')+'</div>'
-        +'</div>'
+          + '<div class="equipos-group-header">'
+            + '<span class="equipos-group-label" style="color:var(--gris-medio);">Sin asignar</span>'
+            + '<span class="equipos-group-count">' + sinEquipo.length + '</span>'
+          + '</div>'
+          + '<div class="equipos-grid">' + sinEquipo.map(function(i){ return renderCard(i, color); }).join('') + '</div>'
+        + '</div>'
       : '';
 
-    const eqsHtml = uniq.map(function(eq){
-      const grupo = jugadores.filter(function(i){ return i.equipo === eq; });
-      const eqColor = EQUIPO_COLORS[eq] || '#888';
+    var eqsHtml = uniq.map(function(eq){
+      var grupo = jugadores.filter(function(i){ return i.equipo === eq; });
+      var eqColor = EQUIPO_COLORS[eq] || '#888';
       return '<div class="equipos-group">'
-        +'<div class="equipos-group-header">'
-          +'<span class="equipo-badge" style="background:'+eqColor+';color:#fff;width:24px;height:24px;font-size:13px;">'+(eq==='Descartado'?'&#10060;':eq)+'</span>'
-          +'<span class="equipos-group-label" style="color:'+eqColor+';">Equipo '+eq+'</span>'
-          +'<span class="equipos-group-count">'+grupo.length+' jugadores</span>'
-        +'</div>'
-        +'<div class="equipos-grid">'+grupo.map(renderCard).join('')+'</div>'
-        +'</div>';
+        + '<div class="equipos-group-header">'
+          + '<span class="equipo-badge" style="background:' + eqColor + ';color:#fff;width:24px;height:24px;font-size:13px;">' + (eq === 'Descartado' ? '&#10060;' : eq) + '</span>'
+          + '<span class="equipos-group-label" style="color:' + eqColor + ';">Equipo ' + eq + '</span>'
+          + '<span class="equipos-group-count">' + grupo.length + ' jugadores</span>'
+        + '</div>'
+        + '<div class="equipos-grid">' + grupo.map(function(i){ return renderCard(i, color); }).join('') + '</div>'
+        + '</div>';
     }).join('');
 
-    const totalAsign = jugadores.length - sinEquipo.length;
+    var totalAsign = jugadores.length - sinEquipo.length;
     return '<div class="equipos-cat-block">'
-      +'<div class="equipos-cat-header" style="background:'+color+'18;border-bottom-color:'+color+';">'
-        +'<span class="equipos-cat-header-title" style="color:'+color+';">'+cat+'</span>'
-        +'<span style="font-size:12px;color:var(--gris-medio);font-weight:600;">'+jugadores.length+' jugadores &middot; '+totalAsign+' asignados &middot; '+sinEquipo.length+' pendientes</span>'
-      +'</div>'
-      +'<div class="equipos-cat-body">'
-        +sinHtml+eqsHtml
-        +(!sinHtml && !eqsHtml ? '<p style="color:var(--gris-medio);font-size:13px;">Sin jugadores</p>' : '')
-      +'</div>'
-    +'</div>';
+      + '<div class="equipos-cat-header" style="background:' + color + '18;border-bottom-color:' + color + ';">'
+        + '<span class="equipos-cat-header-title" style="color:' + color + ';">' + cat + '</span>'
+        + '<span style="font-size:12px;color:var(--gris-medio);font-weight:600;">' + jugadores.length + ' jugadores &middot; ' + totalAsign + ' asignados &middot; ' + sinEquipo.length + ' pendientes</span>'
+      + '</div>'
+      + '<div class="equipos-cat-body">'
+        + sinHtml + eqsHtml
+        + (!sinHtml && !eqsHtml ? '<p style="color:var(--gris-medio);font-size:13px;">Sin jugadores</p>' : '')
+      + '</div>'
+    + '</div>';
   }).join('');
 }
-
 
 
 // ════════════════════════════════════════════════════════
