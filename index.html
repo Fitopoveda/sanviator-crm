@@ -1021,7 +1021,8 @@ function renderKanban(){
 function kanbanCard(i,canEdit){
   const asClass=i.asiste===true?'si':i.asiste===false?'no':'';
   const asLabel=i.asiste===true?'✅ Asiste':i.asiste===false?'❌ No asiste':'⬜ Asistencia';
-  const waNum=(i.telefono||'').replace(/\D/g,'');
+  const waNum=(i.telefono||'').replace(/[^0-9]/g,'');
+  const waMsg = generarMensajeWA(i);
   return `<div class="kanban-card" onclick="openDetail('${i.id}')">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
       <div class="kanban-card-name">${i.nombre}</div>
@@ -1040,7 +1041,7 @@ function kanbanCard(i,canEdit){
         ${['A','B','C','D','E'].map(e=>`<option ${i.equipo===e?'selected':''}>${e}</option>`).join('')}
         <option value="Descartado" ${i.equipo==='Descartado'?'selected':''}>❌ Desc.</option>
       </select>`:asLabel}
-      ${waNum?`<a href="https://wa.me/34${waNum}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-wa">💬</a>`:''}
+      ${waNum?`<a href="https://wa.me/34${waNum}?text=${waMsg}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-wa">💬 WA</a>`:''}
     </div>
   </div>`;
 }
@@ -1083,7 +1084,7 @@ function openDetail(id){
           ${i.equipo?`<span class="equipo-badge">${i.equipo}</span>`:''}
         </div>
       </div>
-      ${waNum?`<a href="https://wa.me/34${waNum}" target="_blank" class="btn btn-wa btn-sm">💬 WhatsApp</a>`:''}
+      ${waNum?`<a href="https://wa.me/34${waNum}?text=${generarMensajeWA(i)}" target="_blank" class="btn btn-wa btn-sm">💬 WhatsApp</a>`:''}
     </div>
     ${canEdit?`
     <div class="detail-row">
@@ -1375,6 +1376,52 @@ function renderPruebas(){
     </div>`;
 
   renderHorarios();
+}
+
+// ════════════════════════════════════════════════════════
+// WHATSAPP MESSAGE GENERATOR
+// ════════════════════════════════════════════════════════
+function generarMensajeWA(i) {
+  const nombre = (i.nombre || '').split(' ')[0]; // Solo el primer nombre
+
+  // Horarios de pruebas por deporte y categoría
+  const PRUEBAS_FUTBOL = [
+    {cats:['Benjamín','Alevín'],        dia:'domingo 1 de junio', hora:'10:00h'},
+    {cats:['Alevín'],                   dia:'domingo 1 de junio', hora:'11:00h'},
+    {cats:['Infantil','Cadete'],        dia:'sábado 7 de junio',  hora:'10:00h'},
+    {cats:['Cadete'],                   dia:'sábado 7 de junio',  hora:'11:30h'},
+    {cats:['Juvenil'],                  dia:'sábado 14 de junio', hora:'10:00h'},
+    {cats:['Senior'],                   dia:'sábado 14 de junio', hora:'12:00h'},
+  ];
+  const PRUEBAS_BALONCESTO = [
+    {cats:['Benjamín'],                 dia:'domingo 1 de junio', hora:'12:00h'},
+    {cats:['Alevín'],                   dia:'domingo 8 de junio', hora:'10:00h'},
+    {cats:['Infantil'],                 dia:'domingo 8 de junio', hora:'11:30h'},
+    {cats:['Cadete'],                   dia:'domingo 8 de junio', hora:'13:00h'},
+    {cats:['Junior'],                   dia:'domingo 15 de junio',hora:'10:00h'},
+    {cats:['Sub-22'],                   dia:'domingo 15 de junio',hora:'11:30h'},
+    {cats:['Senior'],                   dia:'domingo 15 de junio',hora:'13:00h'},
+  ];
+
+  const deporte = (i.deporte || '').toLowerCase();
+  const cat = i.categoria || '';
+  const isFut = deporte.includes('fut') || deporte.includes('fút');
+  const pruebas = isFut ? PRUEBAS_FUTBOL : PRUEBAS_BALONCESTO;
+
+  let diaHora = '';
+  for(const p of pruebas) {
+    if(p.cats.includes(cat)) {
+      diaHora = `el ${p.dia} a las ${p.hora}`;
+      break;
+    }
+  }
+  if(!diaHora) diaHora = 'próximamente (pendiente de confirmar fecha)';
+
+  const equipoTexto = cat ? `${cat} de ${i.deporte}` : i.deporte;
+
+  const msg = `Buenos días ${nombre}, te escribo del CD San Viator porque te has apuntado a nuestras jornadas de puertas abiertas. El próximo día de entreno de ${equipoTexto} es ${diaHora}. Confirma tu asistencia. Un saludo 👋`;
+
+  return encodeURIComponent(msg);
 }
 
 // ════════════════════════════════════════════════════════
