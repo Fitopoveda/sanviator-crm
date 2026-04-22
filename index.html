@@ -884,9 +884,15 @@ async function syncFromSheets() {
     if(toInsert.length){
       await sb.from('inscritos').insert(toInsert);
       await loadInscritos();
+      mergeSocios();
       renderDashboard(); renderView();
       showToast(`🎉 ${nuevos} nuevo${nuevos>1?'s':''} inscrito${nuevos>1?'s':''}`);
-    } else showToast('✅ Todo al día');
+    } else {
+      await loadInscritos();
+      mergeSocios();
+      renderDashboard(); renderView();
+      showToast('✅ Todo al día');
+    }
     const t=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
     const lbl=document.getElementById('sync-label');
     if(lbl) lbl.textContent=`Sync: ${t}`;
@@ -921,6 +927,7 @@ function importCSV(event) {
     if(toInsert.length){
       await sb.from('inscritos').insert(toInsert);
       await loadInscritos();
+      mergeSocios();
       renderDashboard(); renderView();
       showToast(`✅ ${toInsert.length} inscritos importados`);
     }
