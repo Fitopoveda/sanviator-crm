@@ -1692,6 +1692,7 @@ function renderCampusParticipants() {
             <div>
               <div class="cp-name">${p.nombre} ${p.apellidos}</div>
               <div class="cp-meta">👕 ${p.talla||'—'} &nbsp;|&nbsp; ${p.deporte}</div>
+              ${(()=>{const t=getTelefonos(p.nombre);return t?`<div class="cp-meta" style="font-size:11px;">👨 ${t[0]} &nbsp;|&nbsp; 👩 ${t[1]}</div>`:'';})()}
               ${hasAlergia ? `<div class="cp-meta" style="color:#c62828;font-weight:600;">⚠️ ${p.alergias}</div>` : ''}
             </div>
             <span class="cp-badge equipo-color" style="background:${color}">${p.equipo}</span>
@@ -1705,6 +1706,150 @@ function renderCampusParticipants() {
       </div>
     </div>`;
   }).join('');
+}
+
+const CAMPUS_TELEFONOS = {
+  "Sara Foulquie Bouasbia":["654123073","699637534"],
+  "Nicolás Nozal Cruz":["656640008","657723837"],
+  "TIRSO PANADERO BERGUA":["628131213","620803824"],
+  "Irene Barroso Lorenzo":["678591535","619708921"],
+  "Lucia Meras":["630980257","655780273"],
+  "Gabriela Mesas López":["667430549","667423438"],
+  "Darío Rovira Igualada":["658645696","659178833"],
+  "Ana Paniagua Alonso":["636209110","636289815"],
+  "Lucas Lázaro García":["675130957","676831481"],
+  "Aroa Pérez Oreja":["648035586","675901414"],
+  "DAVID VAZQUEZ GONZALEz":["693580197","606710439"],
+  "José Ignacio Gracia Díaz":["661294476","667982844"],
+  "Inés Díaz -Guerra":["657247959","657247960"],
+  "Iván Moreno Illera":["630044221","646043358"],
+  "María Elena Callejón Slugoiu":["653978464","627068061"],
+  "Pablo Ausín Gutierrez":["647835543","606228298"],
+  "GONZALO VEGA CIRILO":["622171464","626391599"],
+  "Haojie Ni":["652763338","688066621"],
+  "Gonzalo Carbajo García":["696933472","687832337"],
+  "Diego Carbajo García":["696933472","687832337"],
+  "PAULA SÁNCHEZ DE LA TORRE":["676548445","619601760"],
+  "Oliver Fuentes Perez":["614283280","620848632"],
+  "Vega Moragrega Díaz":["629413444","609592207"],
+  "Elena Murillo de Frutos":["651521903","650481601"],
+  "Rubén Domínguez García":["611413464","622900408"],
+  "HÉCTOR PERIS SANCHEZ":["615011888","655111905"],
+  "Pablo Corbera Infante":["616637717","699054012"],
+  "LEO VARELA PINILLA":["609227592","620079071"],
+  "Oscar Martínez Bravo":["686347648","616442997"],
+  "Hugo Martin":["646765736","646765736"],
+  "Nicolás Gómez Izquierdo":["646147606","620813768"],
+  "DIEGO PAJUELO GOMEZ":["699110662","699051196"],
+  "Álex Formoso Badorrey":["620181879","659795768"],
+  "Lucas Formoso Badorrey":["620181879","659795768"],
+  "IRENE DE GRADO GARCIA":["661525894","687689940"],
+  "Néstor Estarrona Cuesta":["695543123","651657381"],
+  "Alonso Ibarra Granados":["679103168","646479632"],
+  "Samira Adalyd Fischer Leiva":["697886204","697842768"],
+  "Erick Fischer Leiva":["697886204","697842768"],
+  "Adriana Perez Moreno":["616220324","658680663"],
+  "Abril Sánchez Marín":["622766682","696010661"],
+  "AINA HERMOSEL FERRER":["607502207","620502628"],
+  "Cayetana Bernal Fernández":["—","661030222"],
+  "María de la Soledad García Sánchez":["607726399","626763597"],
+  "DIEGO MONTES JIMENEZ":["607993345","650421703"],
+  "ADRIAN MONTES JIMENEZ":["607993345","650421703"],
+  "Samuel Lucas casado":["678568531","606280039"],
+  "David Jimenez Puertollano":["696511799","659878724"],
+  "Marco Estévez Hernández":["675579462","675250014"],
+  "Rubén Abad Martin":["687754624","610226860"],
+  "JAIME MUÑOZ CARCEDO":["616768426","677355300"],
+  "Mateo Pastor Pérez":["609181982","661112181"],
+  "Nicolás Pastor Pérez":["609181982","661112181"],
+  "Alain Gonzalez de Zarate Soto":["676076780","618769599"],
+  "Jon Gonzalez de Zarate Soto":["676076780","618769599"],
+  "Alba Lorente Sebastian":["656940715","675219522"],
+  "HUGO GARCIA HEDO":["639328365","647173286"],
+  "CARLOS MAESTRE ACEBES":["696370245","636709165"],
+  "LEO BERMEJO FUENTEVILLA":["629965850","649806535"],
+  "Álvaro Solar López":["689190733","606829146"],
+  "Daniel Baztán Antona":["629052063","696616716"],
+  "JORGE NIHARRA RODRÍGUEZ":["646539804","637712864"],
+  "Alejandro Moreno Arriba":["616347060","649236123"],
+  "Pablo Larrinaga Mendoza":["629666497","650221101"],
+  "Izan Sarraseca López":["636793048","652078273"],
+  "Aiden Sarraseca López":["636793048","652078273"],
+  "Víctor Páramo Blanco":["637707911","610993157"],
+  "Ismael Páramo Blanco":["637707911","610993157"],
+  "GUILLERMO MARCOS REYERO":["00000000","676240453"],
+  "Samuel Feito Ribas":["683102415","678668570"],
+  "Darío Amano García":["638109693","638232292"],
+  "Alejandro Perea Sánchez":["667541428","637540757"],
+  "Ana Perea Sánchez":["667541428","637540757"],
+  "Sofía Arroyo Ferreira":["606232348","651192779"],
+  "David Kuno":["637952875","677336336"],
+  "LIDIA BENITO GARCÍA":["629122681","676776891"],
+  "DIEGO GONZALEZ DE VEGA MARTIN":["618209388","626996158"],
+  "Asier Blanco Blanco":["627906899","600425476"],
+  "Unai Ruiz Royo":["648273194","699155464"],
+  "ANDRÉS JIN AN CHEN LIU":["657933693","653169164"],
+  "Guillermo Barreto Huertas":["641586531","658073659"],
+  "Angel abad palma":["633253076","697350183"],
+  "Martín Gallardo González":["676940453","698128439"],
+  "Joheny Antonio Marte Santiago":["—","661852849"],
+  "Irene Cava González":["657268049","657268050"],
+  "Marcos Bonilla Díaz":["653915462","654435611"],
+  "Paula Gila":["609947301","686175929"],
+  "Micaela Núñez Alarcón":["610541595","619413324"],
+  "Nira Olza":["617741841","652553927"],
+  "Álvaro Moya Gálvez":["609442049","639744147"],
+  "Sara Colmenar Escidero":["616582391","686896282"],
+  "ELSA MARTIN HERNDANDEZ":["652066987","615409105"],
+  "Pablo Barreto Huertas":["641586531","658073659"],
+  "Ignacio San Miguel Molinero":["616009082","636274742"],
+  "SIMON SAN MIGUEL MOLINERO":["616009082","636274742"],
+  "Vega Lucas Bolaños":["635967605","635967605"],
+  "Lucía Guerra Rodriguez":["646504471","671737331"],
+  "Adrián Crespo Díaz":["655687008","606115270"],
+  "Lucia Chavarri Gómez":["657809541","656816022"],
+  "Brandon Steven Garcia Redroban":["682318937","602546300"],
+  "Andres Tanarro":["686768460","659503528"],
+  "IVAN RIVAS MORENO":["625443297","625043624"],
+  "Gala Diaz Ramos":["685348042","692267202"],
+  "Leonardo Pacheco":["637584836","696089838"],
+  "Mario Dorado Benito":["629787738","620692489"],
+  "Elieth Robles  Apaza":["690043676","672394416"],
+  "MARIA POZUELO PEREZ":["687168853","666299158"],
+  "Mario Méndez Montejo":["607703135","607703144"],
+  "IGNACIO GARCIA CASTAÑO":["658455664","654593004"],
+  "PEDRO JOSE GARCIA CASTAÑO":["658455664","654593004"],
+  "Diego Jimenez":["640735845","606520654"],
+  "Sergio caballero":["680504521","644646147"],
+  "Mateo Ibarra Granados":["679103168","646479632"],
+  "Ángel Serna Gallego":["639502273","617294186"],
+  "Alberto Lorenzo Sánchez":["616434906","629960380"],
+  "Marcos Coroian Rensel":["647859560","653446092"],
+  "Matías Joel Beltrán Robalino":["634131768","666149068"],
+  "Germán Esperón Pérez":["610521258","626564648"],
+  "Olivia Esperón Pérez":["610521258","626564648"],
+  "Marcos Josué Torres Yopán":["642253596","641443122"],
+  "Sara Gismero":["—","722564810"],
+  "Eva Rodríguez de Guzmán López":["669261493","609365146"],
+  "Nicolas Jimenez Puertollano":["696511799","659878724"],
+  "Javier Silva Saldivar":["680645639","636629552"],
+  "Ainhara Saíz Pérez":["679322982","659579052"],
+  "Hugo Cañueto Guijarro":["627836340","659208131"],
+  "Nicolas Gonzalez Dorado":["615112920","615112920"],
+  "Sergio Escribano Martínez":["669589194","699403112"],
+  "Hugo Martin Perez":["606651407","649036000"],
+  "Samuel Herrero":["658764522","653668123"],
+  "Adrián Serrano Osorio":["699460518","687935856"],
+  "Daniel Torres":["68031209","606754135"]
+};
+
+function getTelefonos(nombre) {
+  // Exact match first
+  if(CAMPUS_TELEFONOS[nombre]) return CAMPUS_TELEFONOS[nombre];
+  // Fuzzy: normalize spaces and case
+  const norm = s => s.toLowerCase().replace(/\s+/g,' ').trim();
+  const key = Object.keys(CAMPUS_TELEFONOS).find(k => norm(k) === norm(nombre));
+  return key ? CAMPUS_TELEFONOS[key] : null;
 }
 
 function openCampusDetail(id) {
@@ -1726,7 +1871,8 @@ function openCampusDetail(id) {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
       <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">Talla</div><div style="font-weight:600;">${p.talla||'—'}</div></div>
       <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">Deporte</div><div style="font-weight:600;">${p.deporte}</div></div>
-      <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">📞 Tlf. Contacto</div><div style="font-weight:600;">${(()=>{const t=String(p.apellidos||'');return t.match(/\d{6,}/)?t:(p.telefono||'—');})()}</div></div>
+      <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">📞 Tlf. Padre</div><div style="font-weight:600;">${(()=>{const t=getTelefonos(p.nombre);return t?`<a href="tel:${t[0]}" style="color:var(--negro);text-decoration:none;">${t[0]}</a>`:'—';})()}</div></div>
+      <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">📞 Tlf. Madre</div><div style="font-weight:600;">${(()=>{const t=getTelefonos(p.nombre);return t?`<a href="tel:${t[1]}" style="color:var(--negro);text-decoration:none;">${t[1]}</a>`:'—';})()}</div></div>
       <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">🛏️ Nº Habitación</div>
         <div style="font-weight:600;display:flex;align-items:center;gap:6px;">
           <span id="hab-val-${p.id}">${(()=>{const h=JSON.parse(localStorage.getItem('sv_campus_habitaciones')||'{}');return h[p.id]||'—';})()}</span>
