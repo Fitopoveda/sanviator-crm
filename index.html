@@ -1543,8 +1543,85 @@ function openCampusDetail(id) {
     ${p.medicacion && p.medicacion.length > 2 && p.medicacion.toLowerCase() !== 'nan' ? `<div style="background:#fff3e0;border-radius:8px;padding:12px;margin-bottom:10px;border-left:4px solid #f97316;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#f97316;font-weight:700;margin-bottom:4px;">💊 Medicación</div><div style="font-size:13px;">${p.medicacion}</div></div>` : ''}
     ${p.observaciones && p.observaciones.length > 2 ? `<div style="background:var(--gris-bg);border-radius:8px;padding:12px;border-left:4px solid var(--azul);"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--azul);font-weight:700;margin-bottom:4px;">📝 Observaciones</div><div style="font-size:13px;">${p.observaciones}</div></div>` : ''}
   `;
+  // Load photos from localStorage
+  const _campusPhotos = JSON.parse(localStorage.getItem('sv_campus_photos') || '{}');
+  if(_campusPhotos[id]) p.foto = _campusPhotos[id];
+
+  const _campusComments = JSON.parse(localStorage.getItem('sv_campus_comments') || '{}');
+  const _comments = _campusComments[id] || [];
+  const _canEditCampus = currentPerfil?.rol === 'admin' || currentPerfil?.rol === 'entrenador';
+
+  document.getElementById('modal-body').innerHTML += `
+    <div style="margin-top:14px;border-top:1px solid var(--gris-claro);padding-top:14px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:8px;">
+        💬 Comentarios del equipo técnico (${_comments.length})
+      </div>
+      ${_canEditCampus ? `
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <input type="text" id="campus-comment-input" placeholder="Añadir comentario..." onkeydown="if(event.key==='Enter')addCampusComment(${id})"
+          style="flex:1;border:1.5px solid var(--gris-claro);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;outline:none;">
+        <button class="btn btn-primary btn-sm" style="background:#c0392b;" onclick="addCampusComment(${id})">Añadir</button>
+      </div>` : ''}
+      <div id="campus-comment-list" style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;">
+        ${_comments.length ? [..._comments].reverse().map(c => `
+          <div style="background:var(--gris-bg);border-radius:6px;padding:8px 10px;border-left:3px solid #c0392b;">
+            <div style="font-size:10px;color:var(--gris-medio);margin-bottom:2px;">📅 ${c.fecha} · ${c.autor}</div>
+            <div style="font-size:13px;">${c.texto}</div>
+          </div>`).join('') : '<p style="font-size:12.5px;color:var(--gris-medio);">Sin comentarios</p>'}
+      </div>
+    </div>
+    ${currentPerfil?.rol === 'admin' ? `
+    <div style="margin-top:12px;border-top:1px solid var(--gris-claro);padding-top:12px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:6px;">📸 Foto del jugador</div>
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="campus-photo-input" value="${p.foto||''}" placeholder="Enlace de Google Drive..."
+          style="flex:1;border:1.5px solid var(--gris-claro);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'Barlow',sans-serif;outline:none;">
+        <button class="btn btn-primary btn-sm" style="background:#c0392b;" onclick="saveCampusPhoto(${id})">Guardar</button>
+      </div>
+      <div style="font-size:11px;color:var(--gris-medio);margin-top:4px;">
+        Convierte el enlace: drive.google.com/file/d/<strong>ID</strong>/view → se guarda automáticamente como miniatura
+      </div>
+    </div>` : ''}
+  `;
   document.getElementById('modal-footer').innerHTML = `<button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>`;
   document.getElementById('modal-overlay').classList.add('open');
+}
+
+function addCampusComment(playerId) {
+  const input = document.getElementById('campus-comment-input');
+  const texto = input?.value?.trim();
+  if(!texto) return;
+  const all = JSON.parse(localStorage.getItem('sv_campus_comments') || '{}');
+  if(!all[playerId]) all[playerId] = [];
+  const autor = currentPerfil?.nombre || currentUser?.email?.split('@')[0] || 'Monitor';
+  const now = new Date().toLocaleString('es-ES', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+  all[playerId].push({texto, autor, fecha: now});
+  localStorage.setItem('sv_campus_comments', JSON.stringify(all));
+  input.value = '';
+  const list = document.getElementById('campus-comment-list');
+  if(list) {
+    list.innerHTML = [...all[playerId]].reverse().map(c => `
+      <div style="background:var(--gris-bg);border-radius:6px;padding:8px 10px;border-left:3px solid #c0392b;">
+        <div style="font-size:10px;color:var(--gris-medio);margin-bottom:2px;">📅 ${c.fecha} · ${c.autor}</div>
+        <div style="font-size:13px;">${c.texto}</div>
+      </div>`).join('');
+  }
+  showToast('💬 Comentario añadido');
+}
+
+function saveCampusPhoto(playerId) {
+  const url = document.getElementById('campus-photo-input')?.value?.trim();
+  if(!url) return;
+  let finalUrl = url;
+  const driveMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if(driveMatch) finalUrl = 'https://drive.google.com/thumbnail?id=' + driveMatch[1] + '&sz=w200';
+  const photos = JSON.parse(localStorage.getItem('sv_campus_photos') || '{}');
+  photos[playerId] = finalUrl;
+  localStorage.setItem('sv_campus_photos', JSON.stringify(photos));
+  const p = CAMPUS_PARTICIPANTS.find(x => x.id === playerId);
+  if(p) p.foto = finalUrl;
+  showToast('📸 Foto guardada');
+  openCampusDetail(playerId);
 }
 
 // VELADAS
@@ -1628,31 +1705,131 @@ function saveNewVelada() {
 }
 
 // CONTENIDO DEPORTIVO
+const CAMPUS_TIPS = ["El campus no es para ti, es para los jugadores. Lo principal es que los chavales disfruten y aprendan.", "Eres responsable del grupo asignado por encima de los demás. En desplazamientos, salidas y viajes vas con tu grupo en todo momento.", "Si hay cualquier problema con tu grupo o algún jugador, comunícaselo a los coordinadores por pequeño que sea.", "En desplazamientos: un monitor delante y otro al final. El de delante se asegura de que todos siguen el ritmo.", "Respeta los horarios. Estar 5 minutos antes en el lugar de reunión. No hagas esperar a los jugadores.", "En comidas: un monitor sirve y otro come con su grupo, alternando. No comer con otros grupos. Atención especial a los alérgicos.", "Los móviles con responsabilidad. No sacarlos en comedor mientras los jugadores comen.", "Sigue la planificación asignada.", "La noche es para el descanso. Las salas comunes cierran a la hora estipulada. Todos en sus pasillos/habitaciones.", "En la hora de piscina, si estás en el césped, estás pendiente de los jugadores. No es momento de descanso.", "En talleres y veladas eres responsable de tu actividad aunque no la hayas preparado tú. Ten el material listo.", "En la hora de ducha, los monitores se aseguran de que los jugadores se duchan. Rotación alternativa cada día.", "Revisar habitaciones del pasillo cada 2 días. Vuestra habitación debe ser el ejemplo de orden.", "El LINCE solo los días que se decida. PROHIBIDO cualquier otro día. No pintar, asustar ni molestar.", "ERES UN EJEMPLO. Si te comportas con educación y respeto, podrás exigírselo a ellos."];
+const CONTENIDO_B123 = {"mañana": {"activacion": {"tiempo": "10 min", "titulo": "Activación", "items": ["Juego/Competición de activación"]}, "tecnificacion": {"tiempo": "45 min", "titulo": "Bloque Tecnificación", "items": ["15' — Dribling / Fintas / Arrancadas / Paso 0 / Técnica de pase. Insistir en detalles, reto de dificultad, intensidad máxima.", "30' — Finalizaciones (con oposición, pasiva, coordinación+finalización, disociación). Apoyos largos-cortos, protección del balón. Pases en movimiento trabajando precisión y ejecución."]}, "tactica": {"tiempo": "35 min", "titulo": "Bloque Táctica Individual", "items": ["20' — 1c1: 2 ejercicios aplicando movimientos practicados. Normas de bote, espacios de tiro, toma de decisiones vertical al aro. Defensa intensa: mano en cadera + mano al pase.", "15' — 2c2: El jugador sin balón gana la espalda del defensor. Con balón: ventaja con mínimo número de botes. Defensores pendientes de balón y jugador."]}, "competicion": {"tiempo": "30 min", "titulo": "Bloque Competición", "items": ["Competiciones individuales según tabla de competiciones"]}, "vuelta": {"tiempo": "15 min", "titulo": "Vuelta a la Calma", "items": ["5' — Competición de tiros libres", "10' — Estiramientos"]}}, "tarde": {"tiro": {"tiempo": "30 min", "titulo": "Bloque Tiro", "items": ["10' — Técnica de tiro: mecánica, tiro estático, tiro tras bote, posición pies y manos.", "20' — Tiro en movimiento: activación, ruedas de tiro, tiro por parejas."]}, "tactica": {"tiempo": "35 min", "titulo": "Bloque Táctica Colectiva", "items": ["15' — Situaciones colectivas (una situación/día): spacing, paso y me muevo, balón rápido, lectura bloqueos, continuaciones. Ayudas y CloseOut.", "20' — Con oposición: 3c3, 4c4, 5c5 en medio campo ida y vuelta."]}, "competicion": {"tiempo": "40 min", "titulo": "Bloque Competición", "items": ["Partidos de Play Off por equipos"]}, "vuelta": {"tiempo": "15 min", "titulo": "Vuelta a la Calma", "items": ["5' — Competición de tiros libres", "10' — Estiramientos"]}}};
+const CONTENIDO_B4MINIS = {"mañana": {"activacion": {"tiempo": "10 min", "titulo": "Activación", "items": ["Activación en juego (casi todos con balón)"]}, "tecnificacion": {"tiempo": "45 min", "titulo": "Bloque Tecnificación", "items": ["15' — Dominio de balón: estático (botes en cono, inercias, alturas, pelota de tenis) y dinámico (paradas, arrancadas, paso 0, pivotes). Técnica de pase.", "15' — Dribling, cambios de dirección y ritmo / Pases en movimiento.", "15' — Finalizaciones: sin oposición, con oposición, pasiva, coordinación+finalización."]}, "tactica": {"tiempo": "30 min", "titulo": "Bloque Táctica Individual", "items": ["2-3 ejercicios de 1c1 aplicando movimientos practicados. Limitaciones de bote, espacios de tiro. Toma de decisiones rápida."]}, "competicion": {"tiempo": "35 min", "titulo": "Bloque Competición", "items": ["Competiciones individuales"]}, "vuelta": {"tiempo": "15 min", "titulo": "Vuelta a la Calma", "items": ["5' — Tiros libres", "10' — Estiramientos"]}}};
+const INSTALACIONES_CAMPUS = {"Basket1": {"mañana": "Lazarillo Tormes 3", "tarde": "Lazarillo Tormes 3"}, "Basket2": {"mañana": "Lazarillo Tormes 4", "tarde": "Lazarillo Tormes 4"}, "Basket3": {"mañana": "Residencia", "tarde": "Residencia"}, "Basket4": {"mañana": "Pabellón Residencia", "tarde": "Pabellón Residencia"}, "Basket5": {"mañana": "— Pendiente ayuntamiento —", "tarde": "— Pendiente ayuntamiento —"}, "Basket 6": {"mañana": "Lazarillo Tormes 4", "tarde": "Lazarillo Tormes 4"}, "Minibasket": {"mañana": "Resi Tenis", "tarde": "Resi Tenis"}, "Futbol1": {"mañana": "Lazarillo Tormes 1", "tarde": "Lazarillo Tormes 1"}, "Futbol2": {"mañana": "Lazarillo Tormes 2", "tarde": "Lazarillo Tormes 2"}, "Futbol 3": {"mañana": "Lazarillo Tormes 3", "tarde": "Lazarillo Tormes 3"}};
+const DIAS_CAMPUS = [{"num": 1, "dia": "Miércoles", "fecha": "1 Jul"}, {"num": 2, "dia": "Jueves", "fecha": "2 Jul"}, {"num": 3, "dia": "Viernes", "fecha": "3 Jul"}, {"num": 4, "dia": "Sábado", "fecha": "4 Jul"}, {"num": 5, "dia": "Domingo", "fecha": "5 Jul"}, {"num": 6, "dia": "Lunes", "fecha": "6 Jul"}, {"num": 7, "dia": "Martes", "fecha": "7 Jul"}, {"num": 8, "dia": "Miércoles", "fecha": "8 Jul"}, {"num": 9, "dia": "Jueves", "fecha": "9 Jul"}, {"num": 10, "dia": "Viernes", "fecha": "10 Jul"}];
+
 function renderContenido() {
   const equipos = ['Basket1','Basket2','Basket3','Basket4','Basket5','Basket 6','Minibasket','Futbol1','Futbol2','Futbol 3'];
-  const dias = ['Día 1','Día 2','Día 3','Día 4','Día 5','Día 6','Día 7','Día 8','Día 9','Día 10'];
-  document.getElementById('contenido-grid').innerHTML = equipos.map(eq => {
-    const color = CAMPUS_EQUIPO_COLORS[eq] || '#888';
-    const key = `contenido_${eq}`;
-    const saved = campusContenido[key] || {};
-    return `<div class="contenido-card">
-      <h4 style="color:${color}">🏀 ${eq}</h4>
-      <div style="margin-bottom:8px;">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:4px;">Monitor / Entrenador</div>
-        <div style="font-size:13px;font-weight:600;">${CAMPUS_MONITORS.find(m=>m.equipo===eq)?.nombre || '—'}</div>
+  const canEdit = currentPerfil?.rol === 'admin' || currentPerfil?.rol === 'entrenador';
+
+  document.getElementById('contenido-grid').innerHTML = `
+    <!-- TIPS MONITORES -->
+    <div class="contenido-card" style="grid-column:1/-1;border-left-color:#f97316;">
+      <h4 style="color:#f97316;">📋 Guía de Monitores — Campus 2026</h4>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px;margin-top:4px;">
+        ${CAMPUS_TIPS.map((tip,i) => `
+          <div style="background:var(--gris-bg);border-radius:7px;padding:10px 12px;border-left:3px solid #f97316;display:flex;gap:8px;">
+            <span style="background:#f97316;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;flex-shrink:0;margin-top:1px;">${i+1}</span>
+            <span style="font-size:12.5px;line-height:1.5;">${tip}</span>
+          </div>`).join('')}
       </div>
-      <div style="margin-bottom:8px;">
-        <select id="dia-select-${eq.replace(' ','_')}" style="width:100%;border:1.5px solid var(--gris-claro);border-radius:5px;padding:6px;font-size:12px;font-family:'Barlow',sans-serif;margin-bottom:6px;"
-          onchange="loadContenidoDia('${eq}')">
-          ${dias.map(d=>`<option>${d}</option>`).join('')}
-        </select>
-        <textarea id="cont-${eq.replace(' ','_')}" class="contenido-textarea" 
-          placeholder="Describe el contenido del entrenamiento: objetivos, ejercicios, progresiones..."
-          onchange="saveContenido('${eq}')">${saved['Día 1']||''}</textarea>
-      </div>
-      <button class="btn btn-sm btn-primary" style="background:${color};" onclick="saveContenido('${eq}')">💾 Guardar</button>
-    </div>`;
-  }).join('');
+    </div>
+    <!-- CONTENIDO POR EQUIPO -->
+    ${equipos.map(eq => {
+      const color = CAMPUS_EQUIPO_COLORS[eq] || '#888';
+      const key = 'contenido_' + eq;
+      const saved = campusContenido[key] || {};
+      const inst = INSTALACIONES_CAMPUS[eq] || {};
+      const isB123 = ['Basket1','Basket2','Basket3'].includes(eq);
+      const isB4Minis = ['Basket4','Minibasket'].includes(eq);
+      const isFutbol = eq.toLowerCase().includes('futbol') || eq.toLowerCase().includes('fútbol');
+      const monitor = CAMPUS_MONITORS.find(m => m.equipo === eq);
+      const eqId = eq.replace(/[ /]/g,'_');
+
+      return `<div class="contenido-card" id="cont-card-${eqId}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <h4 style="color:${color};margin:0;">${eq.toLowerCase().includes('basket')||eq.toLowerCase().includes('mini') ? '🏀' : '⚽'} ${eq}</h4>
+          <div style="text-align:right;">
+            <div style="font-size:12px;font-weight:700;">${monitor?.nombre || '—'}</div>
+            <div style="font-size:10.5px;color:var(--gris-medio);">${monitor?.puesto || ''}</div>
+          </div>
+        </div>
+
+        <!-- CALENDARIO DE PISTAS -->
+        <div style="margin-bottom:14px;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:8px;">📍 Calendario de Instalaciones</div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:11.5px;">
+              <thead><tr style="background:${color};color:#fff;">
+                <th style="padding:5px 8px;text-align:left;font-size:10px;">Día</th>
+                <th style="padding:5px 8px;text-align:left;font-size:10px;">Mañana</th>
+                <th style="padding:5px 8px;text-align:left;font-size:10px;">Tarde</th>
+              </tr></thead>
+              <tbody id="pistas-${eqId}">
+                ${DIAS_CAMPUS.map((d,di) => {
+                  const sk = `pistas_${eq}_d${d.num}`;
+                  const pistaSaved = JSON.parse(localStorage.getItem('sv_campus_pistas') || '{}');
+                  const pistaMañana = pistaSaved[sk+'_m'] || inst.mañana || '';
+                  const pistaTarde = pistaSaved[sk+'_t'] || inst.tarde || '';
+                  const isPending = pistaMañana.includes('Pendiente') || pistaTarde.includes('Pendiente');
+                  return `<tr style="border-bottom:1px solid var(--gris-claro);">
+                    <td style="padding:4px 8px;font-weight:700;font-size:11px;white-space:nowrap;">${d.dia}<br><span style="color:${color};font-family:'Barlow Condensed',sans-serif;font-size:14px;">${d.fecha}</span></td>
+                    <td style="padding:4px 6px;">
+                      ${canEdit ? `<input type="text" value="${pistaMañana}" onchange="savePista('${eq}','${d.num}','m',this.value)"
+                        style="width:100%;border:1px solid ${isPending?'#f97316':'var(--gris-claro)'};border-radius:4px;padding:3px 5px;font-size:11px;font-family:'Barlow',sans-serif;background:${isPending?'#fff3e0':'var(--blanco)'};outline:none;">`
+                        : `<span style="color:${isPending?'#f97316':'inherit'}">${pistaMañana||'—'}</span>`}
+                    </td>
+                    <td style="padding:4px 6px;">
+                      ${canEdit ? `<input type="text" value="${pistaTarde}" onchange="savePista('${eq}','${d.num}','t',this.value)"
+                        style="width:100%;border:1px solid ${isPending?'#f97316':'var(--gris-claro)'};border-radius:4px;padding:3px 5px;font-size:11px;font-family:'Barlow',sans-serif;background:${isPending?'#fff3e0':'var(--blanco)'};outline:none;">`
+                        : `<span style="color:${isPending?'#f97316':'inherit'}">${pistaTarde||'—'}</span>`}
+                    </td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- METODOLOGÍA -->
+        ${(isB123 || isB4Minis) ? `
+        <div style="margin-bottom:14px;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:8px;">📚 Metodología y Contenidos</div>
+          ${['mañana','tarde'].filter(t => isB123 ? true : t === 'mañana').map(turno => {
+            const ct = isB123 ? CONTENIDO_B123[turno] : CONTENIDO_B4MINIS[turno];
+            if(!ct) return '';
+            return `<div style="margin-bottom:10px;">
+              <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:${color};margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--gris-claro);">
+                ${turno === 'mañana' ? '☀️ MAÑANA' : '🌅 TARDE'}
+              </div>
+              ${Object.values(ct).map(bloque => `
+                <div style="margin-bottom:8px;">
+                  <div style="font-size:11px;font-weight:700;display:flex;gap:6px;align-items:center;margin-bottom:4px;">
+                    <span style="background:${color};color:#fff;padding:1px 7px;border-radius:20px;font-size:10px;">${bloque.tiempo}</span>
+                    ${bloque.titulo}
+                  </div>
+                  ${bloque.items.map(item => `<div style="font-size:11.5px;color:var(--gris-medio);padding:2px 0 2px 12px;border-left:2px solid var(--gris-claro);margin-bottom:3px;">• ${item}</div>`).join('')}
+                </div>`).join('')}
+            </div>`;
+          }).join('')}
+        </div>` : ''}
+
+        <!-- NOTAS DEL ENTRENADOR por día -->
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:6px;">📝 Notas del entrenador por sesión</div>
+          <select id="dia-select-${eqId}" onchange="loadContenidoDia('${eq}')"
+            style="width:100%;border:1.5px solid var(--gris-claro);border-radius:5px;padding:6px;font-size:12px;font-family:'Barlow',sans-serif;margin-bottom:6px;">
+            ${DIAS_CAMPUS.map(d=>`<option value="Día ${d.num}">${d.dia} ${d.fecha} (Día ${d.num})</option>`).join('')}
+          </select>
+          ${canEdit ? `
+          <textarea id="cont-${eqId}" class="contenido-textarea"
+            placeholder="Escribe el contenido específico de esta sesión: ejercicios, grupos, observaciones..."
+            onchange="saveContenido('${eq}')">${saved['Día 1']||''}</textarea>
+          <button class="btn btn-sm btn-primary" style="background:${color};margin-top:6px;" onclick="saveContenido('${eq}')">💾 Guardar nota</button>`
+          : `<div style="background:var(--gris-bg);border-radius:6px;padding:10px;font-size:13px;color:var(--gris-medio);">${saved['Día 1'] || 'Sin notas todavía'}</div>`}
+        </div>
+      </div>`;
+    }).join('')}
+  `;
+}
+
+function savePista(eq, diaNum, turno, val) {
+  const pistaSaved = JSON.parse(localStorage.getItem('sv_campus_pistas') || '{}');
+  pistaSaved[`pistas_${eq}_d${diaNum}_${turno}`] = val;
+  localStorage.setItem('sv_campus_pistas', JSON.stringify(pistaSaved));
 }
 
 function loadContenidoDia(eq) {
