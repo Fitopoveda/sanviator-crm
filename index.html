@@ -1087,8 +1087,8 @@ function renderKanban(){
   CAT_ORDER.forEach(c=>cols[c]=[]);
   // Sort: new inscribed (fromSheets, not club) first, then by date desc
   filtered.sort((a,b)=>{
-    const aNew = !a.esDelClub && a.fromSheets;
-    const bNew = !b.esDelClub && b.fromSheets;
+    const aNew = !a.esDelClub;
+    const bNew = !b.esDelClub;
     if(aNew && !bNew) return -1;
     if(!aNew && bNew) return 1;
     return new Date(b.fecha||0) - new Date(a.fecha||0);
@@ -1113,17 +1113,17 @@ function kanbanCard(i,canEdit){
   const asLabel=i.asiste===true?'✅ Asiste':i.asiste===false?'❌ No asiste':'⬜ Asistencia';
   const waNum=(i.telefono||'').replace(/[^0-9]/g,'');
   const waMsg = generarMensajeWA(i);
-  const _esNuevoInscrito = !i.esDelClub && i.fromSheets;
+  const _esNuevoInscrito = !i.esDelClub;
   const _cardClass = _esNuevoInscrito ? (i.estado==='Nuevo' ? 'kanban-card nuevo-inscrito' : 'kanban-card nuevo-inscrito contactado') : 'kanban-card';
   return `<div class="${_cardClass}" onclick="openDetail('${i.id}')">
     ${(() => {
-      const esNuevoInscrito = !i.esDelClub && i.fromSheets;
+      const esNuevoInscrito = !i.esDelClub;
       const esNuevoEstado = i.estado === 'Nuevo';
       return esNuevoInscrito ? `<div style="position:absolute;top:8px;right:8px;">
         <span style="color:${esNuevoEstado?'#c0392b':'#333'};font-size:17px;line-height:1;" title="${esNuevoEstado?'Nuevo inscrito externo — sin contactar':'Inscrito externo — ya contactado'}">★</span>
       </div>` : '';
     })()}
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;padding-right:${!i.esDelClub&&i.fromSheets?'22px':'0'};">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;padding-right:${!i.esDelClub?'22px':'0'};">
       <div class="kanban-card-name">${i.nombre}</div>
       ${i.equipo?`<span class="equipo-badge">${i.equipo}</span>`:''}
     </div>
