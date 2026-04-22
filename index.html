@@ -764,9 +764,16 @@ function openAddUserModal() {
         </select>
       </div>
     </div>
-    <p style="font-size:12.5px;color:var(--gris-medio);margin-top:8px;background:#fffbe6;padding:10px;border-radius:6px;">
-      📧 Se creará el usuario con la contraseña por defecto <strong>SanviPruebas@</strong><br>
-      El usuario deberá cambiarla en su primer acceso.
+    <div class="detail-row">
+      <div class="detail-field"><label>Contraseña *</label>
+        <input id="nu-pass" type="password" placeholder="Mínimo 6 caracteres" value="SanviPruebas@">
+      </div>
+      <div class="detail-field"><label>Confirmar contraseña</label>
+        <input id="nu-pass2" type="password" placeholder="Repite la contraseña" value="SanviPruebas@">
+      </div>
+    </div>
+    <p style="font-size:12.5px;color:var(--gris-medio);margin-top:4px;background:#fffbe6;padding:10px;border-radius:6px;">
+      💡 La contraseña por defecto es <strong>SanviPruebas@</strong>. El usuario podrá cambiarla después.
     </p>`;
   document.getElementById('modal-footer').innerHTML = `
     <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
@@ -778,17 +785,53 @@ async function createUser() {
   const email = document.getElementById('nu-email').value.trim();
   const nombre = document.getElementById('nu-nombre').value.trim();
   const rol = document.getElementById('nu-rol').value;
+  const pass = document.getElementById('nu-pass').value.trim();
   if (!email) { showToast('⚠️ El email es obligatorio'); return; }
-  // Crear usuario en Supabase Auth (requiere service role — aquí solo insertamos el perfil)
-  // En su lugar, se invita al usuario por email
-  const { error } = await sb.auth.admin?.inviteUserByEmail
-    ? await sb.auth.admin.inviteUserByEmail(email)
-    : { error: null };
-  // Insertar perfil directamente
-  const { error: e2 } = await sb.from('perfiles').upsert({ email, nombre, rol }, { onConflict: 'email' });
-  if (e2) { showToast('❌ Error: ' + e2.message); return; }
-  closeModal(); loadUsers();
-  showToast('✅ Usuario creado — contraseña: SanviPruebas@');
+  const pass2 = document.getElementById('nu-pass2').value.trim();
+  if (!pass || pass.length < 6) { showToast('⚠️ La contraseña debe tener al menos 6 caracteres'); return; }
+  if (pass !== pass2) { showToast('⚠️ Las contraseñas no coinciden'); return; }
+
+  const btn = document.querySelector('#modal-footer .btn-primary');
+  if(btn) { btn.textContent = '⏳ Creando...'; btn.disabled = true; }
+
+  // Step 1: Create user in Supabase Auth using signUp
+  const { data: signUpData, error: signUpError } = await sb.auth.signUp({
+    email,
+    password: pass,
+    options: { data: { nombre } }
+  });
+
+  if (signUpError) {
+    if(btn) { btn.textContent = 'Crear usuario'; btn.disabled = false; }
+    showToast('❌ Error al crear: ' + signUpError.message);
+    return;
+  }
+
+  // Step 2: Upsert profile with correct role
+  const userId = signUpData?.user?.id;
+  if (userId) {
+    await sb.from('perfiles').upsert(
+      { id: userId, email, nombre, rol },
+      { onConflict: 'id' }
+    );
+  } else {
+    // User may already exist — update by email
+    const { error: e2 } = await sb.from('perfiles').upsert(
+      { email, nombre, rol },
+      { onConflict: 'email' }
+    );
+    if (e2) { showToast('❌ Error perfil: ' + e2.message); return; }
+  }
+
+  // Step 3: If admin, force-set role via SQL (in case trigger set it to invitado)
+  if (rol === 'admin' || rol === 'entrenador') {
+    await sb.from('perfiles').update({ rol, nombre }).eq('email', email);
+  }
+
+  if(btn) { btn.textContent = 'Crear usuario'; btn.disabled = false; }
+  closeModal();
+  await loadUsers();
+  showToast(`✅ Usuario ${nombre||email} creado como ${rol}`);
 }
 
 // ════════════════════════════════════════════════════════
