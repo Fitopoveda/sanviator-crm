@@ -119,6 +119,27 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
 .badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
 .equipo-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:900;background:var(--negro);color:var(--amarillo);}
 
+
+/* EQUIPOS VIEW */
+.equipos-wrapper{display:flex;flex-direction:column;gap:24px;}
+.equipos-cat-block{background:var(--blanco);border-radius:12px;border:1px solid var(--gris-claro);overflow:hidden;}
+.equipos-cat-header{padding:12px 18px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;border-bottom:3px solid var(--amarillo);}
+.equipos-cat-header-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;text-transform:uppercase;letter-spacing:1px;flex:1;}
+.equipos-cat-body{padding:16px;}
+.equipos-group{margin-bottom:16px;}
+.equipos-group:last-child{margin-bottom:0;}
+.equipos-group-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--gris-claro);}
+.equipos-group-label{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:2px;}
+.equipos-group-count{background:var(--gris-claro);border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700;color:var(--negro);}
+.equipos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;}
+.equipos-card{background:var(--gris-bg);border-radius:8px;border:1px solid var(--gris-claro);padding:10px 12px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:10px;}
+.equipos-card:hover{border-color:var(--amarillo);background:var(--blanco);box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+.equipos-card-info{flex:1;min-width:0;}
+.equipos-card-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.equipos-card-meta{font-size:11px;color:var(--gris-medio);margin-top:2px;}
+.equipos-sin-equipo .equipos-group-label{color:var(--gris-medio);}
+.equipos-sin-equipo .equipos-group-header{border-bottom-style:dashed;}
+
 /* KANBAN */
 .kanban-wrapper{overflow-x:auto;padding-bottom:16px;}
 .kanban-board{display:flex;gap:14px;min-width:max-content;align-items:flex-start;}
@@ -331,6 +352,7 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
           <div class="view-toggle">
             <button class="view-btn active" id="btn-table" onclick="setView('table')">☰ Lista</button>
             <button class="view-btn" id="btn-kanban" onclick="setView('kanban')">▦ Kanban</button>
+            <button class="view-btn" id="btn-equipos" onclick="setView('equipos')">🏅 Equipos</button>
           </div>
         </div>
         <div id="view-table">
@@ -352,6 +374,9 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
         </div>
         <div id="view-kanban" style="display:none">
           <div class="kanban-wrapper"><div class="kanban-board" id="kanban-board"></div></div>
+        </div>
+        <div id="view-equipos" style="display:none">
+          <div class="equipos-wrapper" id="equipos-board"></div>
         </div>
       </div>
 
@@ -1030,13 +1055,19 @@ function setView(v){
   currentView=v;
   document.getElementById('view-table').style.display=v==='table'?'block':'none';
   document.getElementById('view-kanban').style.display=v==='kanban'?'block':'none';
+  document.getElementById('view-equipos').style.display=v==='equipos'?'block':'none';
   document.getElementById('btn-table').classList.toggle('active',v==='table');
   document.getElementById('btn-kanban').classList.toggle('active',v==='kanban');
+  document.getElementById('btn-equipos').classList.toggle('active',v==='equipos');
   // Defer heavy render so browser paints the layout change first
   setTimeout(renderView, 0);
 }
 
-function renderView(){ currentView==='table'?renderTable():renderKanban(); }
+function renderView(){
+  if(currentView==='table') renderTable();
+  else if(currentView==='kanban') renderKanban();
+  else renderEquipos();
+}
 
 // ════════════════════════════════════════════════════════
 // TABLA
@@ -1076,6 +1107,111 @@ function renderTable(){
 }
 
 function sortBy(f){ if(sortField===f)sortDir*=-1; else{sortField=f;sortDir=1;} renderTable(); }
+
+// ════════════════════════════════════════════════════════
+// VISTA EQUIPOS — agrupada por categoría + equipo asignado
+// ════════════════════════════════════════════════════════
+const EQUIPO_COLORS = {
+  'A':'#f59e0b','B':'#3b82f6','C':'#10b981',
+  'D':'#8b5cf6','E':'#ec4899','Descartado':'#e03e3e'
+};
+
+function renderEquipos(){
+  const canEdit = currentPerfil?.rol !== 'invitado';
+  const filtered = getFiltered();
+
+  // Group by categoria
+  const byCat = {};
+  CAT_ORDER.forEach(c => byCat[c] = []);
+  filtered.forEach(i => {
+    const cat = i.categoria || 'Senior';
+    if(byCat[cat]) byCat[cat].push(i);
+    else byCat['Senior'].push(i);
+  });
+
+  const board = document.getElementById('equipos-board');
+  const cats = CAT_ORDER.filter(c => byCat[c].length > 0);
+
+  if(!cats.length){
+    board.innerHTML = '<p style="text-align:center;color:var(--gris-medio);padding:40px;">Sin jugadores</p>';
+    return;
+  }
+
+  board.innerHTML = cats.map(cat => {
+    const jugadores = byCat[cat];
+    const color = CAT_COLORS[cat] || '#888';
+
+    // Split: sin equipo first, then by equipo A/B/C...
+    const sinEquipo = jugadores.filter(i => !i.equipo || i.equipo === '');
+    const equiposUsados = [...new Set(jugadores.map(i => i.equipo).filter(e => e && e !== ''))];
+    // Sort equipos: A,B,C,D,E first, Descartado last
+    equiposUsados.sort((a,b) => {
+      if(a === 'Descartado') return 1;
+      if(b === 'Descartado') return -1;
+      return a.localeCompare(b);
+    });
+
+    const renderCard = (i) => {
+      const esExterno = !i.esDelClub;
+      const esNuevo = i.estado === 'Nuevo';
+      const starHtml = esExterno ? `<span style="color:${esNuevo?'#c0392b':'#555'};font-size:13px;margin-left:4px;" title="${esNuevo?'Sin contactar':'Contactado'}">★</span>` : '';
+      const eqColor = EQUIPO_COLORS[i.equipo] || 'transparent';
+      return \`<div class="equipos-card" onclick="openDetail('\${i.id}')">
+        <div class="avatar" style="width:34px;height:34px;font-size:12px;background:\${color};flex-shrink:0;">\${initials(i.nombre)}</div>
+        <div class="equipos-card-info">
+          <div class="equipos-card-name">\${i.nombre}\${starHtml}</div>
+          <div class="equipos-card-meta">
+            \${badgeDeporte(i.deporte)}
+            <span class="badge badge-\${i.genero==='Femenino'?'f':'m'}" style="font-size:10px;">\${i.genero==='Femenino'?'♀':'♂'}</span>
+            \${badgeEstado(i.estado)}
+          </div>
+        </div>
+        \${canEdit ? \`<select class="equipo-select" onclick="event.stopPropagation()" onchange="setEquipo('\${i.id}',this.value);setTimeout(renderEquipos,300);" style="font-size:11px;">
+          <option value="" \${!i.equipo?'selected':''}>—</option>
+          \${['A','B','C','D','E'].map(e=>\`<option \${i.equipo===e?'selected':''} value="\${e}">\${e}</option>\`).join('')}
+          <option value="Descartado" \${i.equipo==='Descartado'?'selected':''}>❌</option>
+        </select>\` : (i.equipo ? \`<span class="equipo-badge" style="background:\${eqColor};color:#fff;">\${i.equipo}</span>\` : '')}
+      </div>\`;
+    };
+
+    const sinEquipoHtml = sinEquipo.length ? \`
+      <div class="equipos-group equipos-sin-equipo">
+        <div class="equipos-group-header">
+          <span class="equipos-group-label" style="color:var(--gris-medio);">Sin asignar</span>
+          <span class="equipos-group-count">\${sinEquipo.length}</span>
+        </div>
+        <div class="equipos-grid">\${sinEquipo.map(renderCard).join('')}</div>
+      </div>\` : '';
+
+    const equiposHtml = equiposUsados.map(eq => {
+      const grupo = jugadores.filter(i => i.equipo === eq);
+      const eqColor = EQUIPO_COLORS[eq] || '#888';
+      return \`<div class="equipos-group">
+        <div class="equipos-group-header">
+          <span class="equipo-badge" style="background:\${eqColor};color:#fff;width:24px;height:24px;font-size:13px;">\${eq === 'Descartado' ? '❌' : eq}</span>
+          <span class="equipos-group-label" style="color:\${eqColor};">Equipo \${eq}</span>
+          <span class="equipos-group-count">\${grupo.length} jugadores</span>
+        </div>
+        <div class="equipos-grid">\${grupo.map(renderCard).join('')}</div>
+      </div>\`;
+    }).join('');
+
+    const totalSinAsignar = sinEquipo.length;
+    const totalAsignados = jugadores.length - totalSinAsignar;
+
+    return \`<div class="equipos-cat-block">
+      <div class="equipos-cat-header" style="background:\${color}18;border-bottom-color:\${color};">
+        <span class="equipos-cat-header-title" style="color:\${color};">\${cat}</span>
+        <span style="font-size:12px;color:var(--gris-medio);font-weight:600;">\${jugadores.length} jugadores · \${totalAsignados} asignados · \${totalSinAsignar} pendientes</span>
+      </div>
+      <div class="equipos-cat-body">
+        \${sinEquipoHtml}
+        \${equiposHtml}
+        \${!sinEquipoHtml && !equiposHtml ? '<p style="color:var(--gris-medio);font-size:13px;padding:4px 0;">Sin jugadores</p>' : ''}
+      </div>
+    </div>\`;
+  }).join('');
+}
 
 // ════════════════════════════════════════════════════════
 // KANBAN
