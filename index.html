@@ -1092,27 +1092,6 @@ function renderPruebas(){
   ];
   const s=x=>`<div class="prueba-sesion"><div><strong style="font-size:13px">${x.cat}</strong><div style="font-size:11.5px;color:var(--gris-medio)">${x.dia} ${x.fecha} · ${x.hora}</div></div><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--amarillo)">${x.fecha}</div></div>`;
 
-  const horarios = [
-    {
-      dias: 'Lunes y Miércoles',
-      sesiones: [
-        {hora:'17:00', equipos:['Benjamín Masculino','Alevín Masculino','Infantil Masculino']},
-        {hora:'18:30', equipos:['Cadete Masculino']},
-        {hora:'20:00', equipos:['Junior Masculino']},
-        {hora:'21:30', equipos:['Sub-22','Senior Masculino']},
-      ]
-    },
-    {
-      dias: 'Martes y Jueves',
-      sesiones: [
-        {hora:'17:00', equipos:['Benjamín Femenino','Alevín Femenino','Infantil Femenino']},
-        {hora:'18:30', equipos:['Infantil Femenino']},
-        {hora:'20:00', equipos:['Cadete Femenino','Junior Femenino']},
-        {hora:'21:30', equipos:['Senior Femenino']},
-      ]
-    }
-  ];
-
   const CAT_COLORS_BAL = {
     'Benjamín Masculino':'#3b82f6','Benjamín Femenino':'#ec4899',
     'Alevín Masculino':'#3b82f6','Alevín Femenino':'#ec4899',
@@ -1123,27 +1102,138 @@ function renderPruebas(){
     'Senior Masculino':'#6b7280','Senior Femenino':'#6b7280'
   };
 
-  const balHTML = horarios.map(bloque=>`
-    <div style="margin-bottom:16px;">
-      <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);padding:6px 0;border-bottom:1px solid var(--gris-claro);margin-bottom:8px;">📅 ${bloque.dias}</div>
-      ${bloque.sesiones.map(s=>`
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--gris-claro);">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--amarillo);min-width:52px;">${s.hora}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:5px;">
-            ${s.equipos.map(e=>`<span style="background:${CAT_COLORS_BAL[e]||'#888'};color:#fff;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">${e}</span>`).join('')}
-          </div>
-        </div>`).join('')}
-    </div>`).join('');
+  const ALL_CATS = [
+    'Benjamín Masculino','Benjamín Femenino','Alevín Masculino','Alevín Femenino',
+    'Infantil Masculino','Infantil Femenino','Cadete Masculino','Cadete Femenino',
+    'Junior Masculino','Junior Femenino','Sub-22','Senior Masculino','Senior Femenino'
+  ];
 
+  // Load from localStorage or use defaults
+  const defaultHorarios = [
+    {
+      dias:'Lunes y Miércoles',
+      sesiones:[
+        {hora:'17:00', equipos:['Benjamín Masculino','Alevín Masculino','Infantil Masculino']},
+        {hora:'18:30', equipos:['Cadete Masculino']},
+        {hora:'20:00', equipos:['Junior Masculino']},
+        {hora:'21:30', equipos:['Sub-22','Senior Masculino']},
+      ]
+    },
+    {
+      dias:'Martes y Jueves',
+      sesiones:[
+        {hora:'17:00', equipos:['Benjamín Femenino','Alevín Femenino','Infantil Femenino']},
+        {hora:'18:30', equipos:['Infantil Femenino']},
+        {hora:'20:00', equipos:['Cadete Femenino','Junior Femenino']},
+        {hora:'21:30', equipos:['Senior Femenino']},
+      ]
+    }
+  ];
+
+  let horarios = JSON.parse(localStorage.getItem('sv_horarios_bal') || JSON.stringify(defaultHorarios));
+
+  function saveHorarios() {
+    localStorage.setItem('sv_horarios_bal', JSON.stringify(horarios));
+  }
+
+  function renderHorarios() {
+    const isAdmin = currentPerfil?.rol === 'admin';
+    const balHTML = horarios.map((bloque, bi) => `
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gris-claro);margin-bottom:8px;">
+          <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);">📅 ${bloque.dias}</div>
+        </div>
+        ${bloque.sesiones.map((ses, si) => `
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--gris-claro);">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--amarillo);min-width:58px;">${ses.hora}</div>
+            <div style="flex:1;display:flex;flex-wrap:wrap;gap:5px;align-items:center;">
+              ${ses.equipos.map((e, ei) => {
+                const parts = e.split(' ');
+                const genero = parts[parts.length-1]; // Masculino/Femenino
+                const catName = parts.slice(0,-1).join(' '); // Benjamín, Alevín...
+                const count = inscritos.filter(i=>i.categoria===catName && i.genero===genero).length;
+                return `
+                <span style="background:${CAT_COLORS_BAL[e]||'#888'};color:#fff;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:4px;cursor:pointer;transition:opacity 0.15s;"
+                  onclick="goToKanban('${catName}','${genero === 'Sub-22' ? 'Masculino' : genero}')"
+                  onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'"
+                  title="Ver inscritos en Kanban">
+                  ${e}
+                  ${count > 0 ? `<span style="background:rgba(255,255,255,0.3);border-radius:20px;padding:0 5px;font-size:10px;">${count}</span>` : ''}
+                  ${isAdmin ? `<span onclick="event.stopPropagation();removeEquipo(${bi},${si},${ei})" style="cursor:pointer;opacity:0.7;font-size:14px;line-height:1;margin-left:2px;" title="Eliminar">×</span>` : ''}
+                </span>`;
+              }).join('')}
+              ${isAdmin ? `
+                <select onchange="addEquipo(${bi},${si},this)" style="border:1.5px dashed var(--gris-claro);border-radius:20px;padding:3px 8px;font-size:11px;font-family:'Barlow',sans-serif;background:var(--blanco);cursor:pointer;color:var(--gris-medio);outline:none;">
+                  <option value="">+ Añadir equipo</option>
+                  ${ALL_CATS.map(c=>`<option value="${c}">${c}</option>`).join('')}
+                </select>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>`).join('');
+
+    document.getElementById('bal-horarios').innerHTML = balHTML;
+  }
+
+  window.removeEquipo = function(bi, si, ei) {
+    horarios[bi].sesiones[si].equipos.splice(ei, 1);
+    saveHorarios(); renderHorarios();
+    showToast('✅ Equipo eliminado');
+  };
+
+  window.addEquipo = function(bi, si, sel) {
+    const val = sel.value; if(!val) return;
+    if(!horarios[bi].sesiones[si].equipos.includes(val)) {
+      horarios[bi].sesiones[si].equipos.push(val);
+      saveHorarios(); renderHorarios();
+      showToast('✅ Equipo añadido');
+    } else {
+      showToast('⚠️ Ese equipo ya está en esta franja');
+      sel.value = '';
+    }
+  };
+
+  window.resetHorarios = function() {
+    if(!confirm('¿Restaurar el horario original?')) return;
+    localStorage.removeItem('sv_horarios_bal');
+    horarios = JSON.parse(JSON.stringify(defaultHorarios));
+    saveHorarios(); renderHorarios();
+    showToast('✅ Horario restaurado');
+  };
+
+  const isAdmin = currentPerfil?.rol === 'admin';
   document.getElementById('pruebas-content').innerHTML=`
     <div>
       <div style="font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--amarillo)">⚽ Fútbol — Puertas Abiertas desde 1 Jun</div>
       ${fut.map(s).join('')}
     </div>
     <div>
-      <div style="font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid var(--amarillo)">🏀 Baloncesto — Horario de Entrenamientos</div>
-      ${balHTML}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid var(--amarillo)">
+        <div style="font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:1px;">🏀 Baloncesto — Horario de Entrenamientos</div>
+        ${isAdmin ? `<button onclick="resetHorarios()" class="btn btn-secondary btn-sm">↺ Restaurar</button>` : ''}
+      </div>
+      <div id="bal-horarios"></div>
     </div>`;
+
+  renderHorarios();
+}
+
+// ════════════════════════════════════════════════════════
+// KANBAN DESDE CALENDARIO
+// ════════════════════════════════════════════════════════
+function goToKanban(categoria, genero) {
+  // Switch to inscritos panel
+  showPanel('inscritos');
+  // Set kanban view
+  setView('kanban');
+  // Apply filters
+  const fCat = document.getElementById('f-cat');
+  const fGen = document.getElementById('f-genero');
+  const fDep = document.getElementById('f-deporte');
+  if(fCat) fCat.value = categoria;
+  if(fGen) fGen.value = genero || '';
+  if(fDep) fDep.value = '';
+  renderView();
+  showToast(`📋 Mostrando ${categoria} ${genero}`);
 }
 
 // ════════════════════════════════════════════════════════
