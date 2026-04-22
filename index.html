@@ -704,13 +704,14 @@ async function loadUsers() {
         </div>
         <span class="rol-badge rol-${u.rol}">${u.rol}</span>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;">
         <select onchange="changeRol('${u.id}',this.value)" style="border:1.5px solid var(--gris-claro);border-radius:5px;padding:4px 8px;font-size:12px;font-family:'Barlow',sans-serif;">
           ${['admin','entrenador','invitado'].map(r=>`<option ${u.rol===r?'selected':''}>${r}</option>`).join('')}
         </select>
-        <button class="btn btn-sm btn-secondary" onclick="editUserCats('${u.id}','${u.nombre||u.email}')">Categorías</button>
+        <button class="btn btn-sm btn-secondary" onclick="editUserPermisos('${u.id}','${(u.nombre||u.email).replace(/'/g,"\\'")}')">✏️ Permisos</button>
       </div>
-      ${u.categorias_permitidas?.length ? `<div style="margin-top:6px;font-size:11px;color:var(--gris-medio)">Categorías: <strong>${u.categorias_permitidas.join(', ')}</strong></div>` : ''}
+      ${u.modulos_permitidos?.length ? `<div style="margin-top:5px;font-size:11px;color:var(--gris-medio)">📦 Módulos: <strong>${u.modulos_permitidos.join(', ')}</strong></div>` : ''}
+      ${u.categorias_permitidas?.length ? `<div style="margin-top:3px;font-size:11px;color:var(--gris-medio)">🏷️ Categorías: <strong>${u.categorias_permitidas.join(', ')}</strong></div>` : ''}
     </div>`).join('');
 }
 
@@ -720,33 +721,54 @@ async function changeRol(userId, newRol) {
   loadUsers();
 }
 
-function editUserCats(userId, userName) {
-  document.getElementById('modal-title').textContent = 'Categorías — ' + userName;
+const MODULOS_DISPONIBLES = ['Pruebas Temporada', 'Campus Salamanca', 'Campus Madrid', 'Tecnificación', 'Escuela'];
+
+async function editUserPermisos(userId, userName) {
+  // Cargar datos actuales del usuario
+  const {data: uData} = await sb.from('perfiles').select('categorias_permitidas,modulos_permitidos').eq('id', userId).single();
+  const currentCats = uData?.categorias_permitidas || [];
+  const currentMods = uData?.modulos_permitidos || [];
+
+  document.getElementById('modal-title').textContent = 'Permisos — ' + userName;
   document.getElementById('modal-body').innerHTML = `
-    <p style="font-size:13.5px;color:var(--gris-medio);margin-bottom:14px">Selecciona a qué categorías tiene acceso este usuario. Si no seleccionas ninguna, tendrá acceso a todas.</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      ${CAT_ORDER.map(c=>`
-        <label style="display:flex;align-items:center;gap:8px;padding:8px;border:1.5px solid var(--gris-claro);border-radius:6px;cursor:pointer;">
-          <input type="checkbox" value="${c}" id="cat-${c}" style="accent-color:var(--amarillo)"> ${c}
-        </label>`).join('')}
+    <div style="margin-bottom:18px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;color:var(--gris-medio);margin-bottom:10px;">📦 Módulos con acceso</div>
+      <p style="font-size:12.5px;color:var(--gris-medio);margin-bottom:10px;">Si no seleccionas ninguno, tendrá acceso a todos.</p>
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        ${MODULOS_DISPONIBLES.map(m=>`
+          <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1.5px solid var(--gris-claro);border-radius:7px;cursor:pointer;background:var(--gris-bg);">
+            <input type="checkbox" value="${m}" id="mod-${m.replace(/\s/g,'-')}" style="accent-color:var(--amarillo);width:15px;height:15px;" ${currentMods.includes(m)?'checked':''}>
+            <span style="font-size:13px;font-weight:600;">${m}</span>
+          </label>`).join('')}
+      </div>
+    </div>
+    <div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;color:var(--gris-medio);margin-bottom:10px;">🏷️ Categorías con acceso</div>
+      <p style="font-size:12.5px;color:var(--gris-medio);margin-bottom:10px;">Si no seleccionas ninguna, tendrá acceso a todas.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+        ${CAT_ORDER.map(c=>`
+          <label style="display:flex;align-items:center;gap:8px;padding:8px;border:1.5px solid var(--gris-claro);border-radius:6px;cursor:pointer;">
+            <input type="checkbox" value="${c}" id="cat-${c}" style="accent-color:var(--amarillo);" ${currentCats.includes(c)?'checked':''}> ${c}
+          </label>`).join('')}
+      </div>
     </div>`;
   document.getElementById('modal-footer').innerHTML = `
     <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-    <button class="btn btn-primary" onclick="saveCats('${userId}')">Guardar</button>`;
-  // Load current
-  sb.from('perfiles').select('categorias_permitidas').eq('id',userId).single()(async()=>{const {data:uData}=await sb.from('perfiles').select('categorias_permitidas').eq('id',userId).single();
-    (data?.categorias_permitidas||[]).forEach(c=>{
-      const el=document.getElementById('cat-'+c); if(el) el.checked=true;
-    });
-  });
+    <button class="btn btn-primary" onclick="savePermisos('${userId}')">💾 Guardar</button>`;
   document.getElementById('modal-overlay').classList.add('open');
 }
 
-async function saveCats(userId) {
-  const cats = CAT_ORDER.filter(c=>document.getElementById('cat-'+c)?.checked);
-  await sb.from('perfiles').update({ categorias_permitidas: cats }).eq('id', userId);
-  closeModal(); loadUsers(); showToast('✅ Categorías guardadas');
+// Keep old name as alias for backward compat
+function editUserCats(userId, userName) { editUserPermisos(userId, userName); }
+
+async function savePermisos(userId) {
+  const cats = CAT_ORDER.filter(c => document.getElementById('cat-'+c)?.checked);
+  const mods = MODULOS_DISPONIBLES.filter(m => document.getElementById('mod-'+m.replace(/\s/g,'-'))?.checked);
+  await sb.from('perfiles').update({ categorias_permitidas: cats, modulos_permitidos: mods }).eq('id', userId);
+  closeModal(); loadUsers(); showToast('✅ Permisos guardados');
 }
+
+async function saveCats(userId) { savePermisos(userId); }
 
 function openAddUserModal() {
   document.getElementById('modal-title').textContent = 'Nuevo usuario';
@@ -1029,8 +1051,9 @@ function renderTable(){
   if(!filtered.length){tbody.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
   tbody.innerHTML=filtered.map(i=>`
-    <tr onclick="openDetail('${i.id}')">
+    <tr onclick="openDetail('${i.id}')" ${i.estado==='Nuevo'?'style="background:#fff8e1;border-left:4px solid var(--amarillo);"':''}>
       <td><div class="name-cell">
+        ${i.estado==='Nuevo'?'<span title="Pendiente de contactar" style="font-size:14px;margin-right:2px;">🔔</span>':''}
         <div class="avatar" style="background:${CAT_COLORS[i.categoria]||'#888'}">${initials(i.nombre)}</div>
         <div class="name-info"><strong>${i.nombre}</strong><span>${i.email||'—'}</span></div>
       </div></td>
@@ -1095,7 +1118,7 @@ function kanbanCard(i,canEdit){
       const esNuevoInscrito = !i.esDelClub && i.fromSheets;
       const esNuevoEstado = i.estado === 'Nuevo';
       return esNuevoInscrito ? `<div style="position:absolute;top:8px;right:8px;">
-        <span style="background:${esNuevoEstado?'#c0392b':'var(--gris-medio)'};color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;" title="${esNuevoEstado?'Nuevo inscrito — pendiente de contactar':'Inscrito contactado'}">★</span>
+        <span style="color:${esNuevoEstado?'#c0392b':'#333'};font-size:17px;line-height:1;" title="${esNuevoEstado?'Nuevo inscrito externo — sin contactar':'Inscrito externo — ya contactado'}">★</span>
       </div>` : '';
     })()}
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;padding-right:${!i.esDelClub&&i.fromSheets?'22px':'0'};">
@@ -1864,7 +1887,7 @@ function openCampusDetail(id) {
       <div style="width:50px;height:50px;border-radius:50%;background:${color};color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;">${(p.nombre[0]||'')+(p.apellidos[0]||'')}</div>
       <div>
         <div style="font-size:16px;font-weight:700;">${p.nombre} ${p.apellidos}</div>
-        <div style="font-size:12px;color:var(--gris-medio);">${p.tipo} &nbsp;|&nbsp; Socio: ${p.socio}</div>
+        <div style="font-size:12px;color:var(--gris-medio);">${p.tipo}</div>
         <div style="margin-top:5px;"><span class="cp-badge equipo-color" style="background:${color}">${p.equipo}</span></div>
       </div>
     </div>
