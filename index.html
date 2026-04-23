@@ -3653,9 +3653,29 @@ async function openVerEntreno(id) {
 }
 
 async function deleteEntreno(id) {
-  if(!confirm('¿Eliminar este entrenamiento?')) return;
-  await sb.from('entrenamientos').delete().eq('id',id);
-  closeModal(); renderEntrenamientos(); showToast('🗑️ Entrenamiento eliminado');
+  // Usar modal propio en vez de confirm() nativo (bloquea el hilo)
+  const fromCampus = document.getElementById('cs-planificadorEntrenos')?.classList.contains('active');
+  document.getElementById('modal-title').textContent = '⚠️ Eliminar entrenamiento';
+  document.getElementById('modal-body').innerHTML = `<p style="font-size:14px;line-height:1.6;">¿Seguro que quieres eliminar este entrenamiento? Esta acción no se puede deshacer.</p>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-danger" onclick="confirmDeleteEntreno('${id}', ${fromCampus})">🗑️ Sí, eliminar</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function confirmDeleteEntreno(id, fromCampus) {
+  closeModal();
+  const {error} = await sb.from('entrenamientos').delete().eq('id', id);
+  if(error) { showToast('❌ Error al eliminar'); return; }
+  // Quitar de la caché local
+  etEntrenamientos = etEntrenamientos.filter(x => x.id !== id);
+  showToast('🗑️ Entrenamiento eliminado');
+  // Refrescar la vista correcta
+  if(fromCampus) {
+    renderEntrenosCampus();
+  } else {
+    renderEntrenamientos();
+  }
 }
 
 // ── CREAR / EDITAR ENTRENAMIENTO ─────────────────────────
