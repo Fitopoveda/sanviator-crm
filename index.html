@@ -3889,6 +3889,19 @@ function etRemoveEj(i) {
 
 // ── AÑADIR DE BIBLIOTECA ─────────────────────────────────
 async function openAddEjercicioModal() {
+  // Guardar snapshot del formulario de entreno antes de abrir la biblioteca
+  _etFormSnapshot = {
+    deporte:    document.getElementById('et-f-deporte')?.value,
+    equipo:     document.getElementById('et-f-equipo')?.value,
+    fecha:      document.getElementById('et-f-fecha')?.value,
+    sesion:     document.getElementById('et-f-sesion')?.value,
+    contexto:   document.getElementById('et-f-contexto')?.value,
+    campusDia:  document.getElementById('et-f-campus-dia')?.value,
+    categoria:  document.getElementById('et-f-categoria')?.value,
+    comentarios:document.getElementById('et-f-comentarios')?.value,
+    editId:     _etCurrentEditId || null,
+  };
+
   const {data}=await sb.from('ejercicios').select('*').order('created_at',{ascending:false});
   etEjercicios=data||[];
   function listHtml(q,dep,tipo) {
@@ -3926,8 +3939,8 @@ async function openAddEjercicioModal() {
     </div>
     <div id="bib-list" style="max-height:320px;overflow-y:auto;border:1px solid var(--gris-claro);border-radius:7px;">${listHtml('','','')}</div>`;
   document.getElementById('modal-footer').innerHTML=`
-    <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
-    <button class="btn btn-primary" onclick="closeModal();document.getElementById('et-ejes-list').innerHTML=etRenderEjsList();etUpdateDurTotal()">✅ Listo</button>`;
+    <button class="btn btn-secondary" onclick="_restoreEntrenoForm()">← Volver al entreno</button>
+    <button class="btn btn-primary" onclick="_restoreEntrenoForm()">✅ Listo (${etEjerciciosSeleccionados.length} ejercicios)</button>`;
   window._bibHtml=()=>listHtml(document.getElementById('bib-q2')?.value||'',document.getElementById('bib-dep2')?.value||'',document.getElementById('bib-tipo2')?.value||'');
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -3937,6 +3950,9 @@ function etAddEjFromBib(ejId) {
   if(etEjerciciosSeleccionados.some(x=>x.ejercicio_id===ejId)){showToast('Ya está en el entreno');return;}
   etEjerciciosSeleccionados.push({ejercicio_id:ejId,duracion_override:d.duracion||10,orden:etEjerciciosSeleccionados.length+1,notas:'',_data:d});
   document.getElementById('bib-list').innerHTML=window._bibHtml?window._bibHtml():'';
+  // Actualizar contador del botón Listo
+  const btnListo = document.querySelector('#modal-footer .btn-primary');
+  if(btnListo) btnListo.textContent = `✅ Listo (${etEjerciciosSeleccionados.length} ejercicios)`;
   showToast('✅ Ejercicio añadido');
 }
 
