@@ -502,6 +502,7 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
           <button class="campus-tab" onclick="campusTab('codigoEtico')">📜 Código Ético</button>
           <button class="campus-tab" onclick="campusTab('monitores')">👨‍🏫 Monitores</button>
           <button class="campus-tab" onclick="campusTab('medico')">🏥 Médico</button>
+          <button class="campus-tab entrenador-only" onclick="campusTab('planificadorEntrenos')">🗒️ Planificador</button>
         </div>
 
         <!-- PARTICIPANTES -->
@@ -607,6 +608,16 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
             </select>
           </div>
           <div id="medico-grid" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+
+        <!-- PLANIFICADOR ENTRENOS (dentro de campus) -->
+        <div class="campus-section" id="cs-planificadorEntrenos">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="openNuevoEntreno(null,null,null,'Campus')">+ Nuevo entreno Campus</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;" id="cs-entrenos-grid">
+            <div class="empty-state"><div class="icon">📋</div><p>Cargando...</p></div>
+          </div>
         </div>
 
       </div>
@@ -2305,6 +2316,56 @@ function campusTab(tab) {
   if(tab === 'codigoEtico') renderCodigoEtico();
   if(tab === 'monitores') renderMonitores();
   if(tab === 'medico') renderMedico();
+  if(tab === 'planificadorEntrenos') renderEntrenosCampus();
+}
+
+async function renderEntrenosCampus() {
+  const grid = document.getElementById('cs-entrenos-grid');
+  if(!grid) return;
+  grid.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>Cargando...</p></div>';
+  const { data } = await sb.from('entrenamientos').select('*').eq('contexto','Campus').order('campus_dia',{ascending:true}).order('fecha',{ascending:true});
+  const entrenos = data || [];
+  if(!entrenos.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Sin entrenamientos de campus. Crea el primero con <strong>+ Nuevo entreno Campus</strong>.</p></div>';
+    return;
+  }
+  // Agrupar por día de campus
+  const porDia = {};
+  entrenos.forEach(e => {
+    const d = e.campus_dia || 0;
+    if(!porDia[d]) porDia[d] = [];
+    porDia[d].push(e);
+  });
+  const diasInfo = {1:'Miérc 1 Jul',2:'Juev 2 Jul',3:'Vie 3 Jul',4:'Sáb 4 Jul',5:'Dom 5 Jul',6:'Lun 6 Jul',7:'Mar 7 Jul',8:'Miérc 8 Jul',9:'Juev 9 Jul',10:'Vie 10 Jul'};
+  grid.innerHTML = Object.keys(porDia).sort((a,b)=>+a-+b).map(dia => {
+    const lista = porDia[dia];
+    const diaLabel = diasInfo[dia] || 'Día '+dia;
+    const cards = lista.map(e => {
+      const ejes = (e.ejercicios||[]).length;
+      const depColor = e.deporte==='Baloncesto' ? {bg:'#dbeafe',c:'#1e40af'} : {bg:'#dcfce7',c:'#166534'};
+      return `<div class="et-card" onclick="openVerEntreno('${e.id}')" style="margin-bottom:0;">
+        <div class="et-card-header">
+          <div>
+            <div class="et-card-title">${ET_DEP_ICON[e.deporte]||''} ${e.equipo||'—'} ${e.categoria?'· '+e.categoria:''}</div>
+            <div class="et-card-meta">⏱️ ${e.duracion_total||0} min &nbsp;·&nbsp; ${ejes} ejercicio${ejes!==1?'s':''}</div>
+            <div class="et-card-meta">👤 ${e.autor_nombre||'—'}${e.sesion?' · '+e.sesion:''}</div>
+          </div>
+          <span class="et-tag" style="background:${depColor.bg};color:${depColor.c};">${e.deporte||'—'}</span>
+        </div>
+        ${e.comentarios ? `<div style="font-size:12px;color:var(--gris-medio);border-top:1px solid var(--gris-claro);padding-top:8px;margin-top:6px;line-height:1.5;">${e.comentarios}</div>` : ''}
+      </div>`;
+    }).join('');
+    return `<div style="background:var(--blanco);border-radius:10px;border:1px solid var(--gris-claro);overflow:hidden;border-top:3px solid #c0392b;">
+      <div style="background:var(--negro);color:var(--amarillo);padding:10px 16px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;">
+        <span>🏕️ Día ${dia} — ${diaLabel}</span>
+        <span style="font-size:12px;font-weight:400;color:rgba(255,255,255,0.5);">${lista.length} sesión${lista.length!==1?'es':''}</span>
+      </div>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">${cards}</div>
+    </div>`;
+  }).join('');
+  // Asegurarse de que etEntrenamientos está sincronizado para openVerEntreno
+  etEntrenamientos = [...(etEntrenamientos||[])];
+  entrenos.forEach(e => { if(!etEntrenamientos.find(x=>x.id===e.id)) etEntrenamientos.push(e); });
 }
 
 // PARTICIPANTES
@@ -3599,6 +3660,7 @@ async function deleteEntreno(id) {
 
 // ── CREAR / EDITAR ENTRENAMIENTO ─────────────────────────
 async function openNuevoEntreno(editId, prefillEquipo, prefillDia, prefillContexto) {
+  _etCurrentEditId = editId || null;
   let editData = null;
   if(editId) {
     editData = etEntrenamientos.find(x=>x.id===editId);
@@ -3989,12 +4051,29 @@ function openNuevoEjercicio(editId) {
 }
 
 function openNuevoEjercicioInline() {
+  // Guardar estado del formulario de entreno antes de abrir ejercicio
+  _etFormSnapshot = {
+    deporte:    document.getElementById('et-f-deporte')?.value,
+    equipo:     document.getElementById('et-f-equipo')?.value,
+    fecha:      document.getElementById('et-f-fecha')?.value,
+    sesion:     document.getElementById('et-f-sesion')?.value,
+    contexto:   document.getElementById('et-f-contexto')?.value,
+    campusDia:  document.getElementById('et-f-campus-dia')?.value,
+    categoria:  document.getElementById('et-f-categoria')?.value,
+    comentarios:document.getElementById('et-f-comentarios')?.value,
+    editId:     _etCurrentEditId || null,
+  };
   openNuevoEjercicio(null);
   setTimeout(()=>{
     document.getElementById('modal-footer').innerHTML = `
-      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-secondary" onclick="cancelEjercicioInline()">← Volver al entreno</button>
       <button class="btn btn-primary" onclick="saveEjercicioInline()">💾 Guardar y añadir al entreno</button>`;
   }, 120);
+}
+
+function cancelEjercicioInline() {
+  if(_etFormSnapshot) _restoreEntrenoForm();
+  else closeModal();
 }
 
 async function saveEjercicioInline() {
@@ -4003,11 +4082,35 @@ async function saveEjercicioInline() {
   const {data} = await sb.from('ejercicios').select('*').eq('id',id).single();
   if(data) {
     etEjerciciosSeleccionados.push({ejercicio_id:data.id,duracion_override:data.duracion||10,orden:etEjerciciosSeleccionados.length+1,notas:'',_data:data});
-    closeModal();
-    document.getElementById('et-ejes-list').innerHTML=etRenderEjsList();
-    etUpdateDurTotal();
     showToast('✅ Ejercicio creado y añadido');
+    _restoreEntrenoForm();
   }
+}
+
+let _etFormSnapshot = null;
+let _etCurrentEditId = null;
+
+function _restoreEntrenoForm() {
+  const snap = _etFormSnapshot;
+  if(!snap) { closeModal(); return; }
+  _etFormSnapshot = null;
+  // Reabrir el formulario de entreno con el estado guardado
+  openNuevoEntreno(snap.editId, snap.equipo, snap.campusDia ? parseInt(snap.campusDia) : null, snap.contexto);
+  // Restaurar campos después de que el modal se renderice
+  setTimeout(() => {
+    if(snap.deporte)     { const el=document.getElementById('et-f-deporte');     if(el) el.value=snap.deporte; }
+    if(snap.equipo)      { const el=document.getElementById('et-f-equipo');      if(el) el.value=snap.equipo; }
+    if(snap.fecha)       { const el=document.getElementById('et-f-fecha');       if(el) el.value=snap.fecha; }
+    if(snap.sesion)      { const el=document.getElementById('et-f-sesion');      if(el) el.value=snap.sesion; }
+    if(snap.contexto)    { const el=document.getElementById('et-f-contexto');    if(el) el.value=snap.contexto; etToggleCampusDia(); }
+    if(snap.campusDia)   { const el=document.getElementById('et-f-campus-dia'); if(el) el.value=snap.campusDia; }
+    if(snap.categoria)   { const el=document.getElementById('et-f-categoria');  if(el) el.value=snap.categoria; }
+    if(snap.comentarios) { const el=document.getElementById('et-f-comentarios');if(el) el.value=snap.comentarios; }
+    // Actualizar lista de ejercicios con el nuevo añadido
+    const ejList = document.getElementById('et-ejes-list');
+    if(ejList) ejList.innerHTML = etRenderEjsList();
+    etUpdateDurTotal();
+  }, 200);
 }
 
 // ── PIZARRA ──────────────────────────────────────────────
