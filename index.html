@@ -4130,23 +4130,76 @@ function _restoreEntrenoForm() {
   const snap = _etFormSnapshot;
   if(!snap) { closeModal(); return; }
   _etFormSnapshot = null;
-  // Reabrir el formulario de entreno con el estado guardado
-  openNuevoEntreno(snap.editId, snap.equipo, snap.campusDia ? parseInt(snap.campusDia) : null, snap.contexto);
-  // Restaurar campos después de que el modal se renderice
-  setTimeout(() => {
-    if(snap.deporte)     { const el=document.getElementById('et-f-deporte');     if(el) el.value=snap.deporte; }
-    if(snap.equipo)      { const el=document.getElementById('et-f-equipo');      if(el) el.value=snap.equipo; }
-    if(snap.fecha)       { const el=document.getElementById('et-f-fecha');       if(el) el.value=snap.fecha; }
-    if(snap.sesion)      { const el=document.getElementById('et-f-sesion');      if(el) el.value=snap.sesion; }
-    if(snap.contexto)    { const el=document.getElementById('et-f-contexto');    if(el) el.value=snap.contexto; etToggleCampusDia(); }
-    if(snap.campusDia)   { const el=document.getElementById('et-f-campus-dia'); if(el) el.value=snap.campusDia; }
-    if(snap.categoria)   { const el=document.getElementById('et-f-categoria');  if(el) el.value=snap.categoria; }
-    if(snap.comentarios) { const el=document.getElementById('et-f-comentarios');if(el) el.value=snap.comentarios; }
-    // Actualizar lista de ejercicios con el nuevo añadido
-    const ejList = document.getElementById('et-ejes-list');
-    if(ejList) ejList.innerHTML = etRenderEjsList();
-    etUpdateDurTotal();
-  }, 200);
+
+  // NO llamar a openNuevoEntreno porque resetea etEjerciciosSeleccionados = []
+  // Reconstruir el modal del entreno manualmente preservando los ejercicios en memoria
+  const equipos = etGetEquipos(snap.contexto);
+  const ctxActual = snap.contexto || 'Temporada';
+
+  document.getElementById('modal-title').textContent = snap.editId ? '✏️ Editar entrenamiento' : '+ Nuevo entrenamiento';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="detail-row">
+      <div class="detail-field"><label>Deporte *</label>
+        <select id="et-f-deporte">
+          <option ${(snap.deporte||'Baloncesto')==='Baloncesto'?'selected':''}>Baloncesto</option>
+          <option ${snap.deporte==='Fútbol'?'selected':''}>Fútbol</option>
+        </select>
+      </div>
+      <div class="detail-field"><label>Sesión</label>
+        <select id="et-f-sesion">
+          ${['Mañana','Tarde','Única'].map(s=>`<option ${(snap.sesion||'Única')===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-field"><label>Equipo *</label>
+        <select id="et-f-equipo">
+          ${equipos.map(eq=>`<option ${(snap.equipo||'')===eq?'selected':''}>${eq}</option>`).join('')}
+        </select>
+      </div>
+      <div class="detail-field"><label>Categoría</label>
+        <input id="et-f-categoria" type="text" value="${snap.categoria||''}" placeholder="Ej: Cadete, Infantil...">
+      </div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-field"><label>Fecha *</label>
+        <input id="et-f-fecha" type="date" value="${snap.fecha||new Date().toISOString().split('T')[0]}">
+      </div>
+      <div class="detail-field"><label>Contexto</label>
+        <select id="et-f-contexto" onchange="etToggleCampusDia();etRefreshEquipos()">
+          ${['Temporada','Campus','Pruebas'].map(c=>`<option ${ctxActual===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="detail-row" id="et-campus-dia-row" style="display:${ctxActual==='Campus'?'':'none'}">
+      <div class="detail-field"><label>Día del campus</label>
+        <select id="et-f-campus-dia">
+          ${Array.from({length:10},(_,i)=>`<option value="${i+1}" ${snap.campusDia===(i+1)?'selected':''}>Día ${i+1}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-field"><label>Comentarios / Objetivos</label>
+        <textarea id="et-f-comentarios" placeholder="Objetivos del entreno, observaciones...">${snap.comentarios||''}</textarea>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--gris-claro);padding-top:14px;margin-top:4px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">Ejercicios del entrenamiento</div>
+          <div style="font-size:11px;color:var(--gris-medio);margin-top:2px;">Total: <strong id="et-dur-total">${etEjerciciosSeleccionados.reduce((s,e)=>s+(e.duracion_override||e._data?.duracion||0),0)} min</strong></div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm btn-secondary" onclick="openAddEjercicioModal()">📚 Biblioteca</button>
+          <button class="btn btn-sm btn-primary" onclick="openNuevoEjercicioInline()">+ Nuevo ejercicio</button>
+        </div>
+      </div>
+      <div id="et-ejes-list">${etRenderEjsList()}</div>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveEntreno(${snap.editId?`'${snap.editId}'`:'null'})">💾 Guardar entrenamiento</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
 }
 
 // ── PIZARRA ──────────────────────────────────────────────
