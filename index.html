@@ -3042,18 +3042,162 @@ function renderContenido() {
         <div style="background:#1565c0;padding:14px 20px;display:flex;align-items:center;gap:10px;">
           <span style="font-size:22px;">🏀</span>
           <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;">Baloncesto B1-6</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.6);">Basket1 · Basket2 · Basket3 · Basket4 · Basket5 · Basket 6</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;">Baloncesto B1-6 — Estructura de sesiones</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.6);">Basket1 · Basket2 · Basket3 · Basket4 · Basket5 · Basket 6 · 7 sesiones mañana · 7 sesiones tarde · 3 sesiones tiro extra</div>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
           <div style="padding:16px 20px;border-right:1px solid rgba(255,255,255,0.06);">
-            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#f5c400;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(245,196,0,0.2);">☀️ MAÑANA — 135 min</div>
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#f5c400;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(245,196,0,0.2);">☀️ MAÑANAS — 150 min · 7 sesiones</div>
             ${bloques(CONTENIDO_B123.mañana, '#f5c400')}
+            <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);">
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.4);margin-bottom:8px;">Índice de sesiones</div>
+              ${[
+                ['M1','Bote + Finalizaciones','Bruja, bote estático, tiro balón, 1c1 rodeando, 2c2, competiciones'],
+                ['M2','Pase + Finalizaciones','Pilla pases, cuadrado, cartero, estrella pase, 1c1, 2c2 continuo'],
+                ['M3','Bote + Finalizaciones','Comecocos, bote estático, cambio en cono, 2 balones, 1c1 calles, 2x2 superioridad'],
+                ['M4','Pase + Finalizaciones','Pilla equipos, pases banda, trenza, penetración esquina, 1c1, 2x2'],
+                ['M5','Bote','Pañuelo, pelota tenis, bote parejas, 1c1, cuadrado ½ campo'],
+                ['M6','Pase','Rondo, pases parejas, ejercicio Dudu, tríos, 1x1, 2x2 defensa'],
+                ['M7','Bote','Silla/cono, balón alrededor cuerpo, parejas pivotar, 2x2 ayudas'],
+              ].map(([id,tema,desc])=>`
+                <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:8px;">
+                  <span style="background:#1565c0;color:#fff;padding:1px 7px;border-radius:20px;font-size:9px;font-weight:900;white-space:nowrap;height:fit-content;margin-top:2px;">${id}</span>
+                  <div>
+                    <div style="font-size:12px;font-weight:700;color:#fff;">${tema}</div>
+                    <div style="font-size:10.5px;color:rgba(255,255,255,0.5);margin-top:1px;line-height:1.4;">${desc}</div>
+                  </div>
+                </div>`).join('')}
+            </div>
           </div>
           <div style="padding:16px 20px;">
-            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#f97316;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(249,115,22,0.2);">🌅 TARDE — 120 min</div>
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#f97316;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(249,115,22,0.2);">🌅 TARDES — 120 min · 7 sesiones</div>
             ${bloques(CONTENIDO_B123.tarde, '#f97316')}
+            <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);">
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.4);margin-bottom:8px;">Índice de sesiones</div>
+              ${[
+                ['T1','Tiro + Táctica Colectiva','Mecánica, ruedas, spacing tras penetración, 3x2+1, competiciones'],
+                ['T2','Tiro + Táctica Colectiva','Mecánica, parejas 25-15-5, spacing cabecera, 3x3 continuo'],
+                ['T3','Tiro + Táctica Colectiva','Abanico tiro, 30-20-15-5, spacing esquina, 2x1+1, 2x2 balance'],
+                ['T4','Tiro + Táctica Colectiva','Australia pases, tríos, tiro tablero, 3x3 contraataque, 3x3 continuo'],
+                ['T5','Tiro + Táctica Colectiva','Tiro pilla tacos, meter 5 canastas, 2x2 esquinas, 3x3 ayudas, partidos'],
+                ['T6','Tiro + Táctica Colectiva','Tríos codo/esquina, conos ½ campo, 2x1+1 corte, 3x3 continuo'],
+                ['T7','Tiro + Táctica Colectiva','3 en raya, meter 30, 2 balones mano a mano, 3x3 continuo balance'],
+              ].map(([id,tema,desc])=>`
+                <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:8px;">
+                  <span style="background:#f97316;color:#fff;padding:1px 7px;border-radius:20px;font-size:9px;font-weight:900;white-space:nowrap;height:fit-content;margin-top:2px;">${id}</span>
+                  <div>
+                    <div style="font-size:12px;font-weight:700;color:#fff;">${tema}</div>
+                    <div style="font-size:10.5px;color:rgba(255,255,255,0.5);margin-top:1px;line-height:1.4;">${desc}</div>
+                  </div>
+                </div>`).join('')}
+            </div>
+            <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);">
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.4);margin-bottom:8px;">🎯 Sesiones Tiro Extra — 60 min · 3 sesiones</div>
+              ${[
+                ['Tiro 1','Parada 1 tiempo · Recepción de cara','5 posiciones, tiro de 3, flecha tiro, filas penetración + caída'],
+                ['Tiro 2','Parada 2 tiempos · Recepción lateral','Caída 2 tiempos int-ext, penetrar por banda, recibir y tirar/penetrar'],
+                ['Tiro 3','2 Paradas','Tiro por tríos, me tiro balón, pase esquina extra pass'],
+              ].map(([id,tema,desc])=>`
+                <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:8px;">
+                  <span style="background:#6b7280;color:#fff;padding:1px 7px;border-radius:20px;font-size:9px;font-weight:900;white-space:nowrap;height:fit-content;margin-top:2px;">${id}</span>
+                  <div>
+                    <div style="font-size:12px;font-weight:700;color:#fff;">${tema}</div>
+                    <div style="font-size:10.5px;color:rgba(255,255,255,0.5);margin-top:1px;line-height:1.4;">${desc}</div>
+                  </div>
+                </div>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BALONCESTO B2 — DETALLE SESIONES (Federación Madrid) -->
+      <div style="background:var(--negro);border-radius:12px;overflow:hidden;margin-bottom:16px;border:1px solid rgba(255,255,255,0.06);">
+        <div style="background:#0e4a8a;padding:14px 20px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:22px;">🏀</span>
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;">Basket 2 — Programa completo</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.6);">Sesiones detalladas · Federación de Baloncesto de Madrid</div>
+          </div>
+        </div>
+        <div style="padding:16px 20px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#f5c400;font-weight:800;margin-bottom:8px;">☀️ MAÑANAS</div>
+              ${[
+                {d:'Miérc 2 Jul', obj:'BOTE', items:['Activación: balones botando en parejas (3 balones)', 'Tecnificación 45\': Bote estático por parejas (ej. 2-9 ambas manos) + lanzar cono y cogerlo + Finalizaciones (bote protección + ataque, coord. línea triple)', '1c1 35\': 1c1 bote fuerte/cambiando de mano + 1c1 máx. 2 botes (sin mover pies en finta)', '2c2 15\': Con pasadores, no pasa a compañera', 'Rutina TL 15\' · Competiciones 45\'']},
+                {d:'Juev 3 Jul', obj:'PASE', items:['Mañana: ver notas Federación (pases, transiciones, superioridades, spacing)', 'Tecnificación 45\': Pilla con pases, estrella pase, trenza, transiciones 3 filas', '1c1/2c2 35\': Superioridades (2vs1, 2vs2 sin botes), spacing', 'Rutina TL 15\' · Competiciones 45\'']},
+                {d:'Sáb 5 Jul', obj:'MOVIMIENTO CONTINUO + SALIDAS/PASO 0', items:['Extra tiro 60\': Movimiento continuo (catch & shoot), 5 posiciones, tras bote, spacing+tiro', 'Mañana*: 1c1 10 botes estáticos + opción pase, 2c2 superioridad corta cruzando medio', 'Tarde*: 1c0 paso 0 (salida rápida, bloqueo+entrada, bloqueo+apoyo), 2c1, 1c1 espalda']},
+                {d:'Lun 7 Jul', obj:'DEFENSA', items:['Extra tiro 60\': Individual (ver notas Federación)', 'Mañana*: 1c1 pasar por puertas + 1c1 recibir 2 veces, 2c2 ayudas lados balón/sin balón', 'Tarde*: Def jugador sin balón (líneas pase + puertas), def jugador con balón (distancia), 2c2, 3c3 desde círculo central']},
+                {d:'Miérc 9 Jul', obj:'PASE', items:['Extra tiro 60\': Volumen tiro, orientación cuerpo, tiros rápidos', 'Mañana*: 1c1 Cartero + 2c2 continuo oblig. pase bandas', 'Tarde*: Pases 1 mano (bote lateral), finalización paso0 + pase corte, pases movimiento todo campo, 3c3']},
+                {d:'Juev 10 Jul', obj:'SALIDAS/FINTAS', items:['Mañana: Rueda todo campo, 1c0 fintas, finalizaciones con finta, 1c1 finta tiro, 2c2', 'Tarde: Mecánica tiro tras finta, ruedas (pivote+finta+tiro), ruedas spacing postes, 3c3 spacing']},
+              ].map(s=>`
+                <div style="margin-bottom:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:3px solid #1565c0;">
+                  <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:#60a5fa;margin-bottom:4px;">${s.d} — <span style="color:#f5c400">${s.obj}</span></div>
+                  ${s.items.map(i=>`<div style="font-size:11px;color:rgba(255,255,255,0.6);padding:2px 0 2px 10px;border-left:2px solid #1565c055;margin-bottom:2px;line-height:1.4;">• ${i}</div>`).join('')}
+                </div>`).join('')}
+            </div>
+            <div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#f97316;font-weight:800;margin-bottom:8px;">🌅 TARDES</div>
+              ${[
+                {d:'Martes 1 Jul', obj:'COLOCACIÓN DE PIES', items:['Tiro 30\': Mecánica por parejas (2 balones), ruedas (codo, poste, bombilla), meter 20 entre todas', 'Táctica Colectiva 35\': Ruedas spacing salida contraataque + trailer, 3c3 desde palmeos', 'Rutina TL 15\' · Competiciones 40\'']},
+                {d:'Miérc 2 Jul', obj:'TIRO TRAS BOTE', items:['Mecánica 20\': Tiro tras bote (2 series Instagram), ganar espacio + parada', 'Ruedas 10\': 2 balones bote lateral + pase, recibe espaldas + pivote + finta', 'Táctica Colectiva 35\': Ruedas spacing recibir 45°, 3c3 estático (llegar 80 puntos)', 'Rutina TL 15\' · Competiciones 40\'']},
+                {d:'Juev 3 Jul', obj:'TÉCNICA DE TIRO', items:['Autopase + tiro 15\': colocación pies, corregir tren superior', 'Tocar línea + recibir y tirar 15\': series 10 tiros, parada-flexión-arco', 'Situaciones 2x0 15\': paso y me muevo, vertical, pocos pases', '2c1+1 15\': recuperación defensiva, atacar rápido', '2x2 balance 15\' · 5x5 2 partidos 7\' · TL 15\'']},
+                {d:'Sáb 5 Jul', obj:'SALIDAS / PASO 0', items:['1c0 paso 0: salida rápida, bloqueo+entrada, bloqueo+apoyo+parada', '2c1: recepción con pie en suelo, girar tronco, bote avanzado', '1c1 espaldas pegadas TL: paso 0 fuera triple', 'Spacing mano a mano + paso 0, 3c3 mano a mano o bloqueo indirecto · TL 15\'']},
+                {d:'Lun 7 Jul', obj:'DEFENSA', items:['Tecnificación 35\': Def sin balón (líneas pase + puertas), def con balón (distancia x parejas + puertas)', '2c2 15\': primero en recibir NO puede pasar', 'Táctica 30\': Ruedas spacing línea fondo, 3c3 desde círculo central · TL 15\'']},
+                {d:'Miérc 9 Jul', obj:'PASE', items:['Tecnificación 35\': Pases 1 mano + bote lateral, finalización paso0 + pase al corte por fondo', 'Pases en movimiento 15\': cambio + pase contraataque adelantado (3 variantes)', 'Táctica 30\': Ruedas spacing todo campo + pase parado vs movimiento, 3c3 · TL 15\'']},
+                {d:'Juev 10 Jul', obj:'TIRO TRAS FINTA', items:['Mecánica 30\': finta + tiro (DEF puntea y salta), ruedas (pivote+finta+tiro), ruedas con DEF', 'Táctica 35\': Ruedas spacing postes, 3c3 spacing postes (ATAQ>DEF>DESCANSO) · TL 15\'']},
+              ].map(s=>`
+                <div style="margin-bottom:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:3px solid #f97316;">
+                  <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:#fb923c;margin-bottom:4px;">${s.d} — <span style="color:#f5c400">${s.obj}</span></div>
+                  ${s.items.map(i=>`<div style="font-size:11px;color:rgba(255,255,255,0.6);padding:2px 0 2px 10px;border-left:2px solid #f9731655;margin-bottom:2px;line-height:1.4;">• ${i}</div>`).join('')}
+                </div>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BASKET 3 -->
+      <div style="background:var(--negro);border-radius:12px;overflow:hidden;margin-bottom:16px;border:1px solid rgba(255,255,255,0.06);">
+        <div style="background:#155e75;padding:14px 20px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:22px;">🏀</span>
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;">Basket 3 — Programa completo</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.6);">7 sesiones mañana · 7 sesiones tarde · Jugadoras: ver lista en participantes</div>
+          </div>
+        </div>
+        <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#f5c400;font-weight:800;margin-bottom:8px;">☀️ MAÑANAS</div>
+            ${[
+              {id:'1ª Mañana',dia:'1 Jul', obj:'Dominio balón + Arrancadas/Finalizaciones', items:['Bruja en 2 grupos (mano dom. / no dom.)', 'Dom. balón: estático + dinámico pilla-pilla 1vs1', 'Finalizaciones 1x0: todas básicas + escalera coordinación', '1x0 cambio ritmo, 2 botes en L3 · TL + agua', '1x1 puertas (verticalidad, cambio ritmo), 1x1 (a 7 puntos)', '2x2 + 2x2 transiciones (máx 1 pase)']},
+              {id:'2ª Mañana',dia:'2 Jul', obj:'Pase + Finalizaciones', items:['Pilla-pilla con pases, técnica pase parejas + cuadrado', 'Finalizaciones: trabajo max 1 bote', '1x1 close out + 2x2 desde 4 esquinas', '1x1 recibo y a la 3ª ataco']},
+              {id:'3ª Mañana',dia:'3 Jul', obj:'Bote + Pase + Cross step', items:['2x0 pase largo tablerazo + transición', 'Manejo balón + eurostep (hacia dentro/fuera)', 'Iniciación cross step estático/dinámico', 'Contrataques 2 pases · TL + agua', '1x1 ventaja ofensiva (leer dónde está la ventaja)', '1x1 desde balón dividido · 2x1→3x2']},
+              {id:'4ª Mañana',dia:'4 Jul', obj:'Drop step', items:['Tira conos, progresión drop-step (x pareja estático → desde bote lectura → en carrera)', 'Drop desde bote lateral con defensa pasiva', '1x1 desde bote lateral + 2x2 con balance · Competis']},
+              {id:'5ª Mañana',dia:'6 Jul', obj:'Finalizaciones desde poste bajo', items:['Tulipán', 'Recepción + finalizaciones menores', 'Finalizaciones desde poste bajo: orienta+bump, jab+semigancho, contacto+giro', '1x1 poste bajo + 1x1 exterior + 2x2 4 esquinas · 2x2 continuo medio campo']},
+              {id:'6ª Mañana',dia:'7 Jul', obj:'Finalizaciones avanzadas', items:['Tablerazo, bote 2 balones (disociación)', '1x0 desde esquina + finalizaciones aro pasado', '1x1 ventaja ofensiva + finalizaciones 1x1 (toco a def y ataco) · 2x2 desde recepción / desde DHO']},
+              {id:'7ª Mañana',dia:'8 Jul', obj:'Jab step + Cross jab', items:['Comecocos, dom. con pelotas de tenis (x parejas, competitivo 1vs1, tenis basket)', 'Progresión jab step/cross jab: estático → dinámico → toma decisiones', '1x1 en carrera (3ª persona avesa para atacar)', '1x1 (gesto más cerca del aro) · 2x2 desde 4 filas · Competis']},
+            ].map(s=>`
+              <div style="margin-bottom:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:3px solid #155e75;">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:#22d3ee;margin-bottom:4px;">${s.id} (${s.dia}) — <span style="color:#f5c400">${s.obj}</span></div>
+                ${s.items.map(i=>`<div style="font-size:11px;color:rgba(255,255,255,0.6);padding:2px 0 2px 10px;border-left:2px solid #155e7555;margin-bottom:2px;line-height:1.4;">• ${i}</div>`).join('')}
+              </div>`).join('')}
+          </div>
+          <div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#f97316;font-weight:800;margin-bottom:8px;">🌅 TARDES</div>
+            ${[
+              {id:'1ª Tarde',dia:'1 Jul', obj:'Mecánica tiro · Spacing · Ayudas', items:['Mecánica tiro desde silla (1 mano, 2 manos) 20\'', '1x0 desde spacing+tiro: elyo a quién pasa, a quién puntea, leo y tiro', 'Ayudas 2x2 + 3x2 lectura ayudas', '3x3 continuo medio campo · Competis']},
+              {id:'2ª Tarde',dia:'2 Jul', obj:'Progresión Dip · Mano a mano', items:['Progresión dip desde estático (finta, gesto completo)', '1x1 desde pases (at. elige cuándo tirar / def. elige)', 'Situaciones 3x0 (mano a mano en LD, Lituania)', '3x3 medio campo (mano a mano def con atacante) + 3x3 balance']},
+              {id:'3ª Tarde',dia:'3 Jul', obj:'Progresión hop · Stagger', items:['Progresión hop: estático (10 zona/fuera zona), tras recepción (0-1-hop, stagger 2 lecturas)', '1x1 desde stagger, 4x0 stagger con variantes', '4x0→4x4 + 4x4 continuo · Competis']},
+              {id:'4ª Tarde',dia:'4 Jul', obj:'Progresión pull-up · Lectura BD', items:['Progresión pull-up: pata coja 0-1-2 (10 dentro/fuera zona, ambas manos)', '1x1 · Lectura BD: roll+pocket pass, pop (encima cabeza), triangular', '4x0 glase+BD + 4x4 continuo · Competis']},
+              {id:'5ª Tarde',dia:'6 Jul', obj:'Side-step · Lectura BD', items:['Progresión side-step: pata coja → sobre bote', '1x1 desde def lateral', 'Lectura BD tras flash largo y corto', '3x3 desde DHO + 3x3 con balance · Competis']},
+              {id:'6ª Tarde',dia:'7 Jul', obj:'Spacing 5x0 · 5x5', items:['Rueda 2x0 variando corte, tiro tras bote', '1x1 con pasador (rodea conos en orden que quiera)', 'Spacing 5x0 (dividi, dobla, extra pass)', '5x5 ventaja ofensiva (ida-vuelta-ida) + 5x5 · Competis']},
+              {id:'1ª Tarde B3',dia:'1 Jul', obj:'Salida puño I y II · 4x4 · 5x5', items:['Salida puño I (10\') + Salida puño II: trabaja todas las ventajas (20\')', '4x4 (10\') + 5x0+5x5 (10\') + 5x5 ida-vuelta-ida · Competis']},
+            ].map(s=>`
+              <div style="margin-bottom:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:3px solid #f97316;">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:#fb923c;margin-bottom:4px;">${s.id} (${s.dia}) — <span style="color:#f5c400">${s.obj}</span></div>
+                ${s.items.map(i=>`<div style="font-size:11px;color:rgba(255,255,255,0.6);padding:2px 0 2px 10px;border-left:2px solid #f9731655;margin-bottom:2px;line-height:1.4;">• ${i}</div>`).join('')}
+              </div>`).join('')}
           </div>
         </div>
       </div>
@@ -3063,13 +3207,58 @@ function renderContenido() {
         <div style="background:#7b3f9e;padding:14px 20px;display:flex;align-items:center;gap:10px;">
           <span style="font-size:22px;">🏀</span>
           <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;">Minibasket</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.6);">Solo sesión de mañana</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;">Basket 4 — Programa completo</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.6);">150 min mañana × 7 · 120 min tarde × 7 · 60 min tiro × 3 · Jugadoras: Sofía, Gabriela, Lidia, Micaela, María Callejón, Johana, Adriana, María Pozuelo, Paula, Eva, Leire, Ainhara, Olivia, Abril</div>
           </div>
         </div>
-        <div style="padding:16px 20px;">
-          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#c084fc;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(192,132,252,0.2);">☀️ MAÑANA</div>
-          ${bloques(CONTENIDO_B4MINIS.mañana, '#c084fc')}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+          <div style="padding:16px 20px;border-right:1px solid rgba(255,255,255,0.06);">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#c084fc;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(192,132,252,0.2);">☀️ MAÑANAS — 150 min · 7 sesiones</div>
+            ${bloques(CONTENIDO_B4MINIS.mañana, '#c084fc')}
+            <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);">
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.4);margin-bottom:8px;">Índice de sesiones</div>
+              ${[
+                ['M1','Bote + Finalizaciones','Bruja, bote estático, tiro balón, 1c1 rodeando/2c2, competiciones'],
+                ['M2','Pase + Finalizaciones','Pilla pilla con pases, cuadrado, cartero, estrella pase, tríos, 2x2 continuo'],
+                ['M3','Bote + Finalizaciones','Comecocos, bote estático, cambio en cono + 2 botes, 2 balones, 1c1, 2x2 superioridad'],
+                ['M4','Pase + Finalizaciones','Pilla pilla equipos, pases banda+defensora, trenza, penetración esquina extra, 2x2'],
+                ['M5','Bote','Pañuelo balón, pelota tenis, bote parejas, 1c1, cuadrado ½ campo'],
+                ['M6','Pase','Rondo, pases parejas (5 tipos), 2 balones pase a E, ejercicio Dudu, tríos, 1x1, 2x2'],
+                ['M7','Bote','Silla→cono, balón alrededor cuerpo, parejas pivotar, caídas/salidas, 2x2 ayudas'],
+              ].map(([id,tema,desc])=>`
+                <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:8px;">
+                  <span style="background:#7b3f9e;color:#fff;padding:1px 7px;border-radius:20px;font-size:9px;font-weight:900;white-space:nowrap;height:fit-content;margin-top:2px;">${id}</span>
+                  <div>
+                    <div style="font-size:12px;font-weight:700;color:#fff;">${tema}</div>
+                    <div style="font-size:10.5px;color:rgba(255,255,255,0.5);margin-top:1px;line-height:1.4;">${desc}</div>
+                  </div>
+                </div>`).join('')}
+            </div>
+          </div>
+          <div style="padding:16px 20px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#f97316;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(249,115,22,0.2);">🌅 TARDES — 120 min · 7 sesiones</div>
+            ${[
+              {id:'T1',obj:'Tiro + Táctica Colectiva',items:['Mecánica: 1 mano / 1 mano+apoyo palma / 2 manos (máx L3 mini) 15\'','Ruedas: codo, poste bajo, bombilla. Meter 20 en 5\' 15\'','Spacing tras penetración (2 lados), igual con 3 5+10\' ','3x2+1: 1ª y 2ª ayuda, spacing sin balón 20\'','Competiciones 40\' · TL 15\'']},
+              {id:'T2',obj:'Tiro + Táctica Colectiva',items:['Mecánica igual T1 15\' · Parejas meter 25-15-5 15\'','Spacing tras penetración cabecera con 3 10\' · 3x3 continuo 25\'','Competiciones 40\' · TL 15\'']},
+              {id:'T3',obj:'Tiro + Táctica Colectiva',items:['Abanico tiro: fijarse mecánica 25-15-5 15\' · 30-20-15-5 10\'','Spacing tras penetración esquina con 3 10\'','Situación: si hay balón a corte canasta/corte por centro/esquina 20\'','Competiciones 40\' · TL 15\'']},
+              {id:'T4',obj:'Tiro + Táctica Colectiva',items:['Australia con 4 pases 10\' · Tríos: hacer 6 y cambio pasadora 15\'','Tiro balón tablero 10\' · 3x3 buscar contraataque 1, sino ataque estático 15\'','3x3 continuo con equipo fuera (ida-vuelta-ida) 10\'','Competiciones 40\' · TL 15\'']},
+              {id:'T5',obj:'Tiro + Táctica Colectiva',items:['Tiro pilla tacos 10\' · Meter 5 canastas 10\' · 1 toca cono contrario al que decida 2 10\'','2x2 esquinas (no pasan entre atacantes), ayudas 15\' · 3x3 con ayudas, spacing sin balón 10\'','Partidos 3x3 en 2 canastas a 5\' 10\' · Competiciones 40\' · TL 15\'']},
+              {id:'T6',obj:'Tiro + Táctica Colectiva',items:['Tríos: tiro codo y esquina mini (2 lados, 8 c/una) 10\' · Meter 40 (pueden empezar por 2 o 3) 10\'','Conos ½ campo: 2 tiros por cono, 2 equipos 2 balones 10\'','2x1+1: cortar al aro sin balón 15\' · 3x3 continuo 20\'','Competiciones 40\' · TL 15\'']},
+              {id:'T7',obj:'Tiro + Táctica Colectiva',items:['3 en raya: para poner cono meter 5 fuera triple mini 10\'','Meter 30 por cada lado 10\' · 1 con 2 balones, mano a mano, finaliza parada/tiro 10\'','Ejercicio 4 (diagrama) 15\' · Ejercicio 5 (diagrama) 10\'','3x3 continuo con balance 10\' · Competiciones 40\' · TL 15\'']},
+            ].map(s=>`
+              <div style="margin-bottom:8px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:7px;border-left:3px solid #f97316;">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;color:#fb923c;margin-bottom:3px;">${s.id} — <span style="color:#f5c400">${s.obj}</span></div>
+                ${s.items.map(i=>`<div style="font-size:10.5px;color:rgba(255,255,255,0.55);padding:1px 0 1px 8px;border-left:2px solid #f9731655;margin-bottom:1px;line-height:1.4;">• ${i}</div>`).join('')}
+              </div>`).join('')}
+            <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);">
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.4);margin-bottom:8px;">🎯 Tiro Extra — 60 min · 3 sesiones</div>
+              ${[['Tiro 1','Parada 1 tiempo + Recepción de cara'],['Tiro 2','Parada 2 tiempos + Recepción lateral (apoyo palma)'],['Tiro 3','2 Paradas — tiro por tríos, pase esquina extra pass']].map(([id,d])=>`
+                <div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:8px;align-items:center;">
+                  <span style="background:#6b7280;color:#fff;padding:1px 7px;border-radius:20px;font-size:9px;font-weight:900;white-space:nowrap;">${id}</span>
+                  <div style="font-size:11px;color:rgba(255,255,255,0.6);">${d}</div>
+                </div>`).join('')}
+            </div>
+          </div>
         </div>
       </div>
 
