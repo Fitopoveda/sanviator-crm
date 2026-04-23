@@ -489,17 +489,52 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
 
         <!-- HORARIO -->
         <div class="campus-section" id="cs-horario">
-          <div style="background:var(--blanco);border-radius:10px;border:1px solid var(--gris-claro);padding:20px;margin-bottom:16px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-              <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#c0392b;">🗓️ Horario Tipo Diario</div>
-              <div id="horario-actions" style="display:flex;gap:6px;"></div>
+          <!-- Controles superiores -->
+          <div style="background:var(--blanco);border-radius:10px;border:1px solid var(--gris-claro);padding:16px 20px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+            <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:280px;">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;color:var(--gris-medio);white-space:nowrap;">📅 Día del campus</label>
+              <select id="hor-dia-sel" onchange="renderHorarioCampus()" style="flex:1;border:1.5px solid var(--gris-claro);border-radius:6px;padding:7px 10px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;outline:none;">
+                <option value="1">Día 1 — Miércoles 1 Jul (Llegada)</option>
+                <option value="2">Día 2 — Jueves 2 Jul</option>
+                <option value="3">Día 3 — Viernes 3 Jul</option>
+                <option value="4">Día 4 — Sábado 4 Jul</option>
+                <option value="5">Día 5 — Domingo 5 Jul</option>
+                <option value="6">Día 6 — Lunes 6 Jul</option>
+                <option value="7">Día 7 — Martes 7 Jul</option>
+                <option value="8">Día 8 — Miércoles 8 Jul</option>
+                <option value="9">Día 9 — Jueves 9 Jul</option>
+                <option value="10">Día 10 — Viernes 10 Jul (Salida)</option>
+              </select>
             </div>
-            <div id="horario-tabla"></div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;color:var(--gris-medio);white-space:nowrap;">👥 Equipo</label>
+              <select id="hor-equipo-sel" onchange="renderHorarioCampus()" style="border:1.5px solid var(--gris-claro);border-radius:6px;padding:7px 10px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;outline:none;">
+                <option value="">Todos</option>
+                <option>Minibasket</option><option>Basket1</option><option>Basket2</option><option>Basket3</option>
+                <option>Basket4</option><option>Basket5</option><option>Basket 6</option>
+                <option>Futbol1</option><option>Futbol2</option><option>Futbol 3</option>
+              </select>
+            </div>
+            <div id="hor-admin-btns" style="display:flex;gap:6px;"></div>
           </div>
-          <div style="background:var(--blanco);border-radius:10px;border:1px solid var(--gris-claro);padding:20px;">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;color:#c0392b;">🏟️ Instalaciones disponibles</div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;">
-              <div style="background:var(--gris-bg);border-radius:7px;padding:10px 12px;font-size:13px;font-weight:600;text-align:center;border:1px solid var(--gris-claro);">🏊 Piscina</div><div style="background:var(--gris-bg);border-radius:7px;padding:10px 12px;font-size:13px;font-weight:600;text-align:center;border:1px solid var(--gris-claro);">⚽ Fútbol 7</div><div style="background:var(--gris-bg);border-radius:7px;padding:10px 12px;font-size:13px;font-weight:600;text-align:center;border:1px solid var(--gris-claro);">⚽ Fútbol 5</div><div style="background:var(--gris-bg);border-radius:7px;padding:10px 12px;font-size:13px;font-weight:600;text-align:center;border:1px solid var(--gris-claro);">🏀 Pabellón</div><div style="background:var(--gris-bg);border-radius:7px;padding:10px 12px;font-size:13px;font-weight:600;text-align:center;border:1px solid var(--gris-claro);">🏀 Basket</div><div style="background:var(--gris-bg);border-radius:7px;padding:10px 12px;font-size:13px;font-weight:600;text-align:center;border:1px solid var(--gris-claro);">🎾 Tenis/Basket</div><div style="background:var(--gris-bg);border-radius:7px;padding:10px 12px;font-size:13px;font-weight:600;text-align:center;border:1px solid var(--gris-claro);">🏓 Padel 1</div><div style="background:var(--gris-bg);border-radius:7px;padding:10px 12px;font-size:13px;font-weight:600;text-align:center;border:1px solid var(--gris-claro);">🏓 Padel 2</div><div style="background:var(--gris-bg);border-radius:7px;padding:10px 12px;font-size:13px;font-weight:600;text-align:center;border:1px solid var(--gris-claro);">🎭 Teatro</div><div style="background:var(--gris-bg);border-radius:7px;padding:10px 12px;font-size:13px;font-weight:600;text-align:center;border:1px solid var(--gris-claro);">💪 Gimnasio</div><div style="background:var(--gris-bg);border-radius:7px;padding:10px 12px;font-size:13px;font-weight:600;text-align:center;border:1px solid var(--gris-claro);">🍽️ Comedor</div>
+
+          <!-- Cabecera del día activo -->
+          <div id="hor-dia-header" style="margin-bottom:12px;"></div>
+
+          <!-- Layout principal: calendario + pistas -->
+          <div style="display:grid;grid-template-columns:1fr 320px;gap:14px;" id="hor-main-grid">
+            <!-- Columna izquierda: timeline -->
+            <div style="background:var(--blanco);border-radius:10px;border:1px solid var(--gris-claro);overflow:hidden;">
+              <div id="hor-timeline"></div>
+              <!-- Botón añadir actividad -->
+              <div id="hor-add-row" style="padding:10px 16px;border-top:1px solid var(--gris-claro);display:none;">
+                <button onclick="openAddActividadHorario()" class="btn btn-sm btn-primary" style="width:100%;">+ Añadir actividad</button>
+              </div>
+            </div>
+            <!-- Columna derecha: pistas por equipo -->
+            <div style="background:var(--blanco);border-radius:10px;border:1px solid var(--gris-claro);padding:16px;">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;color:#c0392b;">🏟️ Pistas del día</div>
+              <div id="hor-pistas"></div>
             </div>
           </div>
         </div>
@@ -1858,77 +1893,415 @@ const CAMPUS_EQUIPO_COLORS = {
 let campusVeladas = JSON.parse(localStorage.getItem('sv_campus_veladas') || JSON.stringify([{"dia": "Miérc 2", "nombre": "Cuida tu motor", "descripcion": "Sesión de recuperación física y mental. Vídeos motivacionales.", "tipo": "recuperacion"}, {"dia": "Juev 3", "nombre": "Cuida tu motor", "descripcion": "Charla técnica + estiramientos grupales.", "tipo": "recuperacion"}, {"dia": "Sáb 4", "nombre": "3x3 Nocturno", "descripcion": "Torneo nocturno de baloncesto 3x3 entre equipos mixtos.", "tipo": "competicion"}, {"dia": "Dom 5", "nombre": "Cine", "descripcion": "Sesión de cine en el teatro de la residencia.", "tipo": "ocio"}, {"dia": "Lun 6", "nombre": "Cuida tu motor", "descripcion": "Recuperación activa post-partido.", "tipo": "recuperacion"}, {"dia": "Mar 7", "nombre": "Velada del Miedo", "descripcion": "Velada temática de terror con pruebas y juegos nocturnos.", "tipo": "especial"}, {"dia": "Miérc 8", "nombre": "Safari Fotográfico Salamanca", "descripcion": "Grupos de jugadores hacen fotos por Salamanca con misiones fotográficas.", "tipo": "excursion"}, {"dia": "Juev 9", "nombre": "Fiesta Final", "descripcion": "Gran fiesta de clausura del campus con premios y celebración.", "tipo": "especial"}]));
 let campusContenido = JSON.parse(localStorage.getItem('sv_campus_contenido') || '{}');
 
-const HORARIO_DEFAULT = [
-  {hora:'08:30', act:'Sesión de tiro (días 4-9)'},
-  {hora:'09:00', act:'Desayuno'},
-  {hora:'10:00', act:'Traslado a instalaciones'},
-  {hora:'10:15', act:'ENTRENAMIENTO MAÑANA'},
-  {hora:'13:00', act:'Piscina'},
-  {hora:'14:00', act:'Cambio / Comida'},
-  {hora:'15:30', act:'Actividad sobremesa (Juegos / Bar / Móviles)'},
-  {hora:'17:00', act:'Traslado'},
-  {hora:'17:30', act:'ENTRENAMIENTO TARDE'},
-  {hora:'20:00', act:'Ducha'},
-  {hora:'21:00', act:'Cena'},
-  {hora:'21:45', act:'Velada nocturna (España / Cuida tu motor / 3x3)'},
-  {hora:'22:30', act:'Actividad noche / Cine'},
-  {hora:'23:45', act:'DESCANSO'},
+// ════════════════════════════════════════════════════════
+// HORARIO CAMPUS — Sistema por día y por equipo
+// ════════════════════════════════════════════════════════
+
+const HOR_DIAS = [
+  {num:1,  dia:'Miércoles', fecha:'1 Jul',  label:'Llegada'},
+  {num:2,  dia:'Jueves',    fecha:'2 Jul',  label:''},
+  {num:3,  dia:'Viernes',   fecha:'3 Jul',  label:''},
+  {num:4,  dia:'Sábado',    fecha:'4 Jul',  label:''},
+  {num:5,  dia:'Domingo',   fecha:'5 Jul',  label:''},
+  {num:6,  dia:'Lunes',     fecha:'6 Jul',  label:''},
+  {num:7,  dia:'Martes',    fecha:'7 Jul',  label:''},
+  {num:8,  dia:'Miércoles', fecha:'8 Jul',  label:''},
+  {num:9,  dia:'Jueves',    fecha:'9 Jul',  label:''},
+  {num:10, dia:'Viernes',   fecha:'10 Jul', label:'Salida'},
 ];
 
+// Actividades base por día extraídas del PII (compartidas por todos salvo overrides de equipo)
+const HOR_BASE_DEFAULT = {
+  1: [
+    {hora:'09:00', act:'Check In / Llegada',      tipo:'traslado',    equipos:[]},
+    {hora:'13:00', act:'Habitaciones',             tipo:'descanso',    equipos:[]},
+    {hora:'14:30', act:'Comida',                   tipo:'comida',      equipos:[]},
+    {hora:'15:30', act:'Siesta / Juegos',          tipo:'ocio',        equipos:[]},
+    {hora:'17:00', act:'Entrenamiento tarde',       tipo:'entreno',     equipos:[]},
+    {hora:'20:00', act:'Ducha',                    tipo:'descanso',    equipos:[]},
+    {hora:'21:00', act:'Cena',                     tipo:'comida',      equipos:[]},
+    {hora:'21:45', act:'Paseo',                    tipo:'ocio',        equipos:[]},
+    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  ],
+  2: [
+    {hora:'08:30', act:'Levantarse',               tipo:'descanso',    equipos:[]},
+    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
+    {hora:'10:00', act:'Traslado a instalaciones', tipo:'traslado',    equipos:[]},
+    {hora:'10:15', act:'Entrenamiento mañana',     tipo:'entreno',     equipos:[]},
+    {hora:'13:00', act:'Piscina',                  tipo:'ocio',        equipos:[]},
+    {hora:'14:00', act:'Cambio / Comida',          tipo:'comida',      equipos:[]},
+    {hora:'15:30', act:'Actividad sobremesa',       tipo:'ocio',        equipos:[]},
+    {hora:'17:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
+    {hora:'17:30', act:'Entrenamiento tarde',       tipo:'entreno',     equipos:[]},
+    {hora:'20:00', act:'Ducha',                    tipo:'descanso',    equipos:[]},
+    {hora:'21:00', act:'Cena',                     tipo:'comida',      equipos:[]},
+    {hora:'21:45', act:'España (velada)',           tipo:'velada',      equipos:[]},
+    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  ],
+  3: [
+    {hora:'08:30', act:'Levantarse',               tipo:'descanso',    equipos:[]},
+    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
+    {hora:'10:00', act:'Traslado a instalaciones', tipo:'traslado',    equipos:[]},
+    {hora:'10:15', act:'Entrenamiento mañana',     tipo:'entreno',     equipos:[]},
+    {hora:'13:00', act:'Piscina',                  tipo:'ocio',        equipos:[]},
+    {hora:'14:00', act:'Cambio / Comida',          tipo:'comida',      equipos:[]},
+    {hora:'15:30', act:'Actividad sobremesa',       tipo:'ocio',        equipos:[]},
+    {hora:'17:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
+    {hora:'17:30', act:'Entrenamiento tarde',       tipo:'entreno',     equipos:[]},
+    {hora:'20:00', act:'Ducha',                    tipo:'descanso',    equipos:[]},
+    {hora:'21:00', act:'Cena',                     tipo:'comida',      equipos:[]},
+    {hora:'21:45', act:'Cuida tu motor (velada)',   tipo:'velada',      equipos:[]},
+    {hora:'22:30', act:'Pruebas',                  tipo:'ocio',        equipos:[]},
+    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  ],
+  4: [
+    {hora:'08:30', act:'Sesión de tiro',           tipo:'entreno',     equipos:[]},
+    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
+    {hora:'10:00', act:'Multideporte',             tipo:'ocio',        equipos:[]},
+    {hora:'14:00', act:'Comida / Picnic',          tipo:'comida',      equipos:[]},
+    {hora:'15:30', act:'Actividad sobremesa',       tipo:'ocio',        equipos:[]},
+    {hora:'17:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
+    {hora:'17:30', act:'Entrenamiento tarde',       tipo:'entreno',     equipos:[]},
+    {hora:'20:00', act:'Ducha',                    tipo:'descanso',    equipos:[]},
+    {hora:'21:00', act:'Cena',                     tipo:'comida',      equipos:[]},
+    {hora:'21:45', act:'3x3 Nocturno (velada)',    tipo:'velada',      equipos:[]},
+    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  ],
+  5: [
+    {hora:'08:30', act:'Sesión de tiro',           tipo:'entreno',     equipos:[]},
+    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
+    {hora:'10:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
+    {hora:'10:15', act:'Entrenamiento mañana',     tipo:'entreno',     equipos:[]},
+    {hora:'13:00', act:'Piscina',                  tipo:'ocio',        equipos:[]},
+    {hora:'14:00', act:'Cambio / Comida',          tipo:'comida',      equipos:[]},
+    {hora:'15:30', act:'Cine',                     tipo:'ocio',        equipos:[]},
+    {hora:'20:00', act:'Ducha / Paseo / Piscina',  tipo:'ocio',        equipos:[]},
+    {hora:'21:00', act:'Cena',                     tipo:'comida',      equipos:[]},
+    {hora:'21:45', act:'Cuida tu motor (velada)',   tipo:'velada',      equipos:[]},
+    {hora:'22:30', act:'Bal Pris',                 tipo:'ocio',        equipos:[]},
+    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  ],
+  6: [
+    {hora:'08:30', act:'Sesión de tiro',           tipo:'entreno',     equipos:[]},
+    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
+    {hora:'10:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
+    {hora:'10:15', act:'Entrenamiento mañana',     tipo:'entreno',     equipos:[]},
+    {hora:'13:00', act:'Piscina',                  tipo:'ocio',        equipos:[]},
+    {hora:'14:00', act:'Cambio / Comida',          tipo:'comida',      equipos:[]},
+    {hora:'15:30', act:'Actividad sobremesa',       tipo:'ocio',        equipos:[]},
+    {hora:'17:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
+    {hora:'17:30', act:'Entrenamiento tarde',       tipo:'entreno',     equipos:[]},
+    {hora:'20:00', act:'Ducha',                    tipo:'descanso',    equipos:[]},
+    {hora:'21:00', act:'Cena',                     tipo:'comida',      equipos:[]},
+    {hora:'21:45', act:'España (velada)',           tipo:'velada',      equipos:[]},
+    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  ],
+  7: [
+    {hora:'08:30', act:'Sesión de tiro',           tipo:'entreno',     equipos:[]},
+    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
+    {hora:'10:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
+    {hora:'10:15', act:'Entrenamiento mañana',     tipo:'entreno',     equipos:[]},
+    {hora:'13:00', act:'Piscina',                  tipo:'ocio',        equipos:[]},
+    {hora:'14:00', act:'Cambio / Comida',          tipo:'comida',      equipos:[]},
+    {hora:'15:30', act:'Actividad sobremesa',       tipo:'ocio',        equipos:[]},
+    {hora:'17:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
+    {hora:'17:30', act:'Entrenamiento tarde',       tipo:'entreno',     equipos:[]},
+    {hora:'20:00', act:'Ducha',                    tipo:'descanso',    equipos:[]},
+    {hora:'21:00', act:'Cena',                     tipo:'comida',      equipos:[]},
+    {hora:'21:45', act:'Velada del Miedo',          tipo:'velada',      equipos:[]},
+    {hora:'22:30', act:'Batman y Robin',           tipo:'ocio',        equipos:[]},
+    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  ],
+  8: [
+    {hora:'08:30', act:'Sesión de tiro',           tipo:'entreno',     equipos:[]},
+    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
+    {hora:'10:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
+    {hora:'10:15', act:'Entrenamiento mañana',     tipo:'entreno',     equipos:[]},
+    {hora:'13:00', act:'Piscina',                  tipo:'ocio',        equipos:[]},
+    {hora:'14:00', act:'Cambio / Comida',          tipo:'comida',      equipos:[]},
+    {hora:'15:30', act:'Safari Fotográfico Salamanca', tipo:'salida',  equipos:[]},
+    {hora:'17:30', act:'Entrenamiento tarde',       tipo:'entreno',     equipos:[]},
+    {hora:'20:00', act:'Ducha',                    tipo:'descanso',    equipos:[]},
+    {hora:'21:00', act:'Cena',                     tipo:'comida',      equipos:[]},
+    {hora:'21:45', act:'Pistas (velada)',           tipo:'velada',      equipos:[]},
+    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  ],
+  9: [
+    {hora:'08:30', act:'Sesión de tiro',           tipo:'entreno',     equipos:[]},
+    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
+    {hora:'10:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
+    {hora:'10:15', act:'Entrenamiento mañana',     tipo:'entreno',     equipos:[]},
+    {hora:'13:00', act:'Piscina',                  tipo:'ocio',        equipos:[]},
+    {hora:'14:00', act:'Cambio / Comida',          tipo:'comida',      equipos:[]},
+    {hora:'15:30', act:'Actividad sobremesa',       tipo:'ocio',        equipos:[]},
+    {hora:'17:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
+    {hora:'17:30', act:'Entrenamiento tarde',       tipo:'entreno',     equipos:[]},
+    {hora:'20:00', act:'Ducha',                    tipo:'descanso',    equipos:[]},
+    {hora:'21:00', act:'Fiesta Final',             tipo:'velada',      equipos:[]},
+    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  ],
+  10: [
+    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
+    {hora:'10:00', act:'Preparar maletas',         tipo:'descanso',    equipos:[]},
+    {hora:'12:00', act:'Acto de clausura',         tipo:'ocio',        equipos:[]},
+    {hora:'14:00', act:'Comida / Despedida',       tipo:'comida',      equipos:[]},
+    {hora:'15:30', act:'Viaje de regreso',         tipo:'traslado',    equipos:[]},
+  ],
+};
+
+// Pistas por día y equipo
+const HOR_PISTAS_DEFAULT = {
+  mañana: {
+    'Minibasket':'Resi Tenis','Basket1':'Lazarillo 3','Basket2':'Lazarillo 4',
+    'Basket3':'Residencia','Basket4':'Pabellón Resi','Basket5':'— Pendiente —',
+    'Basket 6':'Lazarillo 4','Futbol1':'Lazarillo 1','Futbol2':'Lazarillo 2','Futbol 3':'Lazarillo 3'
+  },
+  tarde: {
+    'Minibasket':'Resi Tenis','Basket1':'Lazarillo 3','Basket2':'Lazarillo 4',
+    'Basket3':'Residencia','Basket4':'Pabellón Resi','Basket5':'— Pendiente —',
+    'Basket 6':'Lazarillo 4','Futbol1':'Lazarillo 1','Futbol2':'Lazarillo 2','Futbol 3':'Lazarillo 3'
+  }
+};
+
+const HOR_TIPO_STYLE = {
+  entreno:  {bg:'#dbeafe',color:'#1e40af',icon:'🏀'},
+  traslado: {bg:'#fef9c3',color:'#854d0e',icon:'🚌'},
+  comida:   {bg:'#dcfce7',color:'#166534',icon:'🍽️'},
+  ocio:     {bg:'#f3e8ff',color:'#6b21a8',icon:'🎮'},
+  velada:   {bg:'#fce7f3',color:'#9d174d',icon:'🌙'},
+  salida:   {bg:'#ffedd5',color:'#9a3412',icon:'🗺️'},
+  descanso: {bg:'#f1f5f9',color:'#475569',icon:'💤'},
+};
+
+const EQUIPOS_CAMPUS = ['Minibasket','Basket1','Basket2','Basket3','Basket4','Basket5','Basket 6','Futbol1','Futbol2','Futbol 3'];
+
+function getHorarioDia(diaNum) {
+  const saved = JSON.parse(localStorage.getItem('sv_hor_dias') || '{}');
+  return saved[diaNum] ? JSON.parse(JSON.stringify(saved[diaNum])) 
+                       : JSON.parse(JSON.stringify(HOR_BASE_DEFAULT[diaNum] || []));
+}
+
+function saveHorarioDia(diaNum, filas) {
+  const saved = JSON.parse(localStorage.getItem('sv_hor_dias') || '{}');
+  saved[diaNum] = filas;
+  localStorage.setItem('sv_hor_dias', JSON.stringify(saved));
+}
+
+function getPistaDia(diaNum, equipo, turno) {
+  const key = `sv_hor_pistas_d${diaNum}_${equipo}_${turno}`;
+  return localStorage.getItem(key) || HOR_PISTAS_DEFAULT[turno]?.[equipo] || '—';
+}
+
+function savePistaDia(diaNum, equipo, turno, val) {
+  localStorage.setItem(`sv_hor_pistas_d${diaNum}_${equipo}_${turno}`, val);
+}
+
 function renderHorarioCampus() {
-  const canEdit = currentPerfil?.rol === 'admin' || currentPerfil?.rol === 'entrenador';
-  let filas = JSON.parse(localStorage.getItem('sv_campus_horario') || JSON.stringify(HORARIO_DEFAULT));
-  const tabla = document.getElementById('horario-tabla');
-  const actions = document.getElementById('horario-actions');
-  if(!tabla) return;
+  const diaNum = parseInt(document.getElementById('hor-dia-sel')?.value || 2);
+  const equipoFiltro = document.getElementById('hor-equipo-sel')?.value || '';
+  const isAdmin = currentPerfil?.rol === 'admin' || currentPerfil?.rol === 'entrenador';
+  const diaInfo = HOR_DIAS.find(d => d.num === diaNum) || HOR_DIAS[1];
+  let filas = getHorarioDia(diaNum);
 
-  tabla.innerHTML = filas.map((f, i) => `
-    <div class="schedule-row" style="align-items:center;">
-      ${canEdit
-        ? `<input type="time" value="${f.hora}" onchange="saveHorarioCampusFila(${i},'hora',this.value)"
-             class="schedule-hora" style="border:none;border-bottom:2px solid transparent;background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--negro);width:80px;outline:none;cursor:pointer;"
-             onfocus="this.style.borderBottomColor='var(--amarillo)'" onblur="this.style.borderBottomColor='transparent'">`
-        : `<div class="schedule-hora">${f.hora}</div>`}
-      ${canEdit
-        ? `<input type="text" value="${f.act.replace(/"/g,'&quot;')}" onchange="saveHorarioCampusFila(${i},'act',this.value)"
-             class="schedule-act" style="flex:1;border:none;border-bottom:2px solid transparent;background:transparent;font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;color:var(--negro);outline:none;cursor:text;padding:4px 0;"
-             onfocus="this.style.borderBottomColor='var(--amarillo)'" onblur="this.style.borderBottomColor='transparent'">
-           <button onclick="deleteHorarioCampusFila(${i})" title="Eliminar fila"
-             style="background:none;border:none;cursor:pointer;color:var(--gris-medio);font-size:16px;padding:0 4px;line-height:1;opacity:0.5;" onmouseover="this.style.opacity='1';this.style.color='var(--rojo)'" onmouseout="this.style.opacity='0.5';this.style.color='var(--gris-medio)'">×</button>`
-        : `<div class="schedule-act">${f.act}</div>`}
-    </div>`).join('');
+  // Header del día
+  const hdr = document.getElementById('hor-dia-header');
+  if(hdr) hdr.innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;padding:14px 20px;background:var(--negro);border-radius:10px;color:var(--blanco);">
+      <div style="background:var(--amarillo);color:var(--negro);border-radius:8px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;line-height:1;">DÍA ${diaNum}</div>
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;letter-spacing:1px;">${diaInfo.dia.toUpperCase()} ${diaInfo.fecha}</div>
+        ${diaInfo.label?`<div style="font-size:12px;color:var(--amarillo);font-weight:700;text-transform:uppercase;letter-spacing:1px;">${diaInfo.label}</div>`:''}
+      </div>
+      ${equipoFiltro ? `<div style="margin-left:auto;background:${CAMPUS_EQUIPO_COLORS[equipoFiltro]||'#888'};color:#fff;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:900;">${equipoFiltro}</div>` : ''}
+    </div>`;
 
-  if(actions) {
-    actions.innerHTML = canEdit
-      ? `<button onclick="addHorarioCampusFila()" class="btn btn-sm btn-primary">+ Fila</button>
-         <button onclick="resetHorarioCampus()" class="btn btn-sm btn-secondary">↺ Restaurar</button>`
-      : '';
+  // Botones admin
+  const adminBtns = document.getElementById('hor-admin-btns');
+  if(adminBtns) adminBtns.innerHTML = isAdmin
+    ? `<button onclick="openAddActividadHorario()" class="btn btn-sm btn-primary">+ Actividad</button>
+       <button onclick="resetHorarioDia()" class="btn btn-sm btn-secondary" title="Restaurar día">↺</button>`
+    : '';
+
+  // Filtrar filas por equipo si procede
+  const filasVis = equipoFiltro
+    ? filas.filter(f => !f.equipos?.length || f.equipos.includes(equipoFiltro))
+    : filas;
+
+  // Timeline
+  const timeline = document.getElementById('hor-timeline');
+  if(timeline) timeline.innerHTML = filasVis.length === 0
+    ? `<div class="empty-state"><div class="icon">📅</div><p>Sin actividades para este día</p></div>`
+    : filasVis.map((f, visIdx) => {
+        const realIdx = filas.indexOf(f);
+        const st = HOR_TIPO_STYLE[f.tipo] || HOR_TIPO_STYLE.ocio;
+        const equipoTags = f.equipos?.length
+          ? f.equipos.map(e=>`<span style="background:${CAMPUS_EQUIPO_COLORS[e]||'#888'};color:#fff;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;">${e}</span>`).join('')
+          : '';
+        return `
+        <div style="display:flex;align-items:stretch;border-bottom:1px solid var(--gris-claro);min-height:52px;" 
+             class="hor-row" data-idx="${realIdx}">
+          <!-- Hora -->
+          <div style="min-width:68px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:3px solid ${st.bg};background:${st.bg}20;">
+            ${isAdmin
+              ? `<input type="time" value="${f.hora}" onchange="editHorFila(${diaNum},${realIdx},'hora',this.value)"
+                   style="border:none;background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;color:var(--negro);width:64px;outline:none;text-align:center;cursor:pointer;">`
+              : `<span style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;">${f.hora}</span>`}
+          </div>
+          <!-- Tipo icono -->
+          <div style="width:36px;display:flex;align-items:center;justify-content:center;background:${st.bg};font-size:16px;">${st.icon}</div>
+          <!-- Contenido -->
+          <div style="flex:1;padding:10px 12px;display:flex;flex-direction:column;justify-content:center;gap:4px;">
+            ${isAdmin
+              ? `<input type="text" value="${f.act.replace(/"/g,'&quot;')}" onchange="editHorFila(${diaNum},${realIdx},'act',this.value)"
+                   style="border:none;border-bottom:2px solid transparent;background:transparent;font-family:'Barlow',sans-serif;font-size:13.5px;font-weight:700;color:var(--negro);outline:none;width:100%;"
+                   onfocus="this.style.borderBottomColor='var(--amarillo)'" onblur="this.style.borderBottomColor='transparent'">`
+              : `<div style="font-size:13.5px;font-weight:700;">${f.act}</div>`}
+            <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
+              ${isAdmin ? `<select onchange="editHorFila(${diaNum},${realIdx},'tipo',this.value)" 
+                style="border:1px solid var(--gris-claro);border-radius:4px;padding:2px 6px;font-size:11px;font-family:'Barlow',sans-serif;background:${st.bg};color:${st.color};font-weight:700;outline:none;">
+                ${Object.entries(HOR_TIPO_STYLE).map(([k,v])=>`<option value="${k}" ${f.tipo===k?'selected':''}>${v.icon} ${k}</option>`).join('')}
+              </select>` : `<span style="background:${st.bg};color:${st.color};border-radius:20px;padding:1px 8px;font-size:10.5px;font-weight:700;">${st.icon} ${f.tipo}</span>`}
+              ${equipoTags}
+            </div>
+          </div>
+          <!-- Acciones -->
+          ${isAdmin ? `<div style="padding:0 8px;display:flex;align-items:center;">
+            <button onclick="openEditEquiposActividad(${diaNum},${realIdx})" title="Asignar equipos específicos"
+              style="background:none;border:1px solid var(--gris-claro);border-radius:4px;cursor:pointer;font-size:12px;padding:3px 7px;color:var(--gris-medio);" title="Equipos">👥</button>
+            <button onclick="deleteHorFila(${diaNum},${realIdx})" title="Eliminar"
+              style="background:none;border:none;cursor:pointer;color:var(--gris-medio);font-size:18px;padding:0 4px;line-height:1;margin-left:4px;"
+              onmouseover="this.style.color='var(--rojo)'" onmouseout="this.style.color='var(--gris-medio)'">×</button>
+          </div>` : ''}
+        </div>`;
+      }).join('');
+
+  // Pistas
+  const pistasEl = document.getElementById('hor-pistas');
+  if(pistasEl) {
+    const equiposList = equipoFiltro ? [equipoFiltro] : EQUIPOS_CAMPUS;
+    pistasEl.innerHTML = equiposList.map(eq => {
+      const color = CAMPUS_EQUIPO_COLORS[eq] || '#888';
+      const pm = getPistaDia(diaNum, eq, 'mañana');
+      const pt = getPistaDia(diaNum, eq, 'tarde');
+      return `<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--gris-claro);">
+        <div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:${color};margin-bottom:4px;">${eq}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          <div>
+            <div style="font-size:9.5px;color:var(--gris-medio);font-weight:700;margin-bottom:2px;">☀️ MAÑANA</div>
+            ${isAdmin
+              ? `<input type="text" value="${pm}" onchange="savePistaDia(${diaNum},'${eq}','mañana',this.value);showToast('✅ Pista guardada')"
+                   style="width:100%;border:1px solid var(--gris-claro);border-radius:4px;padding:3px 6px;font-size:11.5px;font-family:'Barlow',sans-serif;outline:none;" placeholder="Instalación...">`
+              : `<div style="font-size:11.5px;font-weight:600;">${pm}</div>`}
+          </div>
+          <div>
+            <div style="font-size:9.5px;color:var(--gris-medio);font-weight:700;margin-bottom:2px;">🌅 TARDE</div>
+            ${isAdmin
+              ? `<input type="text" value="${pt}" onchange="savePistaDia(${diaNum},'${eq}','tarde',this.value);showToast('✅ Pista guardada')"
+                   style="width:100%;border:1px solid var(--gris-claro);border-radius:4px;padding:3px 6px;font-size:11.5px;font-family:'Barlow',sans-serif;outline:none;" placeholder="Instalación...">`
+              : `<div style="font-size:11.5px;font-weight:600;">${pt}</div>`}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
   }
 }
 
-function saveHorarioCampusFila(i, campo, val) {
-  let filas = JSON.parse(localStorage.getItem('sv_campus_horario') || JSON.stringify(HORARIO_DEFAULT));
-  filas[i][campo] = val;
-  localStorage.setItem('sv_campus_horario', JSON.stringify(filas));
+function editHorFila(diaNum, idx, campo, val) {
+  const filas = getHorarioDia(diaNum);
+  if(filas[idx]) { filas[idx][campo] = val; saveHorarioDia(diaNum, filas); }
+  if(campo === 'tipo') renderHorarioCampus();
 }
-function deleteHorarioCampusFila(i) {
-  let filas = JSON.parse(localStorage.getItem('sv_campus_horario') || JSON.stringify(HORARIO_DEFAULT));
-  filas.splice(i, 1);
-  localStorage.setItem('sv_campus_horario', JSON.stringify(filas));
+
+function deleteHorFila(diaNum, idx) {
+  const filas = getHorarioDia(diaNum);
+  filas.splice(idx, 1);
+  saveHorarioDia(diaNum, filas);
   renderHorarioCampus();
 }
-function addHorarioCampusFila() {
-  let filas = JSON.parse(localStorage.getItem('sv_campus_horario') || JSON.stringify(HORARIO_DEFAULT));
-  filas.push({hora:'00:00', act:'Nueva actividad'});
-  localStorage.setItem('sv_campus_horario', JSON.stringify(filas));
-  renderHorarioCampus();
-}
-function resetHorarioCampus() {
-  if(!confirm('¿Restaurar el horario original?')) return;
-  localStorage.removeItem('sv_campus_horario');
+
+function resetHorarioDia() {
+  const diaNum = parseInt(document.getElementById('hor-dia-sel')?.value || 2);
+  if(!confirm(`¿Restaurar el horario del Día ${diaNum} al original?`)) return;
+  const saved = JSON.parse(localStorage.getItem('sv_hor_dias') || '{}');
+  delete saved[diaNum];
+  localStorage.setItem('sv_hor_dias', JSON.stringify(saved));
   renderHorarioCampus();
   showToast('✅ Horario restaurado');
 }
+
+function openAddActividadHorario() {
+  const diaNum = parseInt(document.getElementById('hor-dia-sel')?.value || 2);
+  document.getElementById('modal-title').textContent = '+ Nueva actividad — Día ' + diaNum;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="detail-row">
+      <div class="detail-field"><label>⏰ Hora</label><input id="na-hora" type="time" value="10:00"></div>
+      <div class="detail-field"><label>Tipo</label>
+        <select id="na-tipo">
+          ${Object.entries(HOR_TIPO_STYLE).map(([k,v])=>`<option value="${k}">${v.icon} ${k.charAt(0).toUpperCase()+k.slice(1)}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="detail-row"><div class="detail-field"><label>📝 Descripción</label>
+      <input id="na-act" type="text" placeholder="Ej: Entrenamiento específico Basket1...">
+    </div></div>
+    <div class="detail-field" style="margin-top:8px;"><label>👥 Solo para estos equipos (vacío = todos)</label>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;" id="na-equipos-check">
+        ${EQUIPOS_CAMPUS.map(eq=>`
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;background:var(--gris-bg);padding:4px 10px;border-radius:20px;border:1.5px solid var(--gris-claro);">
+            <input type="checkbox" value="${eq}" style="accent-color:var(--amarillo);"> ${eq}
+          </label>`).join('')}
+      </div>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveNewActividad(${diaNum})">✅ Añadir</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function saveNewActividad(diaNum) {
+  const hora = document.getElementById('na-hora').value;
+  const act = document.getElementById('na-act').value.trim();
+  const tipo = document.getElementById('na-tipo').value;
+  if(!act) { showToast('⚠️ Escribe una descripción'); return; }
+  const equiposChecked = [...document.querySelectorAll('#na-equipos-check input:checked')].map(c=>c.value);
+  const filas = getHorarioDia(diaNum);
+  filas.push({hora, act, tipo, equipos: equiposChecked});
+  filas.sort((a,b) => a.hora.localeCompare(b.hora));
+  saveHorarioDia(diaNum, filas);
+  closeModal();
+  renderHorarioCampus();
+  showToast('✅ Actividad añadida');
+}
+
+function openEditEquiposActividad(diaNum, idx) {
+  const filas = getHorarioDia(diaNum);
+  const f = filas[idx];
+  if(!f) return;
+  document.getElementById('modal-title').textContent = '👥 Equipos para: ' + f.act;
+  document.getElementById('modal-body').innerHTML = `
+    <p style="font-size:13px;color:var(--gris-medio);margin-bottom:12px;">Selecciona los equipos que tienen esta actividad. Vacío = todos los equipos.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;" id="ee-checks">
+      ${EQUIPOS_CAMPUS.map(eq=>`
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:var(--gris-bg);padding:6px 12px;border-radius:20px;border:1.5px solid ${(f.equipos||[]).includes(eq)?'var(--amarillo)':'var(--gris-claro)'};">
+          <input type="checkbox" value="${eq}" ${(f.equipos||[]).includes(eq)?'checked':''} style="accent-color:var(--amarillo);"> ${eq}
+        </label>`).join('')}
+    </div>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveEquiposActividad(${diaNum},${idx})">💾 Guardar</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function saveEquiposActividad(diaNum, idx) {
+  const filas = getHorarioDia(diaNum);
+  filas[idx].equipos = [...document.querySelectorAll('#ee-checks input:checked')].map(c=>c.value);
+  saveHorarioDia(diaNum, filas);
+  closeModal();
+  renderHorarioCampus();
+  showToast('✅ Equipos actualizados');
+}
+
+
 
 function campusTab(tab) {
   document.querySelectorAll('.campus-tab').forEach(t => t.classList.remove('active'));
