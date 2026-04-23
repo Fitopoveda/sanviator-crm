@@ -304,10 +304,10 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
 
       <div class="nav-section-label">Campus</div>
       <div class="nav-item" onclick="showPanel('campus')"><span>🏕️</span><span>Campus Salamanca</span></div>
-      <div class="nav-item entrenador-only" onclick="showPlanificadorCampus()"><span>📋</span><span>Planificador Campus</span></div>
+      <div class="nav-item entrenador-only" onclick="showPlanificadorCampus()" style="display:none!important"><span>📋</span><span>Planificador Campus</span></div>
 
-      <div class="nav-section-label entrenador-only">Entrenamientos</div>
-      <div class="nav-item entrenador-only" onclick="showPanel('entrenamientos')"><span>📋</span><span>Planificador</span></div>
+      <div class="nav-section-label entrenador-only" style="display:none!important">Entrenamientos</div>
+      <div class="nav-item entrenador-only" onclick="showPanel('entrenamientos')" style="display:none!important"><span>📋</span><span>Planificador</span></div>
 
       <div class="nav-section-label jugador-only" style="display:none">Mi espacio</div>
       <div class="nav-item jugador-only" style="display:none" onclick="showPanel('mi-ficha')"><span>👤</span><span>Mi Ficha</span></div>
@@ -968,10 +968,11 @@ function openAddUserModal() {
     <div class="detail-row">
       <div class="detail-field"><label>Email *</label><input id="nu-email" type="email" placeholder="correo@email.com"></div>
       <div class="detail-field"><label>Rol</label>
-        <select id="nu-rol">
+        <select id="nu-rol" onchange="toggleNuPermisos(this.value)">
           <option value="invitado">Invitado</option>
           <option value="entrenador">Entrenador</option>
           <option value="admin">Administrador</option>
+          <option value="jugador">Jugador</option>
         </select>
       </div>
     </div>
@@ -983,13 +984,37 @@ function openAddUserModal() {
         <input id="nu-pass2" type="password" placeholder="Repite la contraseña" value="SanviPruebas@">
       </div>
     </div>
-    <p style="font-size:12.5px;color:var(--gris-medio);margin-top:4px;background:#fffbe6;padding:10px;border-radius:6px;">
+    <div id="nu-permisos-box" style="margin-top:14px;border:1.5px solid var(--gris-claro);border-radius:10px;padding:14px;background:var(--gris-bg);">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;color:var(--gris-medio);margin-bottom:10px;">📦 Acceso a módulos</div>
+      <p style="font-size:12px;color:var(--gris-medio);margin-bottom:10px;">Sin selección = acceso a todos los módulos permitidos por su rol.</p>
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1.5px solid var(--gris-claro);border-radius:7px;cursor:pointer;background:var(--blanco);">
+          <input type="checkbox" value="Pruebas Temporada" id="nu-mod-pruebas" style="accent-color:var(--amarillo);width:15px;height:15px;">
+          <div><div style="font-size:13px;font-weight:600;">⚽ Pruebas de temporada</div><div style="font-size:11px;color:var(--gris-medio);">Inscritos, calendario de pruebas e integración</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1.5px solid var(--gris-claro);border-radius:7px;cursor:pointer;background:var(--blanco);">
+          <input type="checkbox" value="Campus Salamanca" id="nu-mod-campus" style="accent-color:var(--amarillo);width:15px;height:15px;">
+          <div><div style="font-size:13px;font-weight:600;">🏕️ Campus Salamanca</div><div style="font-size:11px;color:var(--gris-medio);">Participantes, horario, veladas y planificación</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1.5px solid var(--gris-claro);border-radius:7px;cursor:pointer;background:var(--blanco);">
+          <input type="checkbox" value="Mensajes" id="nu-mod-mensajes" style="accent-color:var(--amarillo);width:15px;height:15px;">
+          <div><div style="font-size:13px;font-weight:600;">💬 Mensajes</div><div style="font-size:11px;color:var(--gris-medio);">Chat directo y canales de equipo</div></div>
+        </label>
+      </div>
+    </div>
+    <p style="font-size:12.5px;color:var(--gris-medio);margin-top:10px;background:#fffbe6;padding:10px;border-radius:6px;">
       💡 La contraseña por defecto es <strong>SanviPruebas@</strong>. El usuario podrá cambiarla después.
     </p>`;
   document.getElementById('modal-footer').innerHTML = `
     <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
     <button class="btn btn-primary" onclick="createUser()">Crear usuario</button>`;
   document.getElementById('modal-overlay').classList.add('open');
+}
+
+function toggleNuPermisos(rol) {
+  const box = document.getElementById('nu-permisos-box');
+  if (!box) return;
+  box.style.display = rol === 'admin' ? 'none' : 'block';
 }
 
 async function createUser() {
@@ -1001,6 +1026,12 @@ async function createUser() {
   const pass2 = document.getElementById('nu-pass2').value.trim();
   if (!pass || pass.length < 6) { showToast('⚠️ La contraseña debe tener al menos 6 caracteres'); return; }
   if (pass !== pass2) { showToast('⚠️ Las contraseñas no coinciden'); return; }
+
+  // Recoger módulos seleccionados
+  const modulos_permitidos = ['nu-mod-pruebas','nu-mod-campus','nu-mod-mensajes']
+    .map(id => document.getElementById(id))
+    .filter(el => el && el.checked)
+    .map(el => el.value);
 
   const btn = document.querySelector('#modal-footer .btn-primary');
   if(btn) { btn.textContent = '⏳ Creando...'; btn.disabled = true; }
@@ -1020,33 +1051,34 @@ async function createUser() {
 
   // Step 2: Try to get userId — may be null if email confirmation is required
   const userId = signUpData?.user?.id;
+  const profileData = { email, nombre, rol, modulos_permitidos: modulos_permitidos.length ? modulos_permitidos : null };
 
   if (userId) {
     // User created and confirmed immediately — upsert full profile
     const { error: e2 } = await sb.from('perfiles').upsert(
-      { id: userId, email, nombre, rol },
+      { id: userId, ...profileData },
       { onConflict: 'id' }
     );
     if (e2) console.warn('Profile upsert warning:', e2.message);
     // Force role in case trigger set it to invitado
-    await sb.from('perfiles').update({ rol, nombre }).eq('id', userId);
+    await sb.from('perfiles').update({ rol, nombre, modulos_permitidos: profileData.modulos_permitidos }).eq('id', userId);
   } else {
     // Email confirmation pending — store pending profile in localStorage
-    // It will be applied when the trigger fires on first login
     const pending = JSON.parse(localStorage.getItem('sv_pending_users') || '{}');
-    pending[email] = { nombre, rol };
+    pending[email] = { nombre, rol, modulos_permitidos: profileData.modulos_permitidos };
     localStorage.setItem('sv_pending_users', JSON.stringify(pending));
     // Also try upsert by email in case profile already exists
-    await sb.from('perfiles').upsert({ email, nombre, rol }, { onConflict: 'email' });
+    await sb.from('perfiles').upsert({ ...profileData }, { onConflict: 'email' });
   }
 
   if(btn) { btn.textContent = 'Crear usuario'; btn.disabled = false; }
   closeModal();
   await loadUsers();
+  const modsMsg = modulos_permitidos.length ? ` · Módulos: ${modulos_permitidos.join(', ')}` : '';
   const msg = userId
-    ? `✅ ${nombre||email} creado como ${rol}. Ya puede entrar.`
-    : `✅ ${nombre||email} creado. Debe confirmar su email antes de entrar.`;
-  showToast(msg);
+    ? `✅ ${nombre||email} creado como ${rol}${modsMsg}. Ya puede entrar.`
+    : `✅ ${nombre||email} creado${modsMsg}. Si no llega email de confirmación, el usuario puede entrar directamente con SanviPruebas@`;
+  showToast(msg, 6000);
 }
 
 // ════════════════════════════════════════════════════════
@@ -1592,17 +1624,23 @@ async function addComment(id){
 
 async function saveEdit(){
   const i=inscritos.find(x=>x.id===editingId); if(!i) return;
-  const av=document.getElementById('e-asiste').value;
   const getVal = (id) => { const el = document.getElementById(id); return el ? el.value : null; };
+  const asisEl = document.getElementById('e-asiste');
+  const av = asisEl ? asisEl.value : '';
+  const equiVal = getVal('e-equipo');
   const updates={
     deporte:     getVal('e-deporte')   || i.deporte,
     genero:      getVal('e-genero')    || getVal('e-genero-ro')    || i.genero,
     categoria:   getVal('e-categoria') || getVal('e-categoria-ro') || i.categoria,
     estado:      getVal('e-estado')    || i.estado,
-    equipo:      getVal('e-equipo')    || i.equipo,
-    asiste:      av===''?null:av==='true'
+    equipo:      equiVal !== null ? equiVal : i.equipo,
+    asiste:      av===''?null:av==='true',
+    seguir:      getVal('e-seguir')    || i.seguir || null
   };
-  await sb.from('inscritos').update(updates).eq('id',editingId);
+  const btn = document.querySelector('#modal-footer .btn-primary');
+  if(btn){ btn.textContent='⏳ Guardando...'; btn.disabled=true; }
+  const { error } = await sb.from('inscritos').update(updates).eq('id',editingId);
+  if(error){ showToast('❌ Error al guardar'); if(btn){ btn.textContent='💾 Guardar'; btn.disabled=false; } return; }
   await loadInscritos();
   closeModal(); renderView(); renderDashboard();
   showToast('✅ Cambios guardados');
@@ -1973,7 +2011,7 @@ function initials(name){return(name||'?').split(' ').slice(0,2).map(n=>n[0]).joi
 function fmtDate(iso){if(!iso)return'—';return new Date(iso).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'});}
 function badgeDeporte(d){const m={'Fútbol':'futbol','Baloncesto':'baloncesto'};const ic={'Fútbol':'⚽','Baloncesto':'🏀'};return`<span class="badge badge-${m[d]||'futbol'}">${ic[d]||''} ${d}</span>`;}
 function badgeEstado(e){const m={Nuevo:'nuevo',Contactado:'contactado',Confirmado:'confirmado',Descartado:'descartado'};return`<span class="badge badge-${m[e]||'nuevo'}"><span class="badge-dot"></span>${e}</span>`;}
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+function showToast(msg,dur=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 
 
 // ════════════════════════════════════════════════════════
