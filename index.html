@@ -3042,10 +3042,36 @@ function renderContenido() {
         <div style="background:#1565c0;padding:14px 20px;display:flex;align-items:center;gap:10px;">
           <span style="font-size:22px;">🏀</span>
           <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;">Baloncesto B1-6 — Estructura de sesiones</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.6);">Basket1 · Basket2 · Basket3 · Basket4 · Basket5 · Basket 6 · 7 sesiones mañana · 7 sesiones tarde · 3 sesiones tiro extra</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;">Baloncesto B1-6</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.6);">Basket1 · Basket2 · Basket3 · Basket4 · Basket5 · Basket 6</div>
           </div>
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+          <div style="padding:16px 20px;border-right:1px solid rgba(255,255,255,0.06);">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#f5c400;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(245,196,0,0.2);">☀️ MAÑANA — 135 min</div>
+            ${bloques(CONTENIDO_B123.mañana, '#f5c400')}
+          </div>
+          <div style="padding:16px 20px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#f97316;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(249,115,22,0.2);">🌅 TARDE — 120 min</div>
+            ${bloques(CONTENIDO_B123.tarde, '#f97316')}
+          </div>
+        </div>
+      </div>
+
+      <!-- MINIBASKET -->
+      <div style="background:var(--negro);border-radius:12px;overflow:hidden;margin-bottom:16px;border:1px solid rgba(255,255,255,0.06);">
+        <div style="background:#7b3f9e;padding:14px 20px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:22px;">🏀</span>
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;">Minibasket</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.6);">Solo sesión de mañana</div>
+          </div>
+        </div>
+        <div style="padding:16px 20px;">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#c084fc;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(192,132,252,0.2);">☀️ MAÑANA</div>
+          ${bloques(CONTENIDO_B4MINIS.mañana, '#c084fc')}
+        </div>
+      </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
           <div style="padding:16px 20px;border-right:1px solid rgba(255,255,255,0.06);">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#f5c400;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(245,196,0,0.2);">☀️ MAÑANAS — 150 min · 7 sesiones</div>
