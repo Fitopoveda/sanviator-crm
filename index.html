@@ -275,6 +275,12 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
       <div class="nav-section-label">Campus</div>
       <div class="nav-item" onclick="showPanel('campus')"><span>🏕️</span><span>Campus Salamanca</span></div>
 
+      <div class="nav-section-label jugador-only" style="display:none">Mi espacio</div>
+      <div class="nav-item jugador-only" style="display:none" onclick="showPanel('mi-ficha')"><span>👤</span><span>Mi Ficha</span></div>
+
+      <div class="nav-section-label">Comunicación</div>
+      <div class="nav-item" onclick="showPanel('mensajes')"><span>💬</span><span>Mensajes</span></div>
+
       <div class="nav-section-label">Administración</div>
       <div class="nav-item admin-only" onclick="showPanel('usuarios')"><span>🔐</span><span>Usuarios</span></div>
     </nav>
@@ -448,7 +454,8 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
           <button class="campus-tab active" onclick="campusTab('participantes')">👥 Participantes</button>
           <button class="campus-tab" onclick="campusTab('horario')">📅 Horario</button>
           <button class="campus-tab" onclick="campusTab('veladas')">🌙 Veladas</button>
-          <button class="campus-tab" onclick="campusTab('contenido')">🏀 Contenido Deportivo</button>
+          <button class="campus-tab" onclick="campusTab('planificacion')">📋 Planificación</button>
+          <button class="campus-tab" onclick="campusTab('codigoEtico')">📜 Código Ético</button>
           <button class="campus-tab" onclick="campusTab('monitores')">👨‍🏫 Monitores</button>
           <button class="campus-tab" onclick="campusTab('medico')">🏥 Médico</button>
         </div>
@@ -514,10 +521,15 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;" id="veladas-grid"></div>
         </div>
 
-        <!-- CONTENIDO DEPORTIVO -->
-        <div class="campus-section" id="cs-contenido">
+        <!-- PLANIFICACIÓN DEPORTIVA -->
+        <div class="campus-section" id="cs-planificacion">
           <p style="font-size:13.5px;color:var(--gris-medio);margin-bottom:16px;">Espacio para que cada entrenador planifique y suba el contenido deportivo de su equipo para cada sesión.</p>
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;" id="contenido-grid"></div>
+        </div>
+
+        <!-- CÓDIGO ÉTICO -->
+        <div class="campus-section" id="cs-codigoEtico">
+          <div id="codigo-etico-content"></div>
         </div>
 
         <!-- MONITORES -->
@@ -568,6 +580,35 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
         <div class="integration-box">
           <h3>📅 Puertas Abiertas — desde 1 junio 2025</h3>
           <div class="pruebas-grid" id="pruebas-content"></div>
+        </div>
+      </div>
+
+      <!-- MI FICHA (rol jugador) -->
+      <div class="panel" id="panel-mi-ficha">
+        <div id="mi-ficha-content" style="max-width:600px;"></div>
+      </div>
+
+      <!-- MENSAJES -->
+      <div class="panel" id="panel-mensajes">
+        <div style="display:flex;gap:0;height:calc(100vh - 120px);background:var(--blanco);border-radius:10px;border:1px solid var(--gris-claro);overflow:hidden;">
+          <!-- Sidebar conversaciones -->
+          <div style="width:260px;flex-shrink:0;border-right:1px solid var(--gris-claro);display:flex;flex-direction:column;">
+            <div style="padding:14px 16px;border-bottom:1px solid var(--gris-claro);display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;text-transform:uppercase;letter-spacing:1px;">Mensajes</span>
+              <button class="btn btn-sm btn-primary" onclick="openNuevoMensaje()">✏️ Nuevo</button>
+            </div>
+            <div id="msg-conv-list" style="flex:1;overflow-y:auto;"></div>
+          </div>
+          <!-- Chat area -->
+          <div style="flex:1;display:flex;flex-direction:column;">
+            <div id="msg-chat-header" style="padding:14px 18px;border-bottom:1px solid var(--gris-claro);font-weight:700;font-size:14px;color:var(--gris-medio);">Selecciona una conversación</div>
+            <div id="msg-chat-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
+            <div id="msg-chat-input" style="padding:12px 16px;border-top:1px solid var(--gris-claro);gap:8px;display:none;">
+              <input type="text" id="msg-input-text" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')sendMsg()"
+                style="flex:1;border:1.5px solid var(--gris-claro);border-radius:6px;padding:8px 12px;font-family:'Barlow',sans-serif;font-size:13px;outline:none;">
+              <button class="btn btn-primary" onclick="sendMsg()">Enviar</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -667,8 +708,23 @@ function applyRoleUI() {
   const rol = currentPerfil?.rol || 'invitado';
   const isAdmin = rol === 'admin';
   const canEdit = rol === 'admin' || rol === 'entrenador';
+  const isJugador = rol === 'jugador';
   document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? '' : 'none');
   document.querySelectorAll('.can-edit').forEach(el => el.style.display = canEdit ? '' : 'none');
+  document.querySelectorAll('.jugador-only').forEach(el => el.style.display = isJugador ? '' : 'none');
+  if(isJugador) {
+    // Hide all nav items except Campus, Mensajes and Mi Ficha
+    document.querySelectorAll('.nav-item').forEach(el => {
+      const txt = el.textContent.trim();
+      const show = txt.includes('Campus') || txt.includes('Mensajes') || txt.includes('Mi Ficha');
+      if(!el.classList.contains('jugador-only')) el.style.display = show ? '' : 'none';
+    });
+    document.querySelectorAll('.nav-section-label').forEach(el => {
+      const lbl = el.textContent.trim();
+      if(lbl !== 'Campus' && lbl !== 'Comunicación' && lbl !== 'Mi espacio') el.style.display = 'none';
+    });
+    setTimeout(() => showPanel('mi-ficha'), 150);
+  }
 }
 
 // ════════════════════════════════════════════════════════
@@ -731,7 +787,7 @@ async function loadUsers() {
       </div>
       <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;">
         <select onchange="changeRol('${u.id}',this.value)" style="border:1.5px solid var(--gris-claro);border-radius:5px;padding:4px 8px;font-size:12px;font-family:'Barlow',sans-serif;">
-          ${['admin','entrenador','invitado'].map(r=>`<option ${u.rol===r?'selected':''}>${r}</option>`).join('')}
+          ${['admin','entrenador','invitado','jugador'].map(r=>`<option ${u.rol===r?'selected':''}>${r}</option>`).join('')}
         </select>
         <button class="btn btn-sm btn-secondary" onclick="editUserPermisos('${u.id}','${(u.nombre||u.email).replace(/'/g,"\\'")}')">✏️ Permisos</button>
       </div>
@@ -985,18 +1041,21 @@ function importCSV(event) {
 // ════════════════════════════════════════════════════════
 // NAVEGACIÓN
 // ════════════════════════════════════════════════════════
-const TITLES={dashboard:'Dashboard',inscritos:'Pruebas · Inscritos',usuarios:'Administración · Usuarios',integracion:'Pruebas · Integración',pruebas:'Pruebas · Calendario',campus:'Campus Salamanca'};
+const TITLES={dashboard:'Dashboard',inscritos:'Pruebas · Inscritos',usuarios:'Administración · Usuarios',integracion:'Pruebas · Integración',pruebas:'Pruebas · Calendario',campus:'Campus Salamanca',mensajes:'Mensajes','mi-ficha':'Mi Ficha'};
 function showPanel(name){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('panel-'+name).classList.add('active');
-  document.querySelector(`.nav-item[onclick*="${name}"]`)?.classList.add('active');
+  var panel = document.getElementById('panel-'+name);
+  if(!panel) return;
+  panel.classList.add('active');
+  document.querySelector('.nav-item[onclick*="'+name+'"]')?.classList.add('active');
   document.getElementById('panel-title').textContent=TITLES[name]||name;
   if(name==='dashboard') renderDashboard();
   if(name==='inscritos') renderView();
   if(name==='usuarios') loadUsers();
   if(name==='pruebas') renderPruebas();
-  if(name==='campus') {}  // ready for future module
+  if(name==='mensajes') renderMensajes();
+  if(name==='mi-ficha') renderMiFicha();
 }
 
 // ════════════════════════════════════════════════════════
@@ -1814,7 +1873,8 @@ function campusTab(tab) {
   document.getElementById('cs-' + tab).classList.add('active');
   if(tab === 'participantes') renderCampusParticipants();
   if(tab === 'veladas') renderVeladas();
-  if(tab === 'contenido') renderContenido();
+  if(tab === 'planificacion') renderContenido();
+  if(tab === 'codigoEtico') renderCodigoEtico();
   if(tab === 'monitores') renderMonitores();
   if(tab === 'medico') renderMedico();
 }
@@ -2147,6 +2207,102 @@ function saveCampusPhoto(playerId) {
 }
 
 // VELADAS
+// ════════════════════════════════════════════════════════
+// CÓDIGO ÉTICO
+// ════════════════════════════════════════════════════════
+function renderCodigoEtico() {
+  const sections = [
+    { icon: '📋', title: 'Guía de Monitores — Campus 2026', color: '#f97316', items: [
+      'El campus no es para ti, es para los jugadores. Lo principal es que los chavales disfruten y aprendan.',
+      'Eres responsable del grupo asignado por encima de los demás. En desplazamientos, salidas y viajes vas con tu grupo en todo momento.',
+      'Si hay cualquier problema con tu grupo o algún jugador, comunícaselo a los coordinadores por pequeño que sea.',
+      'En desplazamientos: un monitor delante y otro al final. El de delante se asegura de que todos siguen el ritmo.',
+      'Respeta los horarios. Estar 5 minutos antes en el lugar de reunión. No hagas esperar a los jugadores.',
+      'En comidas: un monitor sirve y otro come con su grupo, alternando. No comer con otros grupos. Atención especial a los alérgicos.',
+      'Los móviles con responsabilidad. No sacarlos en comedor mientras los jugadores comen.',
+      'Sigue la planificación asignada.',
+      'La noche es para el descanso. Las salas comunes cierran a la hora estipulada. Todos en sus pasillos/habitaciones.',
+      'En la hora de piscina, si estás en el césped, estás pendiente de los jugadores. No es momento de descanso.',
+      'En talleres y veladas eres responsable de tu actividad aunque no la hayas preparado tú. Ten el material listo.',
+      'En la hora de ducha, los monitores se aseguran de que los jugadores se duchan. Rotación alternativa cada día.',
+      'Revisar habitaciones del pasillo cada 2 días. Vuestra habitación debe ser el ejemplo de orden.',
+      'El LINCE solo los días que se decida. PROHIBIDO cualquier otro día. No pintar, asustar ni molestar.',
+      'ERES UN EJEMPLO. Si te comportas con educación y respeto, podrás exigírselo a ellos.'
+    ]},
+    { icon: '🎯', title: 'Objetivo', color: '#2563eb', text: 'Este código tiene como finalidad garantizar la convivencia, el respeto mutuo y el buen funcionamiento del campus, ofreciendo un entorno seguro, formativo y divertido para todos los participantes.' },
+    { icon: '👤', title: 'Participantes — Comportamiento general', color: '#16a34a', items: [
+      'Mostrar respeto hacia monitores, entrenadores, compañeros y personal externo.',
+      'Mantener una actitud positiva, participativa y colaborativa durante toda la actividad.',
+      'Cumplir con los horarios establecidos (entrenamientos, comidas, descanso, reuniones).',
+      'No abandonar las instalaciones sin permiso del coordinador.',
+      'No usar lenguaje ofensivo ni actitudes violentas o discriminatorias.'
+    ]},
+    { icon: '🟢', title: 'Participantes — Cuidado personal y del entorno', color: '#16a34a', items: [
+      'Mantener la higiene personal y el orden en las habitaciones.',
+      'Cuidar el material deportivo, instalaciones y zonas comunes.',
+      'Usar adecuadamente los teléfonos móviles (solo en horarios establecidos por el coordinador).',
+      'Evitar comportamientos de riesgo o bromas que puedan incomodar a otros.'
+    ]},
+    { icon: '🧑‍🏫', title: 'Entrenadores y Monitores', color: '#7c3aed', items: [
+      'Actuar como referente educativo y de comportamiento en todo momento.',
+      'Ser puntuales y responsables con el desarrollo de las actividades asignadas.',
+      'Fomentar los valores del club: compañerismo, esfuerzo, humildad y deportividad.',
+      'Notificar a coordinación cualquier incidente o situación fuera de lo habitual.',
+      'Respetar los tiempos de descanso y espacios personales de los jugadores.'
+    ]},
+    { icon: '🛏️', title: 'Vida Diaria y Actividades', color: '#0891b2', items: [
+      'La rutina diaria incluye: entrenamientos, actividades lúdicas, comidas, descanso y sesión nocturna "Recupera tu motor".',
+      'Las normas de cada espacio (residencia, pistas, comedor...) deben respetarse estrictamente.',
+      'No está permitido el uso de dispositivos electrónicos durante las sesiones, salvo autorización expresa.',
+      'El mal uso reiterado de los tiempos de descanso o conducta inadecuada podrá implicar medidas disciplinarias.'
+    ]},
+    { icon: '🚨', title: 'Seguridad y Salud', color: '#e03e3e', items: [
+      'Está totalmente prohibido el consumo o tenencia de sustancias no permitidas.',
+      'Se respetarán rigurosamente las alergias, pautas médicas y restricciones alimentarias comunicadas por las familias.',
+      'Cualquier malestar o accidente debe notificarse inmediatamente al equipo responsable.',
+      'Las salidas del campus o excursiones estarán siempre supervisadas por el personal del club.'
+    ]},
+    { icon: '👨‍👩‍👧', title: 'Familias', color: '#d97706', items: [
+      'Las comunicaciones oficiales se harán a través del Canal de WhatsApp del campus.',
+      'Las visitas durante el campus no están permitidas, salvo casos excepcionales.',
+      'En caso de urgencia, se contactará directamente con los teléfonos facilitados en la inscripción.',
+      'Confiamos en el compromiso de las familias para respetar los espacios educativos y deportivos.'
+    ]},
+    { icon: '📝', title: 'Consecuencias por Incumplimiento', color: '#555', items: [
+      'Advertencia verbal.',
+      'Aviso a las familias.',
+      'Suspensión de actividades.',
+      'En casos graves, expulsión del campus sin reembolso.'
+    ]}
+  ];
+
+  const html = '<div style="max-width:860px;">'
+    + '<div style="background:var(--negro);border-radius:12px;padding:20px 24px;margin-bottom:24px;text-align:center;">'
+      + '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:26px;font-weight:900;color:var(--amarillo);letter-spacing:2px;">🏀 CÓDIGO DE CONDUCTA</div>'
+      + '<div style="font-size:14px;color:rgba(255,255,255,0.7);margin-top:4px;">25º Campus San Viator 2026 · Salamanca · 1 al 11 de julio</div>'
+    + '</div>'
+    + sections.map(function(s) {
+        const itemsHtml = s.items ? s.items.map(function(item, i) {
+          return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--gris-claro);">'
+            + '<span style="background:'+s.color+';color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0;margin-top:1px;">'+(i+1)+'</span>'
+            + '<span style="font-size:13.5px;line-height:1.5;">'+item+'</span>'
+            + '</div>';
+        }).join('') : '';
+        const textHtml = s.text ? '<p style="font-size:13.5px;line-height:1.7;color:var(--negro);margin:0;">'+s.text+'</p>' : '';
+        return '<div style="background:var(--blanco);border-radius:10px;border:1px solid var(--gris-claro);margin-bottom:16px;overflow:hidden;border-left:4px solid '+s.color+';">'
+          + '<div style="padding:14px 18px;background:'+s.color+'12;border-bottom:1px solid var(--gris-claro);">'
+            + '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:17px;font-weight:900;color:'+s.color+';">'+s.icon+' '+s.title+'</div>'
+          + '</div>'
+          + '<div style="padding:14px 18px;">'
+            + itemsHtml + textHtml
+          + '</div>'
+        + '</div>';
+      }).join('')
+  + '</div>';
+
+  document.getElementById('codigo-etico-content').innerHTML = html;
+}
+
 function renderVeladas() {
   const typeColors = {competicion:'#f97316',ocio:'#3b82f6',excursion:'#10b981',especial:'#8b5cf6',recuperacion:'#6b7280'};
   const typeLabels = {competicion:'🏆 Competición',ocio:'🎬 Ocio',excursion:'🗺️ Excursión',especial:'⭐ Especial',recuperacion:'💪 Recuperación'};
@@ -2156,19 +2312,32 @@ function renderVeladas() {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
         <div>
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;">${v.nombre}</div>
-          <div style="font-size:11.5px;color:var(--gris-medio);">📅 ${v.dia}</div>
+          <div style="font-size:11.5px;color:var(--gris-medio);">📅 ${v.dia}${v.hora_inicio?' &nbsp;·&nbsp; 🕐 '+v.hora_inicio:''}${v.hora_fin?' — '+v.hora_fin:''}</div>
         </div>
         <span style="background:${typeColors[v.tipo]};color:#fff;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;">${typeLabels[v.tipo]}</span>
       </div>
       ${canEdit ? `
       <textarea style="width:100%;border:1.5px solid var(--gris-claro);border-radius:6px;padding:8px;font-family:'Barlow',sans-serif;font-size:13px;resize:vertical;min-height:70px;outline:none;" 
         onchange="updateVelada(${idx},this.value)" placeholder="Descripción de la velada...">${v.descripcion}</textarea>
-      <div style="display:flex;gap:6px;margin-top:8px;">
+      <div style="display:flex;gap:6px;margin-top:8px;align-items:center;flex-wrap:wrap;">
+        <input type="time" value="${v.hora_inicio||''}" onchange="updateVeladaHora(${idx},'hora_inicio',this.value)"
+          style="border:1.5px solid var(--gris-claro);border-radius:5px;padding:4px 8px;font-size:12px;font-family:'Barlow',sans-serif;" placeholder="Inicio">
+        <span style="font-size:11px;color:var(--gris-medio);">—</span>
+        <input type="time" value="${v.hora_fin||''}" onchange="updateVeladaHora(${idx},'hora_fin',this.value)"
+          style="border:1.5px solid var(--gris-claro);border-radius:5px;padding:4px 8px;font-size:12px;font-family:'Barlow',sans-serif;" placeholder="Fin">
         <select onchange="updateVeladaTipo(${idx},this.value)" style="border:1.5px solid var(--gris-claro);border-radius:5px;padding:4px 8px;font-size:12px;font-family:'Barlow',sans-serif;flex:1;">
           ${Object.entries(typeLabels).map(([k,l])=>`<option value="${k}" ${v.tipo===k?'selected':''}>${l}</option>`).join('')}
         </select>
         <button onclick="deleteVelada(${idx})" class="btn btn-sm btn-danger">🗑️</button>
-      </div>` : `<p style="font-size:13px;color:var(--gris-medio);">${v.descripcion}</p>`}
+      </div>
+      <div style="margin-top:8px;display:flex;gap:6px;align-items:center;">
+        <input type="text" value="${v.pdf_url||''}" onchange="updateVeladaPdf(${idx},this.value)"
+          placeholder="🔗 Enlace PDF de la velada (Google Drive, etc.)..."
+          style="flex:1;border:1.5px solid var(--gris-claro);border-radius:5px;padding:4px 8px;font-size:11px;font-family:'Barlow',sans-serif;outline:none;">
+        ${v.pdf_url ? `<a href="${v.pdf_url}" target="_blank" class="btn btn-sm btn-secondary" onclick="event.stopPropagation()">📄 Ver PDF</a>` : ''}
+      </div>` 
+      : `<p style="font-size:13px;color:var(--gris-medio);">${v.descripcion}</p>
+         ${v.pdf_url ? `<a href="${v.pdf_url}" target="_blank" class="btn btn-sm btn-secondary" style="margin-top:8px;">📄 Ver PDF de la velada</a>` : ''}`}
     </div>`).join('');
 }
 
@@ -2180,6 +2349,14 @@ function updateVeladaTipo(idx, val) {
   campusVeladas[idx].tipo = val;
   localStorage.setItem('sv_campus_veladas', JSON.stringify(campusVeladas));
   renderVeladas();
+}
+function updateVeladaHora(idx, field, val) {
+  campusVeladas[idx][field] = val;
+  localStorage.setItem('sv_campus_veladas', JSON.stringify(campusVeladas));
+}
+function updateVeladaPdf(idx, val) {
+  campusVeladas[idx].pdf_url = val.trim();
+  localStorage.setItem('sv_campus_veladas', JSON.stringify(campusVeladas));
 }
 function deleteVelada(idx) {
   if(!confirm('¿Eliminar esta velada?')) return;
@@ -2207,7 +2384,12 @@ function openAddVelada() {
         </select>
       </div>
     </div>
+    <div class="detail-row">
+      <div class="detail-field"><label>⏰ Hora inicio</label><input id="v-hinicio" type="time"></div>
+      <div class="detail-field"><label>⏰ Hora fin</label><input id="v-hfin" type="time"></div>
+    </div>
     <div class="detail-row"><div class="detail-field"><label>Descripción</label><textarea id="v-desc" placeholder="Describe la velada..."></textarea></div></div>
+    <div class="detail-row"><div class="detail-field"><label>🔗 Enlace PDF (opcional)</label><input id="v-pdf" type="text" placeholder="https://drive.google.com/..."></div></div>
   `;
   document.getElementById('modal-footer').innerHTML = `
     <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
@@ -2218,9 +2400,13 @@ function saveNewVelada() {
   const nombre = document.getElementById('v-nombre').value.trim();
   if(!nombre) { showToast('⚠️ El nombre es obligatorio'); return; }
   campusVeladas.push({
-    nombre, dia: document.getElementById('v-dia').value,
+    nombre,
+    dia: document.getElementById('v-dia').value,
     tipo: document.getElementById('v-tipo').value,
-    descripcion: document.getElementById('v-desc').value
+    hora_inicio: document.getElementById('v-hinicio').value,
+    hora_fin: document.getElementById('v-hfin').value,
+    descripcion: document.getElementById('v-desc').value,
+    pdf_url: document.getElementById('v-pdf').value.trim()
   });
   localStorage.setItem('sv_campus_veladas', JSON.stringify(campusVeladas));
   closeModal(); renderVeladas(); showToast('✅ Velada añadida');
@@ -2456,6 +2642,249 @@ function mergeSocios() {
 }
 
 // ════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════
+// MI FICHA — perfil jugador
+// ════════════════════════════════════════════════════════
+function renderMiFicha() {
+  var perfil = currentPerfil;
+  if(!perfil) return;
+  // Find participant in CAMPUS_PARTICIPANTS by name match
+  var p = null;
+  if(CAMPUS_PARTICIPANTS) {
+    var nombre = (perfil.nombre || '').toLowerCase();
+    p = CAMPUS_PARTICIPANTS.find(function(x) {
+      return (x.nombre + ' ' + (x.apellidos||'')).toLowerCase().includes(nombre) ||
+             nombre.includes(x.nombre.toLowerCase());
+    });
+  }
+  var color = p ? (CAMPUS_EQUIPO_COLORS[p.equipo] || '#888') : '#f5c400';
+  var initials2 = function(n) { return n.split(' ').slice(0,2).map(function(w){ return w[0]||''; }).join('').toUpperCase(); };
+  var html = '<div style="background:var(--negro);border-radius:12px;padding:20px 24px;margin-bottom:20px;display:flex;gap:16px;align-items:center;">'
+    + '<div style="width:64px;height:64px;border-radius:50%;background:'+color+';color:#fff;font-family:\'Barlow Condensed\',sans-serif;font-size:22px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+      + (p && p.foto ? '<img src="'+p.foto+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentElement.textContent=\''+initials2(perfil.nombre||'?')+'\'">' : initials2(perfil.nombre||'?'))
+    + '</div>'
+    + '<div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:22px;font-weight:900;color:var(--amarillo);">'+(perfil.nombre||perfil.email)+'</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:2px;">'+perfil.email+'</div>'
+    + (p ? '<div style="margin-top:6px;"><span style="background:'+color+';color:#fff;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;">'+p.equipo+'</span></div>' : '')
+    + '</div></div>';
+
+  if(p) {
+    var hasAlergia = p.alergias && p.alergias.length > 2 && !['ninguna','no','nada','nan',''].some(function(x){ return p.alergias.toLowerCase().trim() === x; });
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">'
+      + '<div style="background:var(--blanco);border-radius:8px;padding:14px;border:1px solid var(--gris-claro);">'
+        + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:6px;">🏀 Deporte</div>'
+        + '<div style="font-weight:700;">'+p.deporte+'</div>'
+      + '</div>'
+      + '<div style="background:var(--blanco);border-radius:8px;padding:14px;border:1px solid var(--gris-claro);">'
+        + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:6px;">👕 Talla</div>'
+        + '<div style="font-weight:700;">'+(p.talla||'—')+'</div>'
+      + '</div>'
+      + '</div>';
+    if(hasAlergia) {
+      html += '<div style="background:#fce4ec;border-radius:8px;padding:14px;border-left:4px solid #c62828;margin-bottom:12px;">'
+        + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#c62828;font-weight:700;margin-bottom:4px;">⚠️ Alergias</div>'
+        + '<div style="font-size:13px;font-weight:600;">'+p.alergias+'</div>'
+      + '</div>';
+    }
+    if(p.medicacion && p.medicacion.length > 2 && p.medicacion.toLowerCase() !== 'nan') {
+      html += '<div style="background:#fff3e0;border-radius:8px;padding:14px;border-left:4px solid #f97316;margin-bottom:12px;">'
+        + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#f97316;font-weight:700;margin-bottom:4px;">💊 Medicación</div>'
+        + '<div style="font-size:13px;">'+p.medicacion+'</div>'
+      + '</div>';
+    }
+    // Pagos
+    var pagado = p.cuota1 + p.cuota2 + p.cuota3 + p.cuota4;
+    var pendiente = p.total - pagado;
+    html += '<div style="background:#fff3e0;border-radius:8px;padding:14px;border:1px solid var(--gris-claro);margin-bottom:12px;">'
+      + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:8px;">💰 Pagos — Total: '+p.total+'€</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+      + [1,2,3,4].map(function(n){ return p['cuota'+n] > 0 ? '<span style="background:var(--amarillo);color:var(--negro);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;">Cuota '+n+': '+p['cuota'+n]+'€</span>' : ''; }).join('')
+      + (pendiente > 0 ? '<span style="background:#fce4ec;color:#c62828;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;">Pendiente: '+pendiente.toFixed(0)+'€</span>' : '<span style="background:#e8f5e9;color:#1b7a3c;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;">✅ Al corriente</span>')
+      + '</div></div>';
+  } else {
+    html += '<div style="background:var(--gris-bg);border-radius:8px;padding:20px;text-align:center;color:var(--gris-medio);">No hay datos de participante asociados a este perfil.</div>';
+  }
+  // Photo edit
+  html += '<div style="background:var(--blanco);border-radius:8px;padding:14px;border:1px solid var(--gris-claro);">'
+    + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:8px;">📸 Mi foto</div>'
+    + '<div style="display:flex;gap:8px;">'
+    + '<input type="text" id="mi-foto-url" value="'+(p&&p.foto?p.foto:'')+'" placeholder="Enlace de Google Drive o imagen..." '
+    + 'style="flex:1;border:1.5px solid var(--gris-claro);border-radius:6px;padding:8px;font-size:12px;font-family:\'Barlow\',sans-serif;outline:none;">'
+    + (p ? '<button class="btn btn-primary btn-sm" onclick="saveMiFoto('+p.id+')">Guardar</button>' : '')
+    + '</div>'
+    + '<div style="font-size:11px;color:var(--gris-medio);margin-top:4px;">Comparte el enlace de Google Drive → Copiar enlace</div>'
+    + '</div>';
+
+  document.getElementById('mi-ficha-content').innerHTML = html;
+}
+
+function saveMiFoto(playerId) {
+  var url = (document.getElementById('mi-foto-url').value||'').trim();
+  if(!url) return;
+  var finalUrl = url;
+  var m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if(m) finalUrl = 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w200';
+  var photos = JSON.parse(localStorage.getItem('sv_campus_photos') || '{}');
+  photos[playerId] = finalUrl;
+  localStorage.setItem('sv_campus_photos', JSON.stringify(photos));
+  var p = CAMPUS_PARTICIPANTS.find(function(x){ return x.id === playerId; });
+  if(p) p.foto = finalUrl;
+  showToast('📸 Foto guardada');
+  renderMiFicha();
+}
+
+// ════════════════════════════════════════════════════════
+// MENSAJES
+// ════════════════════════════════════════════════════════
+var currentConvId = null;
+var mensajesData = {};
+var conversaciones = [];
+
+function loadMensajes() {
+  var saved = JSON.parse(localStorage.getItem('sv_mensajes_convs') || '[]');
+  conversaciones = saved;
+  mensajesData = JSON.parse(localStorage.getItem('sv_mensajes_data') || '{}');
+}
+
+function saveMensajesLocal() {
+  localStorage.setItem('sv_mensajes_convs', JSON.stringify(conversaciones));
+  localStorage.setItem('sv_mensajes_data', JSON.stringify(mensajesData));
+}
+
+function renderMensajes() {
+  loadMensajes();
+  // Add default group channels if not present
+  var grupoCanalId = 'grupo_general';
+  var equiposCanalIds = ['A','B','C','D','E'].map(function(e){ return 'grupo_equipo_'+e; });
+  var defaultConvs = [{ id: grupoCanalId, tipo: 'grupo', nombre: '📢 Canal General', icono: '📢' }];
+  ['A','B','C','D','E'].forEach(function(eq){
+    defaultConvs.push({ id: 'grupo_equipo_'+eq, tipo: 'grupo', nombre: '🏅 Equipo '+eq, icono: '🏅' });
+  });
+  defaultConvs.forEach(function(dc){
+    if(!conversaciones.find(function(c){ return c.id === dc.id; })) conversaciones.push(dc);
+  });
+
+  // Render conversation list
+  var listHtml = '<div style="padding:8px 0;">';
+  // Groups first
+  listHtml += '<div style="padding:6px 14px 2px;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">Canales de Grupo</div>';
+  conversaciones.filter(function(c){ return c.tipo==='grupo'; }).forEach(function(c){
+    var msgs = mensajesData[c.id] || [];
+    var last = msgs.length ? msgs[msgs.length-1] : null;
+    listHtml += '<div onclick="openConv(\''+c.id+'\')" style="padding:10px 14px;cursor:pointer;border-left:3px solid '+(currentConvId===c.id?'var(--amarillo)':'transparent')
+      + ';background:'+(currentConvId===c.id?'#fffbe6':'transparent')+';" onmouseover="this.style.background=\'#f9f9f9\'" onmouseout="this.style.background=\''+(currentConvId===c.id?'#fffbe6':'transparent')+'\'">'
+      + '<div style="font-weight:700;font-size:13px;">'+c.nombre+'</div>'
+      + (last ? '<div style="font-size:11px;color:var(--gris-medio);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+last.autor+': '+last.texto+'</div>' : '')
+      + '</div>';
+  });
+  // Direct messages
+  var directConvs = conversaciones.filter(function(c){ return c.tipo==='directo'; });
+  if(directConvs.length) {
+    listHtml += '<div style="padding:10px 14px 2px;margin-top:4px;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">Mensajes Directos</div>';
+    directConvs.forEach(function(c){
+      var msgs = mensajesData[c.id] || [];
+      var last = msgs.length ? msgs[msgs.length-1] : null;
+      listHtml += '<div onclick="openConv(\''+c.id+'\')" style="padding:10px 14px;cursor:pointer;border-left:3px solid '+(currentConvId===c.id?'var(--amarillo)':'transparent')
+        + ';background:'+(currentConvId===c.id?'#fffbe6':'transparent')+';" onmouseover="this.style.background=\'#f9f9f9\'" onmouseout="this.style.background=\''+(currentConvId===c.id?'#fffbe6':'transparent')+'\'">'
+        + '<div style="font-weight:700;font-size:13px;">💬 '+c.nombre+'</div>'
+        + (last ? '<div style="font-size:11px;color:var(--gris-medio);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+last.autor+': '+last.texto+'</div>' : '<div style="font-size:11px;color:var(--gris-medio);">Sin mensajes</div>')
+        + '</div>';
+    });
+  }
+  listHtml += '</div>';
+  document.getElementById('msg-conv-list').innerHTML = listHtml;
+  saveMensajesLocal();
+}
+
+function openConv(convId) {
+  currentConvId = convId;
+  var conv = conversaciones.find(function(c){ return c.id === convId; });
+  if(!conv) return;
+  document.getElementById('msg-chat-header').innerHTML = '<span style="font-weight:900;font-size:15px;">'+(conv.nombre||convId)+'</span>'
+    + (conv.tipo==='grupo' ? '<span style="font-size:11px;color:var(--gris-medio);margin-left:8px;">Canal de grupo</span>' : '');
+
+  var msgs = mensajesData[convId] || [];
+  var me = currentPerfil?.nombre || currentUser?.email?.split('@')[0] || 'Yo';
+  var msgsHtml = msgs.length
+    ? msgs.map(function(m){
+        var isMe = m.autor === me;
+        return '<div style="display:flex;flex-direction:column;align-items:'+(isMe?'flex-end':'flex-start')+';">'
+          + '<div style="max-width:72%;background:'+(isMe?'var(--amarillo)':'var(--blanco)')
+            + ';border:1px solid var(--gris-claro);border-radius:'+(isMe?'12px 12px 2px 12px':'12px 12px 12px 2px')
+            + ';padding:8px 12px;">'
+          + (conv.tipo==='grupo' && !isMe ? '<div style="font-size:10px;font-weight:700;color:var(--gris-medio);margin-bottom:2px;">'+m.autor+'</div>' : '')
+          + '<div style="font-size:13px;">' + m.texto + '</div>'
+          + '</div>'
+          + '<div style="font-size:10px;color:var(--gris-medio);margin-top:2px;">'+m.fecha+'</div>'
+          + '</div>';
+      }).join('')
+    : '<p style="text-align:center;color:var(--gris-medio);font-size:13px;padding:20px 0;">Sin mensajes aún. ¡Sé el primero en escribir!</p>';
+
+  document.getElementById('msg-chat-messages').innerHTML = msgsHtml;
+  document.getElementById('msg-chat-messages').scrollTop = 999999;
+  var inputArea = document.getElementById('msg-chat-input');
+  inputArea.style.display = 'flex';
+  renderMensajes();
+}
+
+function sendMsg() {
+  if(!currentConvId) return;
+  var input = document.getElementById('msg-input-text');
+  var texto = (input.value||'').trim();
+  if(!texto) return;
+  if(!mensajesData[currentConvId]) mensajesData[currentConvId] = [];
+  var autor = currentPerfil?.nombre || currentUser?.email?.split('@')[0] || 'Usuario';
+  var now = new Date().toLocaleString('es-ES', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+  mensajesData[currentConvId].push({ autor: autor, texto: texto, fecha: now });
+  input.value = '';
+  saveMensajesLocal();
+  openConv(currentConvId);
+}
+
+function openNuevoMensaje() {
+  // Load users from Supabase to pick recipient
+  sb.from('perfiles').select('id,nombre,email,rol').then(function(res){
+    var users = (res.data||[]).filter(function(u){ return u.id !== currentUser?.id; });
+    document.getElementById('modal-title').textContent = 'Nuevo mensaje directo';
+    document.getElementById('modal-body').innerHTML = '<div class="detail-field"><label>Destinatario</label>'
+      + '<select id="msg-dest" style="width:100%;border:1.5px solid var(--gris-claro);border-radius:6px;padding:8px;font-size:13px;font-family:\'Barlow\',sans-serif;">'
+      + '<option value="">Seleccionar...</option>'
+      + users.map(function(u){ return '<option value="'+u.id+'|'+(u.nombre||u.email)+'">'+( u.nombre||u.email)+' ('+u.rol+')</option>'; }).join('')
+      + '</select></div>'
+      + '<div class="detail-field" style="margin-top:12px;"><label>Primer mensaje</label>'
+      + '<textarea id="msg-first-text" placeholder="Escribe tu mensaje..." style="width:100%;border:1.5px solid var(--gris-claro);border-radius:6px;padding:8px;font-family:\'Barlow\',sans-serif;font-size:13px;min-height:80px;outline:none;"></textarea></div>';
+    document.getElementById('modal-footer').innerHTML = '<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>'
+      + '<button class="btn btn-primary" onclick="startDirectConv()">💬 Iniciar chat</button>';
+    document.getElementById('modal-overlay').classList.add('open');
+  });
+}
+
+function startDirectConv() {
+  var destSel = document.getElementById('msg-dest').value;
+  var texto = (document.getElementById('msg-first-text').value||'').trim();
+  if(!destSel) { showToast('⚠️ Selecciona un destinatario'); return; }
+  var parts = destSel.split('|');
+  var destId = parts[0];
+  var destNombre = parts[1];
+  var meId = currentUser?.id || 'me';
+  var convId = 'dm_' + [meId, destId].sort().join('_');
+  if(!conversaciones.find(function(c){ return c.id === convId; })) {
+    conversaciones.push({ id: convId, tipo: 'directo', nombre: destNombre });
+  }
+  if(texto) {
+    if(!mensajesData[convId]) mensajesData[convId] = [];
+    var autor = currentPerfil?.nombre || currentUser?.email?.split('@')[0] || 'Yo';
+    var now = new Date().toLocaleString('es-ES', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    mensajesData[convId].push({ autor: autor, texto: texto, fecha: now });
+  }
+  saveMensajesLocal();
+  closeModal();
+  showPanel('mensajes');
+  setTimeout(function(){ openConv(convId); }, 200);
+}
+
+
 // INIT — comprobar sesión activa
 // ════════════════════════════════════════════════════════
 (async()=>{
