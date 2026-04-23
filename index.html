@@ -72,6 +72,8 @@ body{font-family:'Barlow',sans-serif;background:var(--gris-bg);color:var(--negro
 .btn-sm{padding:4px 10px;font-size:11.5px;}
 .btn-wa{background:#25D366;color:#fff;display:inline-flex;align-items:center;gap:5px;}
 .btn-wa:hover{background:#1da851;}
+.btn-wa-mini{background:#25D366;color:#fff;border:none;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Barlow',sans-serif;line-height:1.6;}
+.btn-wa-mini:hover{background:#1da851;}
 
 .content{padding:24px 28px;}
 .panel{display:none;}.panel.active{display:block;}
@@ -2062,6 +2064,72 @@ const CAMPUS_TELEFONOS = {
   "Daniel Torres":["68031209","606754135"]
 };
 
+
+// ════════════════════════════════════════════════════════
+// WHATSAPP FAMILIAS — solo admin
+// ════════════════════════════════════════════════════════
+var WA_PLANTILLAS = [
+  { id: 'bienvenida', label: '👋 Bienvenida al campus', texto: 'Hola, somos el equipo del Campus San Viator 2026. Queremos comunicarles que {nombre} ha llegado perfectamente y ya está instalado/a. ¡Estamos encantados de tenerle con nosotros!' },
+  { id: 'medico', label: '🏥 Aviso médico', texto: 'Hola, le contactamos desde el Campus San Viator. Queremos informarles de que {nombre} no se encuentra del todo bien. Está siendo atendido/a por nuestro equipo médico. Os mantendremos informados. Sin urgencia de momento.' },
+  { id: 'urgente', label: '🚨 Incidencia urgente', texto: 'Hola, le contactamos urgentemente desde el Campus San Viator respecto a {nombre}. Por favor, llámenos en cuanto pueda al teléfono de coordinación.' },
+  { id: 'pago', label: '💰 Recordatorio de pago', texto: 'Hola, le escribimos desde el Campus San Viator para recordarle que hay un pago pendiente asociado a la inscripción de {nombre}. Por favor, contacte con nosotros para regularizarlo.' },
+  { id: 'foto', label: '📸 Envío de fotos', texto: 'Hola, desde el Campus San Viator les compartimos algunas fotos de {nombre} en el campus. ¡Está disfrutando mucho!' },
+  { id: 'fin', label: '🎉 Fin de campus — recogida', texto: 'Hola, les recordamos que el campus finaliza el próximo sábado. La recogida de {nombre} será a partir de las 10:00h en la residencia universitaria. Por favor, confírmen su asistencia.' },
+  { id: 'libre', label: '✏️ Mensaje personalizado', texto: '' }
+];
+
+function abrirMensajeWA(telefono, nombreJugador, familiar) {
+  var tel = telefono.replace(/[\s\.\-\/]/g, '');
+  if(!tel.startsWith('+') && !tel.startsWith('00')) tel = '+34' + tel;
+
+  document.getElementById('modal-title').textContent = '💬 WhatsApp a familiar de ' + nombreJugador;
+  
+  var plantillasHtml = WA_PLANTILLAS.map(function(p) {
+    return '<label style="display:flex;align-items:flex-start;gap:8px;padding:8px;border-radius:6px;cursor:pointer;border:1.5px solid var(--gris-claro);margin-bottom:6px;transition:border-color 0.15s;" onmouseover="this.style.borderColor=\'#25D366\'" onmouseout="this.style.borderColor=\'var(--gris-claro)\'">'
+      + '<input type="radio" name="wa-plantilla" value="' + p.id + '" onchange="seleccionarPlantillaWA(\'' + p.id + '\',\'' + nombreJugador + '\')" style="margin-top:2px;accent-color:#25D366;">'
+      + '<div><div style="font-size:13px;font-weight:700;">' + p.label + '</div>'
+      + (p.texto ? '<div style="font-size:11.5px;color:var(--gris-medio);margin-top:2px;line-height:1.5;">' + p.texto.replace('{nombre}', '<strong>' + nombreJugador.split(' ')[0] + '</strong>') + '</div>' : '')
+      + '</div></label>';
+  }).join('');
+
+  document.getElementById('modal-body').innerHTML = '<div style="margin-bottom:12px;padding:10px 12px;background:var(--gris-bg);border-radius:8px;border-left:4px solid #25D366;">'
+    + '<div style="font-size:11px;color:var(--gris-medio);margin-bottom:2px;">Enviando a (' + familiar + ')</div>'
+    + '<div style="font-weight:700;font-size:14px;">' + telefono + '</div>'
+    + '</div>'
+    + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);margin-bottom:8px;">Selecciona una plantilla</div>'
+    + plantillasHtml
+    + '<div style="margin-top:12px;">'
+    + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);margin-bottom:6px;">Mensaje a enviar</div>'
+    + '<textarea id="wa-mensaje-final" rows="5" placeholder="Selecciona una plantilla o escribe un mensaje personalizado..." '
+    + 'style="width:100%;border:1.5px solid #25D366;border-radius:6px;padding:10px;font-family:\'Barlow\',sans-serif;font-size:13px;outline:none;resize:vertical;box-sizing:border-box;"></textarea>'
+    + '</div>';
+
+  document.getElementById('modal-footer').innerHTML = '<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>'
+    + '<a id="wa-send-btn" href="#" target="_blank" class="btn" style="background:#25D366;color:#fff;font-weight:700;" onclick="return prepararEnvioWA(\'' + tel + '\')">'
+    + '💬 Abrir en WhatsApp</a>';
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function seleccionarPlantillaWA(plantillaId, nombreJugador) {
+  var p = WA_PLANTILLAS.find(function(x) { return x.id === plantillaId; });
+  if(!p) return;
+  var primerNombre = nombreJugador.split(' ')[0];
+  var textarea = document.getElementById('wa-mensaje-final');
+  if(textarea) textarea.value = p.texto.replace('{nombre}', primerNombre);
+}
+
+function prepararEnvioWA(tel) {
+  var msg = (document.getElementById('wa-mensaje-final').value || '').trim();
+  if(!msg) { showToast('⚠️ Escribe un mensaje antes de enviar'); return false; }
+  var url = 'https://wa.me/' + tel.replace('+','') + '?text=' + encodeURIComponent(msg);
+  window.open(url, '_blank');
+  closeModal();
+  showToast('✅ Abriendo WhatsApp...');
+  return false;
+}
+
+
 function getTelefonos(nombre) {
   // Exact match first
   if(CAMPUS_TELEFONOS[nombre]) return CAMPUS_TELEFONOS[nombre];
@@ -2090,8 +2158,20 @@ function openCampusDetail(id) {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
       <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">Talla</div><div style="font-weight:600;">${p.talla||'—'}</div></div>
       <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">Deporte</div><div style="font-weight:600;">${p.deporte}</div></div>
-      <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">📞 Tlf. Padre</div><div style="font-weight:600;">${(()=>{const t=getTelefonos(p.nombre);return t?`<a href="tel:${t[0]}" style="color:var(--negro);text-decoration:none;">${t[0]}</a>`:'—';})()}</div></div>
-      <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">📞 Tlf. Madre</div><div style="font-weight:600;">${(()=>{const t=getTelefonos(p.nombre);return t?`<a href="tel:${t[1]}" style="color:var(--negro);text-decoration:none;">${t[1]}</a>`:'—';})()}</div></div>
+      <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">📞 Tlf. Padre</div>
+        <div style="font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          ${(()=>{const t=getTelefonos(p.nombre);return t&&t[0]?`<a href="tel:${t[0]}" style="color:var(--negro);text-decoration:none;">${t[0]}</a>
+            ${currentPerfil?.rol==='admin'?`<button class="btn-wa-mini" onclick="abrirMensajeWA('${t[0]}','${p.nombre} ${p.apellidos}','padre')">💬 WA</button>`:''}
+          `:'—';})()}
+        </div>
+      </div>
+      <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">📞 Tlf. Madre</div>
+        <div style="font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          ${(()=>{const t=getTelefonos(p.nombre);return t&&t[1]?`<a href="tel:${t[1]}" style="color:var(--negro);text-decoration:none;">${t[1]}</a>
+            ${currentPerfil?.rol==='admin'?`<button class="btn-wa-mini" onclick="abrirMensajeWA('${t[1]}','${p.nombre} ${p.apellidos}','madre')">💬 WA</button>`:''}
+          `:'—';})()}
+        </div>
+      </div>
       <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">🛏️ Nº Habitación</div>
         <div style="font-weight:600;display:flex;align-items:center;gap:6px;">
           <span id="hab-val-${p.id}">${(()=>{const h=JSON.parse(localStorage.getItem('sv_campus_habitaciones')||'{}');return h[p.id]||'—';})()}</span>
@@ -2153,7 +2233,13 @@ function openCampusDetail(id) {
       </div>
     </div>` : ''}
   `;
-  document.getElementById('modal-footer').innerHTML = `<button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>`;
+  var _telsCampus = getTelefonos(p.nombre);
+  var _waFooter = '';
+  if(currentPerfil?.rol === 'admin' && _telsCampus) {
+    if(_telsCampus[0]) _waFooter += '<button class="btn-wa-mini" style="font-size:12px;padding:5px 10px;" onclick="abrirMensajeWA(\'' + _telsCampus[0] + '\',\'' + p.nombre + ' ' + p.apellidos + '\',\'padre\')">💬 WA Padre</button>';
+    if(_telsCampus[1]) _waFooter += '<button class="btn-wa-mini" style="font-size:12px;padding:5px 10px;margin-left:6px;" onclick="abrirMensajeWA(\'' + _telsCampus[1] + '\',\'' + p.nombre + ' ' + p.apellidos + '\',\'madre\')">💬 WA Madre</button>';
+  }
+  document.getElementById('modal-footer').innerHTML = '<button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>' + _waFooter;
   document.getElementById('modal-overlay').classList.add('open');
 }
 
