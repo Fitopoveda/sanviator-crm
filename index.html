@@ -223,6 +223,34 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
 .bar-fill{height:100%;border-radius:9px;background:var(--amarillo);transition:width 0.8s;}
 .bar-val{font-size:12px;font-weight:700;min-width:22px;text-align:right;}
 
+/* ENTRENAMIENTOS */
+.et-card{background:var(--blanco);border-radius:10px;border:1px solid var(--gris-claro);padding:16px;cursor:pointer;transition:all 0.15s;border-left:4px solid var(--amarillo);}
+.et-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.1);transform:translateY(-2px);}
+.et-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.et-card-title{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:1px;}
+.et-card-meta{font-size:11.5px;color:var(--gris-medio);margin-top:2px;}
+.et-card-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;}
+.et-tag{padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700;}
+.et-tag-tecnico{background:#dbeafe;color:#1e40af;}
+.et-tag-tactico{background:#dcfce7;color:#166534;}
+.et-tag-fisico{background:#fef9c3;color:#854d0e;}
+.et-tag-competicion{background:#fce7f3;color:#9d174d;}
+.et-tag-calentamiento{background:#ffedd5;color:#9a3412;}
+.et-tag-vuelta{background:#f1f5f9;color:#475569;}
+.et-tag-generico{background:var(--gris-bg);color:var(--gris-medio);}
+.bib-card{background:var(--blanco);border-radius:10px;border:1px solid var(--gris-claro);overflow:hidden;transition:all 0.15s;}
+.bib-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.1);border-color:var(--amarillo);}
+.bib-card-body{padding:12px 14px;}
+.bib-card-title{font-weight:700;font-size:14px;margin-bottom:4px;}
+.bib-card-desc{font-size:12px;color:var(--gris-medio);margin-bottom:8px;line-height:1.5;}
+.pizarra-canvas{border-radius:8px;cursor:crosshair;display:block;max-width:100%;}
+.pizarra-toolbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center;}
+.pizarra-tool{padding:5px 10px;border:1.5px solid var(--gris-claro);border-radius:5px;background:var(--blanco);cursor:pointer;font-size:12px;font-weight:700;transition:all 0.15s;}
+.pizarra-tool.active{background:var(--negro);color:var(--amarillo);border-color:var(--negro);}
+.ej-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--gris-bg);border-radius:7px;border:1px solid var(--gris-claro);margin-bottom:6px;}
+.ej-row-num{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;min-width:22px;color:var(--gris-medio);}
+.ej-row-name{flex:1;font-size:13px;font-weight:700;}
+.ej-row-dur{font-size:12px;color:var(--gris-medio);white-space:nowrap;}
 @media(max-width:900px){
   .sidebar{width:56px;}
   .sidebar-logo .club-name,.sidebar-logo .club-sub,.nav-section-label,.nav-item span,.sidebar-user .user-name,.sidebar-user .user-rol{display:none;}
@@ -276,6 +304,9 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
 
       <div class="nav-section-label">Campus</div>
       <div class="nav-item" onclick="showPanel('campus')"><span>🏕️</span><span>Campus Salamanca</span></div>
+
+      <div class="nav-section-label entrenador-only">Entrenamientos</div>
+      <div class="nav-item entrenador-only" onclick="showPanel('entrenamientos')"><span>📋</span><span>Planificador</span></div>
 
       <div class="nav-section-label jugador-only" style="display:none">Mi espacio</div>
       <div class="nav-item jugador-only" style="display:none" onclick="showPanel('mi-ficha')"><span>👤</span><span>Mi Ficha</span></div>
@@ -489,10 +520,9 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
 
         <!-- HORARIO -->
         <div class="campus-section" id="cs-horario">
-          <!-- Controles superiores -->
           <div style="background:var(--blanco);border-radius:10px;border:1px solid var(--gris-claro);padding:16px 20px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
             <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:280px;">
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;color:var(--gris-medio);white-space:nowrap;">📅 Día del campus</label>
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;color:var(--gris-medio);white-space:nowrap;">📅 Día</label>
               <select id="hor-dia-sel" onchange="renderHorarioCampus()" style="flex:1;border:1.5px solid var(--gris-claro);border-radius:6px;padding:7px 10px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;outline:none;">
                 <option value="1">Día 1 — Miércoles 1 Jul (Llegada)</option>
                 <option value="2">Día 2 — Jueves 2 Jul</option>
@@ -517,21 +547,11 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
             </div>
             <div id="hor-admin-btns" style="display:flex;gap:6px;"></div>
           </div>
-
-          <!-- Cabecera del día activo -->
           <div id="hor-dia-header" style="margin-bottom:12px;"></div>
-
-          <!-- Layout principal: calendario + pistas -->
-          <div style="display:grid;grid-template-columns:1fr 320px;gap:14px;" id="hor-main-grid">
-            <!-- Columna izquierda: timeline -->
+          <div style="display:grid;grid-template-columns:1fr 300px;gap:14px;">
             <div style="background:var(--blanco);border-radius:10px;border:1px solid var(--gris-claro);overflow:hidden;">
               <div id="hor-timeline"></div>
-              <!-- Botón añadir actividad -->
-              <div id="hor-add-row" style="padding:10px 16px;border-top:1px solid var(--gris-claro);display:none;">
-                <button onclick="openAddActividadHorario()" class="btn btn-sm btn-primary" style="width:100%;">+ Añadir actividad</button>
-              </div>
             </div>
-            <!-- Columna derecha: pistas por equipo -->
             <div style="background:var(--blanco);border-radius:10px;border:1px solid var(--gris-claro);padding:16px;">
               <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;color:#c0392b;">🏟️ Pistas del día</div>
               <div id="hor-pistas"></div>
@@ -607,6 +627,40 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
         <div class="integration-box">
           <h3>📅 Puertas Abiertas — desde 1 junio 2025</h3>
           <div class="pruebas-grid" id="pruebas-content"></div>
+        </div>
+      </div>
+
+      <!-- PLANIFICADOR DE ENTRENAMIENTOS -->
+      <div class="panel" id="panel-entrenamientos">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+          <div style="display:flex;gap:4px;background:var(--blanco);border:1px solid var(--gris-claro);border-radius:7px;padding:3px;">
+            <button id="et-tab-lista" onclick="etTab('lista')" class="btn btn-sm" style="background:var(--negro);color:var(--amarillo);">📋 Entrenamientos</button>
+            <button id="et-tab-biblioteca" onclick="etTab('biblioteca')" class="btn btn-sm" style="background:transparent;color:var(--negro);">📚 Biblioteca</button>
+          </div>
+          <button class="btn btn-primary" id="et-btn-nuevo-entreno" onclick="openNuevoEntreno()">+ Nuevo entreno</button>
+          <button class="btn btn-secondary" id="et-btn-nuevo-ejercicio" onclick="openNuevoEjercicio(null)" style="display:none;">+ Nuevo ejercicio</button>
+        </div>
+        <div id="et-view-lista">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;" id="et-entrenos-grid">
+            <div class="empty-state"><div class="icon">📋</div><p>Cargando...</p></div>
+          </div>
+        </div>
+        <div id="et-view-biblioteca" style="display:none;">
+          <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+            <input type="text" id="et-bib-q" placeholder="🔍 Buscar ejercicio..." oninput="renderBiblioteca()"
+              style="flex:1;min-width:180px;border:1.5px solid var(--gris-claro);border-radius:6px;padding:7px 11px;font-family:'Barlow',sans-serif;font-size:13px;outline:none;">
+            <select id="et-bib-deporte" onchange="renderBiblioteca()" style="border:1.5px solid var(--gris-claro);border-radius:6px;padding:7px 10px;font-family:'Barlow',sans-serif;font-size:13px;background:var(--blanco);outline:none;">
+              <option value="">Todos los deportes</option><option>Baloncesto</option><option>Fútbol</option><option>Ambos</option>
+            </select>
+            <select id="et-bib-tipo" onchange="renderBiblioteca()" style="border:1.5px solid var(--gris-claro);border-radius:6px;padding:7px 10px;font-family:'Barlow',sans-serif;font-size:13px;background:var(--blanco);outline:none;">
+              <option value="">Todos los tipos</option>
+              <option>Técnico</option><option>Táctico</option><option>Físico</option>
+              <option>Competición</option><option>Calentamiento</option><option>Vuelta a la calma</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;" id="et-bib-grid">
+            <div class="empty-state"><div class="icon">📚</div><p>Cargando ejercicios...</p></div>
+          </div>
         </div>
       </div>
 
@@ -738,6 +792,7 @@ function applyRoleUI() {
   const isJugador = rol === 'jugador';
   document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? '' : 'none');
   document.querySelectorAll('.can-edit').forEach(el => el.style.display = canEdit ? '' : 'none');
+  document.querySelectorAll('.entrenador-only').forEach(el => el.style.display = canEdit ? '' : 'none');
   document.querySelectorAll('.jugador-only').forEach(el => el.style.display = isJugador ? '' : 'none');
   if(isJugador) {
     // Hide all nav items except Campus, Mensajes and Mi Ficha
@@ -1068,7 +1123,7 @@ function importCSV(event) {
 // ════════════════════════════════════════════════════════
 // NAVEGACIÓN
 // ════════════════════════════════════════════════════════
-const TITLES={dashboard:'Dashboard',inscritos:'Pruebas · Inscritos',usuarios:'Administración · Usuarios',integracion:'Pruebas · Integración',pruebas:'Pruebas · Calendario',campus:'Campus Salamanca',mensajes:'Mensajes','mi-ficha':'Mi Ficha'};
+const TITLES={dashboard:'Dashboard',inscritos:'Pruebas · Inscritos',usuarios:'Administración · Usuarios',integracion:'Pruebas · Integración',pruebas:'Pruebas · Calendario',campus:'Campus Salamanca',mensajes:'Mensajes','mi-ficha':'Mi Ficha',entrenamientos:'Planificador de Entrenamientos'};
 function showPanel(name){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -1083,6 +1138,7 @@ function showPanel(name){
   if(name==='pruebas') renderPruebas();
   if(name==='mensajes') renderMensajes();
   if(name==='mi-ficha') renderMiFicha();
+  if(name==='entrenamientos') renderEntrenamientos();
 }
 
 // ════════════════════════════════════════════════════════
@@ -1893,312 +1949,239 @@ const CAMPUS_EQUIPO_COLORS = {
 let campusVeladas = JSON.parse(localStorage.getItem('sv_campus_veladas') || JSON.stringify([{"dia": "Miérc 2", "nombre": "Cuida tu motor", "descripcion": "Sesión de recuperación física y mental. Vídeos motivacionales.", "tipo": "recuperacion"}, {"dia": "Juev 3", "nombre": "Cuida tu motor", "descripcion": "Charla técnica + estiramientos grupales.", "tipo": "recuperacion"}, {"dia": "Sáb 4", "nombre": "3x3 Nocturno", "descripcion": "Torneo nocturno de baloncesto 3x3 entre equipos mixtos.", "tipo": "competicion"}, {"dia": "Dom 5", "nombre": "Cine", "descripcion": "Sesión de cine en el teatro de la residencia.", "tipo": "ocio"}, {"dia": "Lun 6", "nombre": "Cuida tu motor", "descripcion": "Recuperación activa post-partido.", "tipo": "recuperacion"}, {"dia": "Mar 7", "nombre": "Velada del Miedo", "descripcion": "Velada temática de terror con pruebas y juegos nocturnos.", "tipo": "especial"}, {"dia": "Miérc 8", "nombre": "Safari Fotográfico Salamanca", "descripcion": "Grupos de jugadores hacen fotos por Salamanca con misiones fotográficas.", "tipo": "excursion"}, {"dia": "Juev 9", "nombre": "Fiesta Final", "descripcion": "Gran fiesta de clausura del campus con premios y celebración.", "tipo": "especial"}]));
 let campusContenido = JSON.parse(localStorage.getItem('sv_campus_contenido') || '{}');
 
-// ════════════════════════════════════════════════════════
-// HORARIO CAMPUS — Sistema por día y por equipo
-// ════════════════════════════════════════════════════════
-
 const HOR_DIAS = [
-  {num:1,  dia:'Miércoles', fecha:'1 Jul',  label:'Llegada'},
-  {num:2,  dia:'Jueves',    fecha:'2 Jul',  label:''},
-  {num:3,  dia:'Viernes',   fecha:'3 Jul',  label:''},
-  {num:4,  dia:'Sábado',    fecha:'4 Jul',  label:''},
-  {num:5,  dia:'Domingo',   fecha:'5 Jul',  label:''},
-  {num:6,  dia:'Lunes',     fecha:'6 Jul',  label:''},
-  {num:7,  dia:'Martes',    fecha:'7 Jul',  label:''},
-  {num:8,  dia:'Miércoles', fecha:'8 Jul',  label:''},
-  {num:9,  dia:'Jueves',    fecha:'9 Jul',  label:''},
-  {num:10, dia:'Viernes',   fecha:'10 Jul', label:'Salida'},
+  {num:1,dia:'Miércoles',fecha:'1 Jul',label:'Llegada'},
+  {num:2,dia:'Jueves',fecha:'2 Jul',label:''},
+  {num:3,dia:'Viernes',fecha:'3 Jul',label:''},
+  {num:4,dia:'Sábado',fecha:'4 Jul',label:''},
+  {num:5,dia:'Domingo',fecha:'5 Jul',label:''},
+  {num:6,dia:'Lunes',fecha:'6 Jul',label:''},
+  {num:7,dia:'Martes',fecha:'7 Jul',label:''},
+  {num:8,dia:'Miércoles',fecha:'8 Jul',label:''},
+  {num:9,dia:'Jueves',fecha:'9 Jul',label:''},
+  {num:10,dia:'Viernes',fecha:'10 Jul',label:'Salida'},
 ];
-
-// Actividades base por día extraídas del PII (compartidas por todos salvo overrides de equipo)
 const HOR_BASE_DEFAULT = {
-  1: [
-    {hora:'09:00', act:'Check In / Llegada',      tipo:'traslado',    equipos:[]},
-    {hora:'13:00', act:'Habitaciones',             tipo:'descanso',    equipos:[]},
-    {hora:'14:30', act:'Comida',                   tipo:'comida',      equipos:[]},
-    {hora:'15:30', act:'Siesta / Juegos',          tipo:'ocio',        equipos:[]},
-    {hora:'17:00', act:'Entrenamiento tarde',       tipo:'entreno',     equipos:[]},
-    {hora:'20:00', act:'Ducha',                    tipo:'descanso',    equipos:[]},
-    {hora:'21:00', act:'Cena',                     tipo:'comida',      equipos:[]},
-    {hora:'21:45', act:'Paseo',                    tipo:'ocio',        equipos:[]},
-    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  1:[
+    {hora:'09:00',act:'Check In / Llegada',tipo:'traslado',equipos:[]},
+    {hora:'13:00',act:'Habitaciones',tipo:'descanso',equipos:[]},
+    {hora:'14:30',act:'Comida',tipo:'comida',equipos:[]},
+    {hora:'15:30',act:'Siesta / Juegos',tipo:'ocio',equipos:[]},
+    {hora:'17:00',act:'Entrenamiento tarde',tipo:'entreno',equipos:[]},
+    {hora:'20:00',act:'Ducha',tipo:'descanso',equipos:[]},
+    {hora:'21:00',act:'Cena',tipo:'comida',equipos:[]},
+    {hora:'21:45',act:'Paseo',tipo:'ocio',equipos:[]},
+    {hora:'23:45',act:'Descanso',tipo:'descanso',equipos:[]},
   ],
-  2: [
-    {hora:'08:30', act:'Levantarse',               tipo:'descanso',    equipos:[]},
-    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
-    {hora:'10:00', act:'Traslado a instalaciones', tipo:'traslado',    equipos:[]},
-    {hora:'10:15', act:'Entrenamiento mañana',     tipo:'entreno',     equipos:[]},
-    {hora:'13:00', act:'Piscina',                  tipo:'ocio',        equipos:[]},
-    {hora:'14:00', act:'Cambio / Comida',          tipo:'comida',      equipos:[]},
-    {hora:'15:30', act:'Actividad sobremesa',       tipo:'ocio',        equipos:[]},
-    {hora:'17:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
-    {hora:'17:30', act:'Entrenamiento tarde',       tipo:'entreno',     equipos:[]},
-    {hora:'20:00', act:'Ducha',                    tipo:'descanso',    equipos:[]},
-    {hora:'21:00', act:'Cena',                     tipo:'comida',      equipos:[]},
-    {hora:'21:45', act:'España (velada)',           tipo:'velada',      equipos:[]},
-    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  2:[
+    {hora:'08:30',act:'Levantarse',tipo:'descanso',equipos:[]},
+    {hora:'09:00',act:'Desayuno',tipo:'comida',equipos:[]},
+    {hora:'10:00',act:'Traslado a instalaciones',tipo:'traslado',equipos:[]},
+    {hora:'10:15',act:'Entrenamiento mañana',tipo:'entreno',equipos:[]},
+    {hora:'13:00',act:'Piscina',tipo:'ocio',equipos:[]},
+    {hora:'14:00',act:'Cambio / Comida',tipo:'comida',equipos:[]},
+    {hora:'15:30',act:'Actividad sobremesa',tipo:'ocio',equipos:[]},
+    {hora:'17:00',act:'Traslado',tipo:'traslado',equipos:[]},
+    {hora:'17:30',act:'Entrenamiento tarde',tipo:'entreno',equipos:[]},
+    {hora:'20:00',act:'Ducha',tipo:'descanso',equipos:[]},
+    {hora:'21:00',act:'Cena',tipo:'comida',equipos:[]},
+    {hora:'21:45',act:'España (velada)',tipo:'velada',equipos:[]},
+    {hora:'23:45',act:'Descanso',tipo:'descanso',equipos:[]},
   ],
-  3: [
-    {hora:'08:30', act:'Levantarse',               tipo:'descanso',    equipos:[]},
-    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
-    {hora:'10:00', act:'Traslado a instalaciones', tipo:'traslado',    equipos:[]},
-    {hora:'10:15', act:'Entrenamiento mañana',     tipo:'entreno',     equipos:[]},
-    {hora:'13:00', act:'Piscina',                  tipo:'ocio',        equipos:[]},
-    {hora:'14:00', act:'Cambio / Comida',          tipo:'comida',      equipos:[]},
-    {hora:'15:30', act:'Actividad sobremesa',       tipo:'ocio',        equipos:[]},
-    {hora:'17:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
-    {hora:'17:30', act:'Entrenamiento tarde',       tipo:'entreno',     equipos:[]},
-    {hora:'20:00', act:'Ducha',                    tipo:'descanso',    equipos:[]},
-    {hora:'21:00', act:'Cena',                     tipo:'comida',      equipos:[]},
-    {hora:'21:45', act:'Cuida tu motor (velada)',   tipo:'velada',      equipos:[]},
-    {hora:'22:30', act:'Pruebas',                  tipo:'ocio',        equipos:[]},
-    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  3:[
+    {hora:'08:30',act:'Levantarse',tipo:'descanso',equipos:[]},
+    {hora:'09:00',act:'Desayuno',tipo:'comida',equipos:[]},
+    {hora:'10:00',act:'Traslado',tipo:'traslado',equipos:[]},
+    {hora:'10:15',act:'Entrenamiento mañana',tipo:'entreno',equipos:[]},
+    {hora:'13:00',act:'Piscina',tipo:'ocio',equipos:[]},
+    {hora:'14:00',act:'Cambio / Comida',tipo:'comida',equipos:[]},
+    {hora:'15:30',act:'Actividad sobremesa',tipo:'ocio',equipos:[]},
+    {hora:'17:00',act:'Traslado',tipo:'traslado',equipos:[]},
+    {hora:'17:30',act:'Entrenamiento tarde',tipo:'entreno',equipos:[]},
+    {hora:'20:00',act:'Ducha',tipo:'descanso',equipos:[]},
+    {hora:'21:00',act:'Cena',tipo:'comida',equipos:[]},
+    {hora:'21:45',act:'Cuida tu motor (velada)',tipo:'velada',equipos:[]},
+    {hora:'22:30',act:'Pruebas',tipo:'ocio',equipos:[]},
+    {hora:'23:45',act:'Descanso',tipo:'descanso',equipos:[]},
   ],
-  4: [
-    {hora:'08:30', act:'Sesión de tiro',           tipo:'entreno',     equipos:[]},
-    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
-    {hora:'10:00', act:'Multideporte',             tipo:'ocio',        equipos:[]},
-    {hora:'14:00', act:'Comida / Picnic',          tipo:'comida',      equipos:[]},
-    {hora:'15:30', act:'Actividad sobremesa',       tipo:'ocio',        equipos:[]},
-    {hora:'17:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
-    {hora:'17:30', act:'Entrenamiento tarde',       tipo:'entreno',     equipos:[]},
-    {hora:'20:00', act:'Ducha',                    tipo:'descanso',    equipos:[]},
-    {hora:'21:00', act:'Cena',                     tipo:'comida',      equipos:[]},
-    {hora:'21:45', act:'3x3 Nocturno (velada)',    tipo:'velada',      equipos:[]},
-    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  4:[
+    {hora:'08:30',act:'Sesión de tiro',tipo:'entreno',equipos:[]},
+    {hora:'09:00',act:'Desayuno',tipo:'comida',equipos:[]},
+    {hora:'10:00',act:'Multideporte',tipo:'ocio',equipos:[]},
+    {hora:'14:00',act:'Comida / Picnic',tipo:'comida',equipos:[]},
+    {hora:'15:30',act:'Actividad sobremesa',tipo:'ocio',equipos:[]},
+    {hora:'17:30',act:'Entrenamiento tarde',tipo:'entreno',equipos:[]},
+    {hora:'20:00',act:'Ducha',tipo:'descanso',equipos:[]},
+    {hora:'21:00',act:'Cena',tipo:'comida',equipos:[]},
+    {hora:'21:45',act:'3x3 Nocturno (velada)',tipo:'velada',equipos:[]},
+    {hora:'23:45',act:'Descanso',tipo:'descanso',equipos:[]},
   ],
-  5: [
-    {hora:'08:30', act:'Sesión de tiro',           tipo:'entreno',     equipos:[]},
-    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
-    {hora:'10:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
-    {hora:'10:15', act:'Entrenamiento mañana',     tipo:'entreno',     equipos:[]},
-    {hora:'13:00', act:'Piscina',                  tipo:'ocio',        equipos:[]},
-    {hora:'14:00', act:'Cambio / Comida',          tipo:'comida',      equipos:[]},
-    {hora:'15:30', act:'Cine',                     tipo:'ocio',        equipos:[]},
-    {hora:'20:00', act:'Ducha / Paseo / Piscina',  tipo:'ocio',        equipos:[]},
-    {hora:'21:00', act:'Cena',                     tipo:'comida',      equipos:[]},
-    {hora:'21:45', act:'Cuida tu motor (velada)',   tipo:'velada',      equipos:[]},
-    {hora:'22:30', act:'Bal Pris',                 tipo:'ocio',        equipos:[]},
-    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  5:[
+    {hora:'08:30',act:'Sesión de tiro',tipo:'entreno',equipos:[]},
+    {hora:'09:00',act:'Desayuno',tipo:'comida',equipos:[]},
+    {hora:'10:00',act:'Traslado',tipo:'traslado',equipos:[]},
+    {hora:'10:15',act:'Entrenamiento mañana',tipo:'entreno',equipos:[]},
+    {hora:'13:00',act:'Piscina',tipo:'ocio',equipos:[]},
+    {hora:'14:00',act:'Cambio / Comida',tipo:'comida',equipos:[]},
+    {hora:'15:30',act:'Cine',tipo:'ocio',equipos:[]},
+    {hora:'20:00',act:'Ducha / Paseo / Piscina',tipo:'ocio',equipos:[]},
+    {hora:'21:00',act:'Cena',tipo:'comida',equipos:[]},
+    {hora:'21:45',act:'Cuida tu motor (velada)',tipo:'velada',equipos:[]},
+    {hora:'23:45',act:'Descanso',tipo:'descanso',equipos:[]},
   ],
-  6: [
-    {hora:'08:30', act:'Sesión de tiro',           tipo:'entreno',     equipos:[]},
-    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
-    {hora:'10:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
-    {hora:'10:15', act:'Entrenamiento mañana',     tipo:'entreno',     equipos:[]},
-    {hora:'13:00', act:'Piscina',                  tipo:'ocio',        equipos:[]},
-    {hora:'14:00', act:'Cambio / Comida',          tipo:'comida',      equipos:[]},
-    {hora:'15:30', act:'Actividad sobremesa',       tipo:'ocio',        equipos:[]},
-    {hora:'17:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
-    {hora:'17:30', act:'Entrenamiento tarde',       tipo:'entreno',     equipos:[]},
-    {hora:'20:00', act:'Ducha',                    tipo:'descanso',    equipos:[]},
-    {hora:'21:00', act:'Cena',                     tipo:'comida',      equipos:[]},
-    {hora:'21:45', act:'España (velada)',           tipo:'velada',      equipos:[]},
-    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  6:[
+    {hora:'08:30',act:'Sesión de tiro',tipo:'entreno',equipos:[]},
+    {hora:'09:00',act:'Desayuno',tipo:'comida',equipos:[]},
+    {hora:'10:00',act:'Traslado',tipo:'traslado',equipos:[]},
+    {hora:'10:15',act:'Entrenamiento mañana',tipo:'entreno',equipos:[]},
+    {hora:'13:00',act:'Piscina',tipo:'ocio',equipos:[]},
+    {hora:'14:00',act:'Cambio / Comida',tipo:'comida',equipos:[]},
+    {hora:'15:30',act:'Actividad sobremesa',tipo:'ocio',equipos:[]},
+    {hora:'17:00',act:'Traslado',tipo:'traslado',equipos:[]},
+    {hora:'17:30',act:'Entrenamiento tarde',tipo:'entreno',equipos:[]},
+    {hora:'20:00',act:'Ducha',tipo:'descanso',equipos:[]},
+    {hora:'21:00',act:'Cena',tipo:'comida',equipos:[]},
+    {hora:'21:45',act:'España (velada)',tipo:'velada',equipos:[]},
+    {hora:'23:45',act:'Descanso',tipo:'descanso',equipos:[]},
   ],
-  7: [
-    {hora:'08:30', act:'Sesión de tiro',           tipo:'entreno',     equipos:[]},
-    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
-    {hora:'10:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
-    {hora:'10:15', act:'Entrenamiento mañana',     tipo:'entreno',     equipos:[]},
-    {hora:'13:00', act:'Piscina',                  tipo:'ocio',        equipos:[]},
-    {hora:'14:00', act:'Cambio / Comida',          tipo:'comida',      equipos:[]},
-    {hora:'15:30', act:'Actividad sobremesa',       tipo:'ocio',        equipos:[]},
-    {hora:'17:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
-    {hora:'17:30', act:'Entrenamiento tarde',       tipo:'entreno',     equipos:[]},
-    {hora:'20:00', act:'Ducha',                    tipo:'descanso',    equipos:[]},
-    {hora:'21:00', act:'Cena',                     tipo:'comida',      equipos:[]},
-    {hora:'21:45', act:'Velada del Miedo',          tipo:'velada',      equipos:[]},
-    {hora:'22:30', act:'Batman y Robin',           tipo:'ocio',        equipos:[]},
-    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  7:[
+    {hora:'08:30',act:'Sesión de tiro',tipo:'entreno',equipos:[]},
+    {hora:'09:00',act:'Desayuno',tipo:'comida',equipos:[]},
+    {hora:'10:00',act:'Traslado',tipo:'traslado',equipos:[]},
+    {hora:'10:15',act:'Entrenamiento mañana',tipo:'entreno',equipos:[]},
+    {hora:'13:00',act:'Piscina',tipo:'ocio',equipos:[]},
+    {hora:'14:00',act:'Cambio / Comida',tipo:'comida',equipos:[]},
+    {hora:'15:30',act:'Actividad sobremesa',tipo:'ocio',equipos:[]},
+    {hora:'17:00',act:'Traslado',tipo:'traslado',equipos:[]},
+    {hora:'17:30',act:'Entrenamiento tarde',tipo:'entreno',equipos:[]},
+    {hora:'20:00',act:'Ducha',tipo:'descanso',equipos:[]},
+    {hora:'21:00',act:'Cena',tipo:'comida',equipos:[]},
+    {hora:'21:45',act:'Velada del Miedo',tipo:'velada',equipos:[]},
+    {hora:'23:45',act:'Descanso',tipo:'descanso',equipos:[]},
   ],
-  8: [
-    {hora:'08:30', act:'Sesión de tiro',           tipo:'entreno',     equipos:[]},
-    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
-    {hora:'10:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
-    {hora:'10:15', act:'Entrenamiento mañana',     tipo:'entreno',     equipos:[]},
-    {hora:'13:00', act:'Piscina',                  tipo:'ocio',        equipos:[]},
-    {hora:'14:00', act:'Cambio / Comida',          tipo:'comida',      equipos:[]},
-    {hora:'15:30', act:'Safari Fotográfico Salamanca', tipo:'salida',  equipos:[]},
-    {hora:'17:30', act:'Entrenamiento tarde',       tipo:'entreno',     equipos:[]},
-    {hora:'20:00', act:'Ducha',                    tipo:'descanso',    equipos:[]},
-    {hora:'21:00', act:'Cena',                     tipo:'comida',      equipos:[]},
-    {hora:'21:45', act:'Pistas (velada)',           tipo:'velada',      equipos:[]},
-    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  8:[
+    {hora:'08:30',act:'Sesión de tiro',tipo:'entreno',equipos:[]},
+    {hora:'09:00',act:'Desayuno',tipo:'comida',equipos:[]},
+    {hora:'10:00',act:'Traslado',tipo:'traslado',equipos:[]},
+    {hora:'10:15',act:'Entrenamiento mañana',tipo:'entreno',equipos:[]},
+    {hora:'13:00',act:'Piscina',tipo:'ocio',equipos:[]},
+    {hora:'14:00',act:'Cambio / Comida',tipo:'comida',equipos:[]},
+    {hora:'15:30',act:'Safari Fotográfico Salamanca',tipo:'salida',equipos:[]},
+    {hora:'17:30',act:'Entrenamiento tarde',tipo:'entreno',equipos:[]},
+    {hora:'20:00',act:'Ducha',tipo:'descanso',equipos:[]},
+    {hora:'21:00',act:'Cena',tipo:'comida',equipos:[]},
+    {hora:'21:45',act:'Pistas (velada)',tipo:'velada',equipos:[]},
+    {hora:'23:45',act:'Descanso',tipo:'descanso',equipos:[]},
   ],
-  9: [
-    {hora:'08:30', act:'Sesión de tiro',           tipo:'entreno',     equipos:[]},
-    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
-    {hora:'10:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
-    {hora:'10:15', act:'Entrenamiento mañana',     tipo:'entreno',     equipos:[]},
-    {hora:'13:00', act:'Piscina',                  tipo:'ocio',        equipos:[]},
-    {hora:'14:00', act:'Cambio / Comida',          tipo:'comida',      equipos:[]},
-    {hora:'15:30', act:'Actividad sobremesa',       tipo:'ocio',        equipos:[]},
-    {hora:'17:00', act:'Traslado',                 tipo:'traslado',    equipos:[]},
-    {hora:'17:30', act:'Entrenamiento tarde',       tipo:'entreno',     equipos:[]},
-    {hora:'20:00', act:'Ducha',                    tipo:'descanso',    equipos:[]},
-    {hora:'21:00', act:'Fiesta Final',             tipo:'velada',      equipos:[]},
-    {hora:'23:45', act:'Descanso',                 tipo:'descanso',    equipos:[]},
+  9:[
+    {hora:'08:30',act:'Sesión de tiro',tipo:'entreno',equipos:[]},
+    {hora:'09:00',act:'Desayuno',tipo:'comida',equipos:[]},
+    {hora:'10:00',act:'Traslado',tipo:'traslado',equipos:[]},
+    {hora:'10:15',act:'Entrenamiento mañana',tipo:'entreno',equipos:[]},
+    {hora:'13:00',act:'Piscina',tipo:'ocio',equipos:[]},
+    {hora:'14:00',act:'Cambio / Comida',tipo:'comida',equipos:[]},
+    {hora:'15:30',act:'Actividad sobremesa',tipo:'ocio',equipos:[]},
+    {hora:'17:00',act:'Traslado',tipo:'traslado',equipos:[]},
+    {hora:'17:30',act:'Entrenamiento tarde',tipo:'entreno',equipos:[]},
+    {hora:'20:00',act:'Ducha',tipo:'descanso',equipos:[]},
+    {hora:'21:00',act:'Fiesta Final',tipo:'velada',equipos:[]},
+    {hora:'23:45',act:'Descanso',tipo:'descanso',equipos:[]},
   ],
-  10: [
-    {hora:'09:00', act:'Desayuno',                 tipo:'comida',      equipos:[]},
-    {hora:'10:00', act:'Preparar maletas',         tipo:'descanso',    equipos:[]},
-    {hora:'12:00', act:'Acto de clausura',         tipo:'ocio',        equipos:[]},
-    {hora:'14:00', act:'Comida / Despedida',       tipo:'comida',      equipos:[]},
-    {hora:'15:30', act:'Viaje de regreso',         tipo:'traslado',    equipos:[]},
+  10:[
+    {hora:'09:00',act:'Desayuno',tipo:'comida',equipos:[]},
+    {hora:'10:00',act:'Preparar maletas',tipo:'descanso',equipos:[]},
+    {hora:'12:00',act:'Acto de clausura',tipo:'ocio',equipos:[]},
+    {hora:'14:00',act:'Comida / Despedida',tipo:'comida',equipos:[]},
+    {hora:'15:30',act:'Viaje de regreso',tipo:'traslado',equipos:[]},
   ],
 };
-
-// Pistas por día y equipo
 const HOR_PISTAS_DEFAULT = {
-  mañana: {
-    'Minibasket':'Resi Tenis','Basket1':'Lazarillo 3','Basket2':'Lazarillo 4',
-    'Basket3':'Residencia','Basket4':'Pabellón Resi','Basket5':'— Pendiente —',
-    'Basket 6':'Lazarillo 4','Futbol1':'Lazarillo 1','Futbol2':'Lazarillo 2','Futbol 3':'Lazarillo 3'
-  },
-  tarde: {
-    'Minibasket':'Resi Tenis','Basket1':'Lazarillo 3','Basket2':'Lazarillo 4',
-    'Basket3':'Residencia','Basket4':'Pabellón Resi','Basket5':'— Pendiente —',
-    'Basket 6':'Lazarillo 4','Futbol1':'Lazarillo 1','Futbol2':'Lazarillo 2','Futbol 3':'Lazarillo 3'
-  }
+  'mañana':{'Minibasket':'Resi Tenis','Basket1':'Lazarillo 3','Basket2':'Lazarillo 4','Basket3':'Residencia','Basket4':'Pabellón Resi','Basket5':'— Pendiente —','Basket 6':'Lazarillo 4','Futbol1':'Lazarillo 1','Futbol2':'Lazarillo 2','Futbol 3':'Lazarillo 3'},
+  'tarde': {'Minibasket':'Resi Tenis','Basket1':'Lazarillo 3','Basket2':'Lazarillo 4','Basket3':'Residencia','Basket4':'Pabellón Resi','Basket5':'— Pendiente —','Basket 6':'Lazarillo 4','Futbol1':'Lazarillo 1','Futbol2':'Lazarillo 2','Futbol 3':'Lazarillo 3'}
 };
-
 const HOR_TIPO_STYLE = {
-  entreno:  {bg:'#dbeafe',color:'#1e40af',icon:'🏀'},
-  traslado: {bg:'#fef9c3',color:'#854d0e',icon:'🚌'},
-  comida:   {bg:'#dcfce7',color:'#166534',icon:'🍽️'},
-  ocio:     {bg:'#f3e8ff',color:'#6b21a8',icon:'🎮'},
-  velada:   {bg:'#fce7f3',color:'#9d174d',icon:'🌙'},
-  salida:   {bg:'#ffedd5',color:'#9a3412',icon:'🗺️'},
-  descanso: {bg:'#f1f5f9',color:'#475569',icon:'💤'},
+  entreno: {bg:'#dbeafe',color:'#1e40af',icon:'🏀'},
+  traslado:{bg:'#fef9c3',color:'#854d0e',icon:'🚌'},
+  comida:  {bg:'#dcfce7',color:'#166534',icon:'🍽️'},
+  ocio:    {bg:'#f3e8ff',color:'#6b21a8',icon:'🎮'},
+  velada:  {bg:'#fce7f3',color:'#9d174d',icon:'🌙'},
+  salida:  {bg:'#ffedd5',color:'#9a3412',icon:'🗺️'},
+  descanso:{bg:'#f1f5f9',color:'#475569',icon:'💤'},
 };
+const EQUIPOS_HOR = ['Minibasket','Basket1','Basket2','Basket3','Basket4','Basket5','Basket 6','Futbol1','Futbol2','Futbol 3'];
 
-const EQUIPOS_CAMPUS = ['Minibasket','Basket1','Basket2','Basket3','Basket4','Basket5','Basket 6','Futbol1','Futbol2','Futbol 3'];
-
-function getHorarioDia(diaNum) {
-  const saved = JSON.parse(localStorage.getItem('sv_hor_dias') || '{}');
-  return saved[diaNum] ? JSON.parse(JSON.stringify(saved[diaNum])) 
-                       : JSON.parse(JSON.stringify(HOR_BASE_DEFAULT[diaNum] || []));
-}
-
-function saveHorarioDia(diaNum, filas) {
-  const saved = JSON.parse(localStorage.getItem('sv_hor_dias') || '{}');
-  saved[diaNum] = filas;
-  localStorage.setItem('sv_hor_dias', JSON.stringify(saved));
-}
-
-function getPistaDia(diaNum, equipo, turno) {
-  const key = `sv_hor_pistas_d${diaNum}_${equipo}_${turno}`;
-  return localStorage.getItem(key) || HOR_PISTAS_DEFAULT[turno]?.[equipo] || '—';
-}
-
-function savePistaDia(diaNum, equipo, turno, val) {
-  localStorage.setItem(`sv_hor_pistas_d${diaNum}_${equipo}_${turno}`, val);
-}
+function getHorarioDia(n){const s=JSON.parse(localStorage.getItem('sv_hor_dias')||'{}');return s[n]?JSON.parse(JSON.stringify(s[n])):JSON.parse(JSON.stringify(HOR_BASE_DEFAULT[n]||[]));}
+function saveHorarioDia(n,f){const s=JSON.parse(localStorage.getItem('sv_hor_dias')||'{}');s[n]=f;localStorage.setItem('sv_hor_dias',JSON.stringify(s));}
+function getPistaDia(n,eq,t){return localStorage.getItem(`sv_hor_pistas_d${n}_${eq}_${t}`)||HOR_PISTAS_DEFAULT[t]?.[eq]||'—';}
+function savePistaDia(n,eq,t,v){localStorage.setItem(`sv_hor_pistas_d${n}_${eq}_${t}`,v);}
 
 function renderHorarioCampus() {
-  const diaNum = parseInt(document.getElementById('hor-dia-sel')?.value || 2);
-  const equipoFiltro = document.getElementById('hor-equipo-sel')?.value || '';
-  const isAdmin = currentPerfil?.rol === 'admin' || currentPerfil?.rol === 'entrenador';
-  const diaInfo = HOR_DIAS.find(d => d.num === diaNum) || HOR_DIAS[1];
+  const diaNum = parseInt(document.getElementById('hor-dia-sel')?.value||2);
+  const equipoFiltro = document.getElementById('hor-equipo-sel')?.value||'';
+  const isAdmin = currentPerfil?.rol==='admin'||currentPerfil?.rol==='entrenador';
+  const diaInfo = HOR_DIAS.find(d=>d.num===diaNum)||HOR_DIAS[1];
   let filas = getHorarioDia(diaNum);
 
-  // Header del día
   const hdr = document.getElementById('hor-dia-header');
-  if(hdr) hdr.innerHTML = `
-    <div style="display:flex;align-items:center;gap:14px;padding:14px 20px;background:var(--negro);border-radius:10px;color:var(--blanco);">
-      <div style="background:var(--amarillo);color:var(--negro);border-radius:8px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;line-height:1;">DÍA ${diaNum}</div>
-      <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;letter-spacing:1px;">${diaInfo.dia.toUpperCase()} ${diaInfo.fecha}</div>
-        ${diaInfo.label?`<div style="font-size:12px;color:var(--amarillo);font-weight:700;text-transform:uppercase;letter-spacing:1px;">${diaInfo.label}</div>`:''}
-      </div>
-      ${equipoFiltro ? `<div style="margin-left:auto;background:${CAMPUS_EQUIPO_COLORS[equipoFiltro]||'#888'};color:#fff;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:900;">${equipoFiltro}</div>` : ''}
-    </div>`;
+  if(hdr) hdr.innerHTML = `<div style="display:flex;align-items:center;gap:14px;padding:14px 20px;background:var(--negro);border-radius:10px;color:var(--blanco);margin-bottom:0;">
+    <div style="background:var(--amarillo);color:var(--negro);border-radius:8px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;line-height:1;">DÍA ${diaNum}</div>
+    <div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;letter-spacing:1px;">${diaInfo.dia.toUpperCase()} ${diaInfo.fecha}</div>
+      ${diaInfo.label?`<div style="font-size:12px;color:var(--amarillo);font-weight:700;text-transform:uppercase;letter-spacing:1px;">${diaInfo.label}</div>`:''}
+    </div>
+    ${equipoFiltro?`<div style="margin-left:auto;background:${CAMPUS_EQUIPO_COLORS[equipoFiltro]||'#888'};color:#fff;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:900;">${equipoFiltro}</div>`:''}
+  </div>`;
 
-  // Botones admin
   const adminBtns = document.getElementById('hor-admin-btns');
   if(adminBtns) adminBtns.innerHTML = isAdmin
     ? `<button onclick="openAddActividadHorario()" class="btn btn-sm btn-primary">+ Actividad</button>
-       <button onclick="resetHorarioDia()" class="btn btn-sm btn-secondary" title="Restaurar día">↺</button>`
-    : '';
+       <button onclick="resetHorarioDia()" class="btn btn-sm btn-secondary">↺</button>` : '';
 
-  // Filtrar filas por equipo si procede
-  const filasVis = equipoFiltro
-    ? filas.filter(f => !f.equipos?.length || f.equipos.includes(equipoFiltro))
-    : filas;
-
-  // Timeline
+  const filasVis = equipoFiltro ? filas.filter(f=>!f.equipos?.length||f.equipos.includes(equipoFiltro)) : filas;
   const timeline = document.getElementById('hor-timeline');
-  if(timeline) timeline.innerHTML = filasVis.length === 0
-    ? `<div class="empty-state"><div class="icon">📅</div><p>Sin actividades para este día</p></div>`
-    : filasVis.map((f, visIdx) => {
+  if(timeline) timeline.innerHTML = filasVis.length===0
+    ? `<div class="empty-state"><div class="icon">📅</div><p>Sin actividades</p></div>`
+    : filasVis.map((f,vi) => {
         const realIdx = filas.indexOf(f);
-        const st = HOR_TIPO_STYLE[f.tipo] || HOR_TIPO_STYLE.ocio;
-        const equipoTags = f.equipos?.length
-          ? f.equipos.map(e=>`<span style="background:${CAMPUS_EQUIPO_COLORS[e]||'#888'};color:#fff;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;">${e}</span>`).join('')
-          : '';
-        return `
-        <div style="display:flex;align-items:stretch;border-bottom:1px solid var(--gris-claro);min-height:52px;" 
-             class="hor-row" data-idx="${realIdx}">
-          <!-- Hora -->
-          <div style="min-width:68px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:3px solid ${st.bg};background:${st.bg}20;">
-            ${isAdmin
-              ? `<input type="time" value="${f.hora}" onchange="editHorFila(${diaNum},${realIdx},'hora',this.value)"
-                   style="border:none;background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;color:var(--negro);width:64px;outline:none;text-align:center;cursor:pointer;">`
-              : `<span style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;">${f.hora}</span>`}
+        const st = HOR_TIPO_STYLE[f.tipo]||HOR_TIPO_STYLE.ocio;
+        const eqTags = (f.equipos?.length?f.equipos.map(e=>`<span style="background:${CAMPUS_EQUIPO_COLORS[e]||'#888'};color:#fff;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;">${e}</span>`).join(''):'');
+        const isEntreno = f.tipo==='entreno';
+        return `<div style="display:flex;align-items:stretch;border-bottom:1px solid var(--gris-claro);min-height:52px;">
+          <div style="min-width:66px;padding:10px 8px;display:flex;align-items:center;justify-content:center;background:${st.bg}30;border-right:3px solid ${st.bg};">
+            ${isAdmin?`<input type="time" value="${f.hora}" onchange="editHorFila(${diaNum},${realIdx},'hora',this.value)" style="border:none;background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;color:var(--negro);width:62px;outline:none;text-align:center;">`
+            :`<span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;">${f.hora}</span>`}
           </div>
-          <!-- Tipo icono -->
-          <div style="width:36px;display:flex;align-items:center;justify-content:center;background:${st.bg};font-size:16px;">${st.icon}</div>
-          <!-- Contenido -->
-          <div style="flex:1;padding:10px 12px;display:flex;flex-direction:column;justify-content:center;gap:4px;">
-            ${isAdmin
-              ? `<input type="text" value="${f.act.replace(/"/g,'&quot;')}" onchange="editHorFila(${diaNum},${realIdx},'act',this.value)"
-                   style="border:none;border-bottom:2px solid transparent;background:transparent;font-family:'Barlow',sans-serif;font-size:13.5px;font-weight:700;color:var(--negro);outline:none;width:100%;"
-                   onfocus="this.style.borderBottomColor='var(--amarillo)'" onblur="this.style.borderBottomColor='transparent'">`
-              : `<div style="font-size:13.5px;font-weight:700;">${f.act}</div>`}
+          <div style="width:34px;display:flex;align-items:center;justify-content:center;background:${st.bg};font-size:15px;">${st.icon}</div>
+          <div style="flex:1;padding:8px 12px;display:flex;flex-direction:column;justify-content:center;gap:3px;">
+            ${isAdmin?`<input type="text" value="${f.act.replace(/"/g,'&quot;')}" onchange="editHorFila(${diaNum},${realIdx},'act',this.value)" style="border:none;border-bottom:2px solid transparent;background:transparent;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--negro);outline:none;width:100%;" onfocus="this.style.borderBottomColor='var(--amarillo)'" onblur="this.style.borderBottomColor='transparent'">`
+            :`<div style="font-size:13px;font-weight:700;">${f.act}</div>`}
             <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
-              ${isAdmin ? `<select onchange="editHorFila(${diaNum},${realIdx},'tipo',this.value)" 
-                style="border:1px solid var(--gris-claro);border-radius:4px;padding:2px 6px;font-size:11px;font-family:'Barlow',sans-serif;background:${st.bg};color:${st.color};font-weight:700;outline:none;">
-                ${Object.entries(HOR_TIPO_STYLE).map(([k,v])=>`<option value="${k}" ${f.tipo===k?'selected':''}>${v.icon} ${k}</option>`).join('')}
-              </select>` : `<span style="background:${st.bg};color:${st.color};border-radius:20px;padding:1px 8px;font-size:10.5px;font-weight:700;">${st.icon} ${f.tipo}</span>`}
-              ${equipoTags}
+              ${isAdmin?`<select onchange="editHorFila(${diaNum},${realIdx},'tipo',this.value)" style="border:1px solid var(--gris-claro);border-radius:4px;padding:2px 5px;font-size:10.5px;font-family:'Barlow',sans-serif;background:${st.bg};color:${st.color};font-weight:700;outline:none;">${Object.entries(HOR_TIPO_STYLE).map(([k,v])=>`<option value="${k}" ${f.tipo===k?'selected':''}>${v.icon} ${k}</option>`).join('')}</select>`:`<span style="background:${st.bg};color:${st.color};border-radius:20px;padding:1px 8px;font-size:10px;font-weight:700;">${st.icon} ${f.tipo}</span>`}
+              ${eqTags}
             </div>
           </div>
-          <!-- Acciones -->
-          ${isAdmin ? `<div style="padding:0 8px;display:flex;align-items:center;">
-            <button onclick="openEditEquiposActividad(${diaNum},${realIdx})" title="Asignar equipos específicos"
-              style="background:none;border:1px solid var(--gris-claro);border-radius:4px;cursor:pointer;font-size:12px;padding:3px 7px;color:var(--gris-medio);" title="Equipos">👥</button>
-            <button onclick="deleteHorFila(${diaNum},${realIdx})" title="Eliminar"
-              style="background:none;border:none;cursor:pointer;color:var(--gris-medio);font-size:18px;padding:0 4px;line-height:1;margin-left:4px;"
-              onmouseover="this.style.color='var(--rojo)'" onmouseout="this.style.color='var(--gris-medio)'">×</button>
-          </div>` : ''}
+          ${isAdmin?`<div style="padding:0 6px;display:flex;align-items:center;gap:3px;">
+            ${isEntreno&&equipoFiltro?`<button onclick="abrirEntrenoDesdeHorario('${equipoFiltro}',${diaNum})" title="Ver/Crear entreno" style="background:#dbeafe;border:1px solid #1e40af;color:#1e40af;border-radius:4px;cursor:pointer;font-size:10px;font-weight:700;padding:3px 6px;white-space:nowrap;">📋 Entreno</button>`:''}
+            <button onclick="openEditEquiposActividad(${diaNum},${realIdx})" style="background:none;border:1px solid var(--gris-claro);border-radius:4px;cursor:pointer;font-size:11px;padding:3px 5px;color:var(--gris-medio);" title="Equipos">👥</button>
+            <button onclick="deleteHorFila(${diaNum},${realIdx})" style="background:none;border:none;cursor:pointer;color:var(--gris-medio);font-size:17px;padding:0 3px;line-height:1;" onmouseover="this.style.color='var(--rojo)'" onmouseout="this.style.color='var(--gris-medio)'">×</button>
+          </div>`:''}
         </div>`;
       }).join('');
 
-  // Pistas
   const pistasEl = document.getElementById('hor-pistas');
   if(pistasEl) {
-    const equiposList = equipoFiltro ? [equipoFiltro] : EQUIPOS_CAMPUS;
-    pistasEl.innerHTML = equiposList.map(eq => {
-      const color = CAMPUS_EQUIPO_COLORS[eq] || '#888';
-      const pm = getPistaDia(diaNum, eq, 'mañana');
-      const pt = getPistaDia(diaNum, eq, 'tarde');
+    const eqs = equipoFiltro?[equipoFiltro]:EQUIPOS_HOR;
+    pistasEl.innerHTML = eqs.map(eq=>{
+      const color=CAMPUS_EQUIPO_COLORS[eq]||'#888';
+      const pm=getPistaDia(diaNum,eq,'mañana'), pt=getPistaDia(diaNum,eq,'tarde');
       return `<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--gris-claro);">
         <div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:${color};margin-bottom:4px;">${eq}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
-          <div>
-            <div style="font-size:9.5px;color:var(--gris-medio);font-weight:700;margin-bottom:2px;">☀️ MAÑANA</div>
-            ${isAdmin
-              ? `<input type="text" value="${pm}" onchange="savePistaDia(${diaNum},'${eq}','mañana',this.value);showToast('✅ Pista guardada')"
-                   style="width:100%;border:1px solid var(--gris-claro);border-radius:4px;padding:3px 6px;font-size:11.5px;font-family:'Barlow',sans-serif;outline:none;" placeholder="Instalación...">`
-              : `<div style="font-size:11.5px;font-weight:600;">${pm}</div>`}
+          <div><div style="font-size:9.5px;color:var(--gris-medio);font-weight:700;margin-bottom:2px;">☀️ MAÑANA</div>
+            ${isAdmin?`<input type="text" value="${pm}" onchange="savePistaDia(${diaNum},'${eq}','mañana',this.value);showToast('✅ Pista guardada')" style="width:100%;border:1px solid var(--gris-claro);border-radius:4px;padding:3px 6px;font-size:11.5px;font-family:'Barlow',sans-serif;outline:none;">`:`<div style="font-size:11.5px;font-weight:600;">${pm}</div>`}
           </div>
-          <div>
-            <div style="font-size:9.5px;color:var(--gris-medio);font-weight:700;margin-bottom:2px;">🌅 TARDE</div>
-            ${isAdmin
-              ? `<input type="text" value="${pt}" onchange="savePistaDia(${diaNum},'${eq}','tarde',this.value);showToast('✅ Pista guardada')"
-                   style="width:100%;border:1px solid var(--gris-claro);border-radius:4px;padding:3px 6px;font-size:11.5px;font-family:'Barlow',sans-serif;outline:none;" placeholder="Instalación...">`
-              : `<div style="font-size:11.5px;font-weight:600;">${pt}</div>`}
+          <div><div style="font-size:9.5px;color:var(--gris-medio);font-weight:700;margin-bottom:2px;">🌅 TARDE</div>
+            ${isAdmin?`<input type="text" value="${pt}" onchange="savePistaDia(${diaNum},'${eq}','tarde',this.value);showToast('✅ Pista guardada')" style="width:100%;border:1px solid var(--gris-claro);border-radius:4px;padding:3px 6px;font-size:11.5px;font-family:'Barlow',sans-serif;outline:none;">`:`<div style="font-size:11.5px;font-weight:600;">${pt}</div>`}
           </div>
         </div>
       </div>`;
@@ -2206,50 +2189,27 @@ function renderHorarioCampus() {
   }
 }
 
-function editHorFila(diaNum, idx, campo, val) {
-  const filas = getHorarioDia(diaNum);
-  if(filas[idx]) { filas[idx][campo] = val; saveHorarioDia(diaNum, filas); }
-  if(campo === 'tipo') renderHorarioCampus();
-}
-
-function deleteHorFila(diaNum, idx) {
-  const filas = getHorarioDia(diaNum);
-  filas.splice(idx, 1);
-  saveHorarioDia(diaNum, filas);
-  renderHorarioCampus();
-}
-
-function resetHorarioDia() {
-  const diaNum = parseInt(document.getElementById('hor-dia-sel')?.value || 2);
-  if(!confirm(`¿Restaurar el horario del Día ${diaNum} al original?`)) return;
-  const saved = JSON.parse(localStorage.getItem('sv_hor_dias') || '{}');
-  delete saved[diaNum];
-  localStorage.setItem('sv_hor_dias', JSON.stringify(saved));
-  renderHorarioCampus();
-  showToast('✅ Horario restaurado');
-}
+function editHorFila(n,i,c,v){const f=getHorarioDia(n);if(f[i]){f[i][c]=v;saveHorarioDia(n,f);}if(c==='tipo')renderHorarioCampus();}
+function deleteHorFila(n,i){const f=getHorarioDia(n);f.splice(i,1);saveHorarioDia(n,f);renderHorarioCampus();}
+function resetHorarioDia(){const n=parseInt(document.getElementById('hor-dia-sel')?.value||2);if(!confirm(`¿Restaurar el Día ${n}?`))return;const s=JSON.parse(localStorage.getItem('sv_hor_dias')||'{}');delete s[n];localStorage.setItem('sv_hor_dias',JSON.stringify(s));renderHorarioCampus();showToast('✅ Restaurado');}
 
 function openAddActividadHorario() {
-  const diaNum = parseInt(document.getElementById('hor-dia-sel')?.value || 2);
-  document.getElementById('modal-title').textContent = '+ Nueva actividad — Día ' + diaNum;
+  const diaNum = parseInt(document.getElementById('hor-dia-sel')?.value||2);
+  document.getElementById('modal-title').textContent = '+ Nueva actividad — Día '+diaNum;
   document.getElementById('modal-body').innerHTML = `
     <div class="detail-row">
       <div class="detail-field"><label>⏰ Hora</label><input id="na-hora" type="time" value="10:00"></div>
       <div class="detail-field"><label>Tipo</label>
-        <select id="na-tipo">
-          ${Object.entries(HOR_TIPO_STYLE).map(([k,v])=>`<option value="${k}">${v.icon} ${k.charAt(0).toUpperCase()+k.slice(1)}</option>`).join('')}
-        </select>
+        <select id="na-tipo">${Object.entries(HOR_TIPO_STYLE).map(([k,v])=>`<option value="${k}">${v.icon} ${k.charAt(0).toUpperCase()+k.slice(1)}</option>`).join('')}</select>
       </div>
     </div>
     <div class="detail-row"><div class="detail-field"><label>📝 Descripción</label>
-      <input id="na-act" type="text" placeholder="Ej: Entrenamiento específico Basket1...">
+      <input id="na-act" type="text" placeholder="Ej: Entrenamiento específico...">
     </div></div>
     <div class="detail-field" style="margin-top:8px;"><label>👥 Solo para estos equipos (vacío = todos)</label>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;" id="na-equipos-check">
-        ${EQUIPOS_CAMPUS.map(eq=>`
-          <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;background:var(--gris-bg);padding:4px 10px;border-radius:20px;border:1.5px solid var(--gris-claro);">
-            <input type="checkbox" value="${eq}" style="accent-color:var(--amarillo);"> ${eq}
-          </label>`).join('')}
+        ${EQUIPOS_HOR.map(eq=>`<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;background:var(--gris-bg);padding:4px 10px;border-radius:20px;border:1.5px solid var(--gris-claro);">
+          <input type="checkbox" value="${eq}" style="accent-color:var(--amarillo);"> ${eq}</label>`).join('')}
       </div>
     </div>`;
   document.getElementById('modal-footer').innerHTML = `
@@ -2259,32 +2219,25 @@ function openAddActividadHorario() {
 }
 
 function saveNewActividad(diaNum) {
-  const hora = document.getElementById('na-hora').value;
-  const act = document.getElementById('na-act').value.trim();
-  const tipo = document.getElementById('na-tipo').value;
-  if(!act) { showToast('⚠️ Escribe una descripción'); return; }
-  const equiposChecked = [...document.querySelectorAll('#na-equipos-check input:checked')].map(c=>c.value);
-  const filas = getHorarioDia(diaNum);
-  filas.push({hora, act, tipo, equipos: equiposChecked});
-  filas.sort((a,b) => a.hora.localeCompare(b.hora));
-  saveHorarioDia(diaNum, filas);
-  closeModal();
-  renderHorarioCampus();
-  showToast('✅ Actividad añadida');
+  const hora=document.getElementById('na-hora').value;
+  const act=(document.getElementById('na-act').value||'').trim();
+  const tipo=document.getElementById('na-tipo').value;
+  if(!act){showToast('⚠️ Escribe una descripción');return;}
+  const equipos=[...document.querySelectorAll('#na-equipos-check input:checked')].map(c=>c.value);
+  const f=getHorarioDia(diaNum);
+  f.push({hora,act,tipo,equipos});
+  f.sort((a,b)=>a.hora.localeCompare(b.hora));
+  saveHorarioDia(diaNum,f);
+  closeModal(); renderHorarioCampus(); showToast('✅ Actividad añadida');
 }
 
 function openEditEquiposActividad(diaNum, idx) {
-  const filas = getHorarioDia(diaNum);
-  const f = filas[idx];
-  if(!f) return;
-  document.getElementById('modal-title').textContent = '👥 Equipos para: ' + f.act;
-  document.getElementById('modal-body').innerHTML = `
-    <p style="font-size:13px;color:var(--gris-medio);margin-bottom:12px;">Selecciona los equipos que tienen esta actividad. Vacío = todos los equipos.</p>
+  const filas=getHorarioDia(diaNum); const f=filas[idx]; if(!f) return;
+  document.getElementById('modal-title').textContent = '👥 Equipos para: '+f.act;
+  document.getElementById('modal-body').innerHTML = `<p style="font-size:13px;color:var(--gris-medio);margin-bottom:12px;">Vacío = todos los equipos.</p>
     <div style="display:flex;flex-wrap:wrap;gap:8px;" id="ee-checks">
-      ${EQUIPOS_CAMPUS.map(eq=>`
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:var(--gris-bg);padding:6px 12px;border-radius:20px;border:1.5px solid ${(f.equipos||[]).includes(eq)?'var(--amarillo)':'var(--gris-claro)'};">
-          <input type="checkbox" value="${eq}" ${(f.equipos||[]).includes(eq)?'checked':''} style="accent-color:var(--amarillo);"> ${eq}
-        </label>`).join('')}
+      ${EQUIPOS_HOR.map(eq=>`<label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:var(--gris-bg);padding:6px 12px;border-radius:20px;border:1.5px solid ${(f.equipos||[]).includes(eq)?'var(--amarillo)':'var(--gris-claro)'};">
+        <input type="checkbox" value="${eq}" ${(f.equipos||[]).includes(eq)?'checked':''} style="accent-color:var(--amarillo);"> ${eq}</label>`).join('')}
     </div>`;
   document.getElementById('modal-footer').innerHTML = `
     <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
@@ -2293,15 +2246,10 @@ function openEditEquiposActividad(diaNum, idx) {
 }
 
 function saveEquiposActividad(diaNum, idx) {
-  const filas = getHorarioDia(diaNum);
-  filas[idx].equipos = [...document.querySelectorAll('#ee-checks input:checked')].map(c=>c.value);
-  saveHorarioDia(diaNum, filas);
-  closeModal();
-  renderHorarioCampus();
-  showToast('✅ Equipos actualizados');
+  const f=getHorarioDia(diaNum);
+  f[idx].equipos=[...document.querySelectorAll('#ee-checks input:checked')].map(c=>c.value);
+  saveHorarioDia(diaNum,f); closeModal(); renderHorarioCampus(); showToast('✅ Actualizado');
 }
-
-
 
 function campusTab(tab) {
   document.querySelectorAll('.campus-tab').forEach(t => t.classList.remove('active'));
@@ -3414,6 +3362,626 @@ function startDirectConv() {
   setTimeout(function(){ openConv(convId); }, 200);
 }
 
+
+
+// ════════════════════════════════════════════════════════
+// PLANIFICADOR DE ENTRENAMIENTOS
+// ════════════════════════════════════════════════════════
+
+let etCurrentTab = 'lista';
+let etEntrenamientos = [];
+let etEjercicios = [];
+let etEjerciciosSeleccionados = [];
+let pizarraCtx = null, pizarraDrawing = false, pizarraTool = 'flecha', pizarraColor = '#c0392b';
+let pizarraHistory = [], pizarraLastX = 0, pizarraLastY = 0;
+
+const ET_TIPO_STYLE = {
+  'Técnico':           {cls:'et-tag-tecnico',     icon:'🎯'},
+  'Táctico':           {cls:'et-tag-tactico',     icon:'🧠'},
+  'Físico':            {cls:'et-tag-fisico',      icon:'💪'},
+  'Competición':       {cls:'et-tag-competicion', icon:'🏆'},
+  'Calentamiento':     {cls:'et-tag-calentamiento',icon:'🔥'},
+  'Vuelta a la calma': {cls:'et-tag-vuelta',      icon:'🧘'},
+};
+const ET_DEP_ICON = {Baloncesto:'🏀', Fútbol:'⚽', Ambos:'🏅'};
+
+function etGetEquipos() {
+  const panelId = document.querySelector('.panel.active')?.id || '';
+  if(panelId === 'panel-campus')
+    return ['Minibasket','Basket1','Basket2','Basket3','Basket4','Basket5','Basket 6','Futbol1','Futbol2','Futbol 3'];
+  return ['Prebenjamín','Benjamín','Alevín','Infantil','Cadete','Juvenil','Junior','Sub-22','Senior'];
+}
+
+function etTab(tab) {
+  etCurrentTab = tab;
+  document.getElementById('et-view-lista').style.display      = tab==='lista'      ? '' : 'none';
+  document.getElementById('et-view-biblioteca').style.display = tab==='biblioteca' ? '' : 'none';
+  document.getElementById('et-btn-nuevo-entreno').style.display   = tab==='lista'      ? '' : 'none';
+  document.getElementById('et-btn-nuevo-ejercicio').style.display = tab==='biblioteca' ? '' : 'none';
+  const tl = document.getElementById('et-tab-lista');
+  const tb = document.getElementById('et-tab-biblioteca');
+  if(tl){ tl.style.background = tab==='lista'      ? 'var(--negro)' : 'transparent'; tl.style.color = tab==='lista'      ? 'var(--amarillo)' : 'var(--negro)'; }
+  if(tb){ tb.style.background = tab==='biblioteca' ? 'var(--negro)' : 'transparent'; tb.style.color = tab==='biblioteca' ? 'var(--amarillo)' : 'var(--negro)'; }
+  if(tab==='lista')      renderEntrenamientos();
+  if(tab==='biblioteca') renderBiblioteca();
+}
+
+// ── LISTA DE ENTRENAMIENTOS ──────────────────────────────
+async function renderEntrenamientos() {
+  if(etCurrentTab !== 'lista') return;
+  const grid = document.getElementById('et-entrenos-grid');
+  if(!grid) return;
+  grid.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>Cargando...</p></div>';
+  const { data, error } = await sb.from('entrenamientos').select('*').order('fecha', {ascending:false});
+  etEntrenamientos = data || [];
+  if(!etEntrenamientos.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Sin entrenamientos aún. Crea el primero pulsando <strong>+ Nuevo entreno</strong>.</p></div>';
+    return;
+  }
+  grid.innerHTML = etEntrenamientos.map(e => {
+    const ejes = (e.ejercicios||[]).length;
+    const ctxTag = e.contexto==='Campus'
+      ? `<span class="et-tag" style="background:#fffbe6;color:#7a6200;">🏕️ Campus Día ${e.campus_dia||'?'}</span>`
+      : e.contexto==='Pruebas' ? `<span class="et-tag" style="background:#e3f2fd;color:#1565c0;">📅 Pruebas</span>`
+      : `<span class="et-tag" style="background:#f1f5f9;color:#475569;">📆 Temporada</span>`;
+    const depColor = e.deporte==='Baloncesto' ? {bg:'#dbeafe',c:'#1e40af'} : {bg:'#dcfce7',c:'#166534'};
+    return `<div class="et-card" onclick="openVerEntreno('${e.id}')">
+      <div class="et-card-header">
+        <div>
+          <div class="et-card-title">${ET_DEP_ICON[e.deporte]||''} ${e.equipo||'—'} ${e.categoria?'· '+e.categoria:''}</div>
+          <div class="et-card-meta">📅 ${e.fecha} &nbsp;·&nbsp; ⏱️ ${e.duracion_total||0} min &nbsp;·&nbsp; ${ejes} ejercicio${ejes!==1?'s':''}</div>
+          <div class="et-card-meta">👤 ${e.autor_nombre||'—'}${e.sesion?' · '+e.sesion:''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          ${ctxTag}
+          <span class="et-tag" style="background:${depColor.bg};color:${depColor.c};">${e.deporte||'—'}</span>
+        </div>
+      </div>
+      ${e.comentarios ? `<div style="font-size:12px;color:var(--gris-medio);border-top:1px solid var(--gris-claro);padding-top:8px;margin-top:6px;line-height:1.5;">${e.comentarios}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── BIBLIOTECA ───────────────────────────────────────────
+async function renderBiblioteca() {
+  const grid = document.getElementById('et-bib-grid');
+  if(!grid) return;
+  const q    = (document.getElementById('et-bib-q')?.value||'').toLowerCase();
+  const dep  = document.getElementById('et-bib-deporte')?.value||'';
+  const tipo = document.getElementById('et-bib-tipo')?.value||'';
+  let query = sb.from('ejercicios').select('*').order('created_at',{ascending:false});
+  if(dep)  query = query.eq('deporte', dep);
+  if(tipo) query = query.eq('tipo', tipo);
+  const {data} = await query;
+  etEjercicios = data||[];
+  let filtered = q ? etEjercicios.filter(e=>(e.tarea+' '+(e.descripcion||'')+' '+(e.etiquetas||[]).join(' ')).toLowerCase().includes(q)) : etEjercicios;
+  if(!filtered.length) { grid.innerHTML='<div class="empty-state"><div class="icon">📚</div><p>No hay ejercicios con esos filtros.</p></div>'; return; }
+  grid.innerHTML = filtered.map(e => {
+    const st = ET_TIPO_STYLE[e.tipo]||{cls:'et-tag-generico',icon:'•'};
+    const tags = (e.etiquetas||[]).map(t=>`<span class="et-tag et-tag-generico">${t}</span>`).join('');
+    const depC = e.deporte==='Baloncesto'?{bg:'#dbeafe',c:'#1e40af'}:e.deporte==='Fútbol'?{bg:'#dcfce7',c:'#166534'}:{bg:'#f1f5f9',c:'#475569'};
+    const imgBlock = e.imagen_url
+      ? `<img src="${e.imagen_url}" style="width:100%;height:130px;object-fit:cover;" onerror="this.style.display='none'">`
+      : e.diagrama?.dataUrl
+      ? `<img src="${e.diagrama.dataUrl}" style="width:100%;height:130px;object-fit:cover;">`
+      : `<div style="width:100%;height:80px;background:var(--gris-bg);display:flex;align-items:center;justify-content:center;font-size:28px;">${ET_DEP_ICON[e.deporte]||'🏅'}</div>`;
+    return `<div class="bib-card">
+      ${imgBlock}
+      <div class="bib-card-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+          <div class="bib-card-title">${e.tarea}</div>
+          <span class="et-tag ${st.cls}">${st.icon} ${e.tipo||'—'}</span>
+        </div>
+        <div class="bib-card-desc">${e.descripcion||''}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+          <span class="et-tag" style="background:${depC.bg};color:${depC.c};">${ET_DEP_ICON[e.deporte]||''} ${e.deporte||'—'}</span>
+          ${e.duracion?`<span class="et-tag et-tag-generico">⏱️ ${e.duracion} min</span>`:''}
+          ${(e.edad_minima||e.edad_maxima)?`<span class="et-tag et-tag-generico">👦 ${e.edad_minima||'?'}-${e.edad_maxima||'?'} años</span>`:''}
+          ${tags}
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm btn-primary" style="flex:1;" onclick="openNuevoEjercicio('${e.id}')">✏️ Editar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── VER ENTRENAMIENTO ────────────────────────────────────
+async function openVerEntreno(id) {
+  const e = etEntrenamientos.find(x=>x.id===id);
+  if(!e) return;
+  const ejesIds = (e.ejercicios||[]).map(x=>x.ejercicio_id).filter(Boolean);
+  let ejesMap = {};
+  if(ejesIds.length) {
+    const {data} = await sb.from('ejercicios').select('*').in('id', ejesIds);
+    (data||[]).forEach(x=>ejesMap[x.id]=x);
+  }
+  const ejesHtml = (e.ejercicios||[]).map((ej,i)=>{
+    const d = ejesMap[ej.ejercicio_id]||{};
+    const st = ET_TIPO_STYLE[d.tipo]||{cls:'et-tag-generico',icon:'•'};
+    const imgThumb = d.imagen_url
+      ? `<img src="${d.imagen_url}" style="width:48px;height:48px;object-fit:cover;border-radius:5px;flex-shrink:0;">`
+      : d.diagrama?.dataUrl
+      ? `<img src="${d.diagrama.dataUrl}" style="width:48px;height:48px;object-fit:cover;border-radius:5px;flex-shrink:0;">`
+      : '';
+    return `<div class="ej-row">
+      <span class="ej-row-num">${i+1}</span>
+      ${imgThumb}
+      <div style="flex:1;">
+        <div class="ej-row-name">${d.tarea||'Ejercicio eliminado'}</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px;">
+          <span class="et-tag ${st.cls}">${st.icon} ${d.tipo||''}</span>
+          ${ej.notas?`<span class="et-tag et-tag-generico">💬 ${ej.notas}</span>`:''}
+        </div>
+      </div>
+      <span class="ej-row-dur">⏱️ ${ej.duracion_override||d.duracion||'?'} min</span>
+    </div>`;
+  }).join('')||'<p style="color:var(--gris-medio);font-size:13px;">Sin ejercicios añadidos.</p>';
+
+  const depC = e.deporte==='Baloncesto'?{bg:'#dbeafe',c:'#1e40af'}:{bg:'#dcfce7',c:'#166534'};
+  document.getElementById('modal-title').textContent = `📋 ${e.equipo} · ${e.fecha}`;
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+      <span class="et-tag" style="background:${depC.bg};color:${depC.c};">${ET_DEP_ICON[e.deporte]||''} ${e.deporte}</span>
+      <span class="et-tag et-tag-generico">📅 ${e.fecha}</span>
+      ${e.categoria?`<span class="et-tag et-tag-generico">👥 ${e.categoria}</span>`:''}
+      <span class="et-tag et-tag-generico">⏱️ ${e.duracion_total||0} min</span>
+      ${e.sesion?`<span class="et-tag et-tag-generico">${e.sesion}</span>`:''}
+      ${e.contexto==='Campus'?`<span class="et-tag" style="background:#fffbe6;color:#7a6200;">🏕️ Campus Día ${e.campus_dia||''}</span>`:''}
+    </div>
+    ${e.comentarios?`<div style="background:var(--gris-bg);border-radius:7px;padding:10px 12px;font-size:13px;margin-bottom:14px;border-left:3px solid var(--amarillo);line-height:1.6;">${e.comentarios}</div>`:''}
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:8px;">Ejercicios (${(e.ejercicios||[]).length})</div>
+    ${ejesHtml}`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+    <button class="btn btn-danger btn-sm" onclick="deleteEntreno('${e.id}')">🗑️ Eliminar</button>
+    <button class="btn btn-primary" onclick="closeModal();openNuevoEntreno('${e.id}')">✏️ Editar</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function deleteEntreno(id) {
+  if(!confirm('¿Eliminar este entrenamiento?')) return;
+  await sb.from('entrenamientos').delete().eq('id',id);
+  closeModal(); renderEntrenamientos(); showToast('🗑️ Entrenamiento eliminado');
+}
+
+// ── CREAR / EDITAR ENTRENAMIENTO ─────────────────────────
+async function openNuevoEntreno(editId, prefillEquipo, prefillDia, prefillContexto) {
+  let editData = null;
+  if(editId) {
+    editData = etEntrenamientos.find(x=>x.id===editId);
+    if(!editData) { const {data}=await sb.from('entrenamientos').select('*').eq('id',editId).single(); editData=data; }
+  }
+  etEjerciciosSeleccionados = [];
+  if(editData?.ejercicios?.length) {
+    const ids = editData.ejercicios.map(x=>x.ejercicio_id).filter(Boolean);
+    const {data:ed} = await sb.from('ejercicios').select('*').in('id',ids);
+    const em={}; (ed||[]).forEach(x=>em[x.id]=x);
+    etEjerciciosSeleccionados = editData.ejercicios.map(ej=>({...ej,_data:em[ej.ejercicio_id]||{}}));
+  }
+  const equipos = etGetEquipos();
+  const ctxActual = prefillContexto||(document.querySelector('.panel.active')?.id==='panel-campus'?'Campus':'Temporada');
+
+  document.getElementById('modal-title').textContent = editId ? '✏️ Editar entrenamiento' : '+ Nuevo entrenamiento';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="detail-row">
+      <div class="detail-field"><label>Deporte *</label>
+        <select id="et-f-deporte">
+          <option ${(editData?.deporte||'Baloncesto')==='Baloncesto'?'selected':''}>Baloncesto</option>
+          <option ${editData?.deporte==='Fútbol'?'selected':''}>Fútbol</option>
+        </select>
+      </div>
+      <div class="detail-field"><label>Sesión</label>
+        <select id="et-f-sesion">
+          ${['Mañana','Tarde','Única'].map(s=>`<option ${(editData?.sesion||'Única')===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-field"><label>Equipo *</label>
+        <select id="et-f-equipo">
+          ${equipos.map(eq=>`<option ${(editData?.equipo||prefillEquipo||'')===eq?'selected':''}>${eq}</option>`).join('')}
+        </select>
+      </div>
+      <div class="detail-field"><label>Categoría</label>
+        <input id="et-f-categoria" type="text" value="${editData?.categoria||''}" placeholder="Ej: Cadete, Infantil...">
+      </div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-field"><label>Fecha *</label>
+        <input id="et-f-fecha" type="date" value="${editData?.fecha||new Date().toISOString().split('T')[0]}">
+      </div>
+      <div class="detail-field"><label>Contexto</label>
+        <select id="et-f-contexto" onchange="etToggleCampusDia()">
+          ${['Temporada','Campus','Pruebas'].map(c=>`<option ${(editData?.contexto||ctxActual)===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="detail-row" id="et-campus-dia-row" style="display:${(editData?.contexto||ctxActual)==='Campus'?'':'none'}">
+      <div class="detail-field"><label>Día del campus</label>
+        <select id="et-f-campus-dia">
+          ${Array.from({length:10},(_,i)=>`<option value="${i+1}" ${editData?.campus_dia===i+1?'selected':''}>Día ${i+1}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-field"><label>Comentarios / Objetivos</label>
+        <textarea id="et-f-comentarios" placeholder="Objetivos del entreno, observaciones...">${editData?.comentarios||''}</textarea>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--gris-claro);padding-top:14px;margin-top:4px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">Ejercicios del entrenamiento</div>
+          <div style="font-size:11px;color:var(--gris-medio);margin-top:2px;">Total: <strong id="et-dur-total">${etEjerciciosSeleccionados.reduce((s,e)=>s+(e.duracion_override||e._data?.duracion||0),0)} min</strong></div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm btn-secondary" onclick="openAddEjercicioModal()">📚 Biblioteca</button>
+          <button class="btn btn-sm btn-primary" onclick="openNuevoEjercicioInline()">+ Nuevo ejercicio</button>
+        </div>
+      </div>
+      <div id="et-ejes-list">${etRenderEjsList()}</div>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveEntreno(${editId?`'${editId}'`:'null'})">💾 Guardar entrenamiento</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  if(prefillDia) setTimeout(()=>{ const s=document.getElementById('et-f-campus-dia'); if(s) s.value=prefillDia; },150);
+}
+
+function etToggleCampusDia() {
+  const v=document.getElementById('et-f-contexto')?.value;
+  document.getElementById('et-campus-dia-row').style.display = v==='Campus'?'':'none';
+}
+
+function etRenderEjsList() {
+  if(!etEjerciciosSeleccionados.length)
+    return '<p style="color:var(--gris-medio);font-size:12.5px;text-align:center;padding:12px 0;">Sin ejercicios. Usa los botones de arriba para añadir.</p>';
+  return etEjerciciosSeleccionados.map((ej,i)=>{
+    const d=ej._data||{};
+    const st=ET_TIPO_STYLE[d.tipo]||{cls:'et-tag-generico',icon:'•'};
+    return `<div class="ej-row" id="ejrow-${i}">
+      <span class="ej-row-num">${i+1}</span>
+      <div style="flex:1;">
+        <div class="ej-row-name">${d.tarea||'Ejercicio'}</div>
+        <div style="display:flex;gap:4px;margin-top:3px;flex-wrap:wrap;">
+          <span class="et-tag ${st.cls}">${st.icon} ${d.tipo||'—'}</span>
+          ${(d.etiquetas||[]).slice(0,3).map(t=>`<span class="et-tag et-tag-generico">${t}</span>`).join('')}
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
+        <input type="number" min="1" max="120" value="${ej.duracion_override||d.duracion||10}"
+          onchange="etEjerciciosSeleccionados[${i}].duracion_override=parseInt(this.value);etUpdateDurTotal()"
+          style="width:48px;border:1px solid var(--gris-claro);border-radius:4px;padding:3px 4px;font-size:12px;text-align:center;font-family:'Barlow',sans-serif;"> min
+        <input type="text" placeholder="Notas..." value="${ej.notas||''}"
+          onchange="etEjerciciosSeleccionados[${i}].notas=this.value"
+          style="width:90px;border:1px solid var(--gris-claro);border-radius:4px;padding:3px 5px;font-size:11px;font-family:'Barlow',sans-serif;">
+        <button onclick="etRemoveEj(${i})" style="background:none;border:none;cursor:pointer;color:var(--gris-medio);font-size:18px;line-height:1;"
+          onmouseover="this.style.color='var(--rojo)'" onmouseout="this.style.color='var(--gris-medio)'">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function etUpdateDurTotal() {
+  const t=etEjerciciosSeleccionados.reduce((s,e)=>s+(e.duracion_override||e._data?.duracion||0),0);
+  const el=document.getElementById('et-dur-total'); if(el) el.textContent=t+' min';
+}
+function etRemoveEj(i) {
+  etEjerciciosSeleccionados.splice(i,1);
+  document.getElementById('et-ejes-list').innerHTML=etRenderEjsList();
+  etUpdateDurTotal();
+}
+
+// ── AÑADIR DE BIBLIOTECA ─────────────────────────────────
+async function openAddEjercicioModal() {
+  const {data}=await sb.from('ejercicios').select('*').order('created_at',{ascending:false});
+  etEjercicios=data||[];
+  function listHtml(q,dep,tipo) {
+    let f=etEjercicios;
+    if(q) f=f.filter(e=>(e.tarea+' '+(e.etiquetas||[]).join(' ')).toLowerCase().includes(q.toLowerCase()));
+    if(dep) f=f.filter(e=>e.deporte===dep);
+    if(tipo) f=f.filter(e=>e.tipo===tipo);
+    if(!f.length) return '<p style="color:var(--gris-medio);font-size:13px;text-align:center;padding:16px 0;">No hay ejercicios con esos filtros.</p>';
+    return f.map(e=>{
+      const ya=etEjerciciosSeleccionados.some(x=>x.ejercicio_id===e.id);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-bottom:1px solid var(--gris-claro);cursor:pointer;"
+        onclick="etAddEjFromBib('${e.id}')" onmouseover="this.style.background='#fffbe6'" onmouseout="this.style.background='transparent'">
+        <span style="font-size:20px;">${ET_DEP_ICON[e.deporte]||'•'}</span>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:700;">${e.tarea}</div>
+          <div style="font-size:11px;color:var(--gris-medio);">${e.tipo||''} · ${e.duracion||'?'} min${(e.etiquetas||[]).length?' · '+(e.etiquetas.slice(0,2).map(t=>'#'+t).join(' ')):''}</div>
+        </div>
+        ${ya?'<span style="color:#16a34a;font-size:11px;font-weight:700;">✅ Añadido</span>':'<span style="color:var(--azul);font-size:11px;font-weight:700;">+ Añadir</span>'}
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('modal-title').textContent='📚 Añadir ejercicio de biblioteca';
+  document.getElementById('modal-body').innerHTML=`
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+      <input type="text" id="bib-q2" placeholder="🔍 Buscar..." oninput="document.getElementById('bib-list').innerHTML=window._bibHtml()"
+        style="flex:1;min-width:150px;border:1.5px solid var(--gris-claro);border-radius:6px;padding:7px 10px;font-family:'Barlow',sans-serif;font-size:13px;outline:none;">
+      <select id="bib-dep2" onchange="document.getElementById('bib-list').innerHTML=window._bibHtml()"
+        style="border:1.5px solid var(--gris-claro);border-radius:6px;padding:7px 8px;font-family:'Barlow',sans-serif;font-size:13px;background:var(--blanco);outline:none;">
+        <option value="">Deporte</option><option>Baloncesto</option><option>Fútbol</option><option>Ambos</option>
+      </select>
+      <select id="bib-tipo2" onchange="document.getElementById('bib-list').innerHTML=window._bibHtml()"
+        style="border:1.5px solid var(--gris-claro);border-radius:6px;padding:7px 8px;font-family:'Barlow',sans-serif;font-size:13px;background:var(--blanco);outline:none;">
+        <option value="">Tipo</option>${Object.keys(ET_TIPO_STYLE).map(t=>`<option>${t}</option>`).join('')}
+      </select>
+    </div>
+    <div id="bib-list" style="max-height:320px;overflow-y:auto;border:1px solid var(--gris-claro);border-radius:7px;">${listHtml('','','')}</div>`;
+  document.getElementById('modal-footer').innerHTML=`
+    <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+    <button class="btn btn-primary" onclick="closeModal();document.getElementById('et-ejes-list').innerHTML=etRenderEjsList();etUpdateDurTotal()">✅ Listo</button>`;
+  window._bibHtml=()=>listHtml(document.getElementById('bib-q2')?.value||'',document.getElementById('bib-dep2')?.value||'',document.getElementById('bib-tipo2')?.value||'');
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function etAddEjFromBib(ejId) {
+  const d=etEjercicios.find(x=>x.id===ejId); if(!d) return;
+  if(etEjerciciosSeleccionados.some(x=>x.ejercicio_id===ejId)){showToast('Ya está en el entreno');return;}
+  etEjerciciosSeleccionados.push({ejercicio_id:ejId,duracion_override:d.duracion||10,orden:etEjerciciosSeleccionados.length+1,notas:'',_data:d});
+  document.getElementById('bib-list').innerHTML=window._bibHtml?window._bibHtml():'';
+  showToast('✅ Ejercicio añadido');
+}
+
+// ── GUARDAR ENTRENAMIENTO ────────────────────────────────
+async function saveEntreno(editId) {
+  const equipo  = document.getElementById('et-f-equipo')?.value;
+  const fecha   = document.getElementById('et-f-fecha')?.value;
+  const deporte = document.getElementById('et-f-deporte')?.value;
+  if(!equipo||!fecha){showToast('⚠️ Equipo y fecha son obligatorios');return;}
+  const contexto  = document.getElementById('et-f-contexto')?.value;
+  const campusDia = contexto==='Campus'?parseInt(document.getElementById('et-f-campus-dia')?.value||1):null;
+  const payload = {
+    deporte, equipo, fecha,
+    categoria:     document.getElementById('et-f-categoria')?.value||'',
+    sesion:        document.getElementById('et-f-sesion')?.value||'Única',
+    contexto, campus_dia: campusDia,
+    comentarios:   document.getElementById('et-f-comentarios')?.value||'',
+    duracion_total: etEjerciciosSeleccionados.reduce((s,e)=>s+(e.duracion_override||e._data?.duracion||0),0),
+    ejercicios:    etEjerciciosSeleccionados.map((ej,i)=>({ejercicio_id:ej.ejercicio_id,duracion_override:ej.duracion_override||10,orden:i+1,notas:ej.notas||''})),
+    created_by:    currentUser?.id,
+    autor_nombre:  currentPerfil?.nombre||currentUser?.email?.split('@')[0]||''
+  };
+  const {error} = editId
+    ? await sb.from('entrenamientos').update(payload).eq('id',editId)
+    : await sb.from('entrenamientos').insert(payload);
+  if(error){showToast('❌ '+error.message);return;}
+  closeModal(); showPanel('entrenamientos'); showToast('✅ Entrenamiento guardado');
+}
+
+// ── CREAR EJERCICIO ──────────────────────────────────────
+function openNuevoEjercicio(editId) {
+  const e = editId ? etEjercicios.find(x=>x.id===editId) : null;
+  document.getElementById('modal-title').textContent = editId ? '✏️ Editar ejercicio' : '+ Nuevo ejercicio';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="detail-row">
+      <div class="detail-field"><label>Tarea / Nombre *</label>
+        <input id="ej-f-tarea" type="text" value="${e?.tarea||''}" placeholder="Ej: 1c1 con finalizaciones...">
+      </div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-field"><label>Deporte *</label>
+        <select id="ej-f-deporte" onchange="pizarraClear(true)">
+          <option ${(e?.deporte||'Baloncesto')==='Baloncesto'?'selected':''}>Baloncesto</option>
+          <option ${e?.deporte==='Fútbol'?'selected':''}>Fútbol</option>
+          <option ${e?.deporte==='Ambos'?'selected':''}>Ambos</option>
+        </select>
+      </div>
+      <div class="detail-field"><label>Tipo</label>
+        <select id="ej-f-tipo">
+          ${Object.keys(ET_TIPO_STYLE).map(t=>`<option ${e?.tipo===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-field"><label>⏱️ Duración (min)</label>
+        <input id="ej-f-dur" type="number" min="1" max="120" value="${e?.duracion||10}">
+      </div>
+      <div class="detail-field"><label>Edad mín.</label>
+        <input id="ej-f-emin" type="number" min="6" max="35" value="${e?.edad_minima||''}">
+      </div>
+      <div class="detail-field"><label>Edad máx.</label>
+        <input id="ej-f-emax" type="number" min="6" max="35" value="${e?.edad_maxima||''}">
+      </div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-field"><label>Descripción</label>
+        <textarea id="ej-f-desc" placeholder="Organización, desarrollo, variantes...">${e?.descripcion||''}</textarea>
+      </div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-field"><label>🏷️ Etiquetas (separadas por coma)</label>
+        <input id="ej-f-tags" type="text" value="${(e?.etiquetas||[]).join(', ')}" placeholder="Ej: 1c1, tiro, presión, ataque...">
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--gris-claro);padding-top:14px;margin-top:4px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:10px;">🎨 Diagrama / Imagen</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <button onclick="etShowPizarra()" class="btn btn-sm" id="ej-tab-pizarra" style="background:var(--negro);color:var(--amarillo);">🖊️ Pizarra</button>
+        <button onclick="etShowImgUpload()" class="btn btn-sm btn-secondary" id="ej-tab-img">📷 Subir imagen</button>
+      </div>
+      <div id="ej-pizarra-wrap">
+        <div class="pizarra-toolbar">
+          <button class="pizarra-tool active" id="pt-flecha"  onclick="setPizarraTool('flecha')">➡️ Flecha</button>
+          <button class="pizarra-tool"        id="pt-linea"   onclick="setPizarraTool('linea')">— Línea</button>
+          <button class="pizarra-tool"        id="pt-jugador" onclick="setPizarraTool('jugador')">⚫ Jugador</button>
+          <button class="pizarra-tool"        id="pt-balon"   onclick="setPizarraTool('balon')">🟡 Balón</button>
+          <button class="pizarra-tool"        id="pt-texto"   onclick="setPizarraTool('texto')">T Texto</button>
+          <input type="color" value="${pizarraColor}" onchange="pizarraColor=this.value" title="Color"
+            style="width:32px;height:28px;border:1px solid var(--gris-claro);border-radius:4px;cursor:pointer;padding:2px;">
+          <button class="pizarra-tool" onclick="pizarraUndo()" title="Deshacer">↩</button>
+          <button class="pizarra-tool" onclick="pizarraClear(true)" title="Borrar">🗑️</button>
+        </div>
+        <canvas id="pizarra-canvas" class="pizarra-canvas" width="520" height="300"
+          style="border:2px solid var(--gris-claro);border-radius:8px;width:100%;background:#1a4731;"></canvas>
+      </div>
+      <div id="ej-img-wrap" style="display:none;">
+        <div style="border:2px dashed var(--amarillo);border-radius:8px;padding:24px;text-align:center;background:#fffbe6;">
+          <div style="font-size:32px;margin-bottom:8px;">📷</div>
+          <p style="font-size:13px;margin-bottom:10px;">Sube una foto del diagrama en papel</p>
+          <input type="file" id="ej-img-file" accept="image/*" style="display:none;" onchange="etPreviewImg(event)">
+          <button class="btn btn-sm btn-primary" onclick="document.getElementById('ej-img-file').click()">Seleccionar imagen</button>
+        </div>
+        <div id="ej-img-preview" style="margin-top:10px;"></div>
+        <input type="hidden" id="ej-img-url" value="${e?.imagen_url||''}">
+      </div>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveEjercicio(${editId?`'${editId}'`:'null'})">💾 Guardar ejercicio</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(()=>{ initPizarra(e?.diagrama); }, 80);
+}
+
+function openNuevoEjercicioInline() {
+  openNuevoEjercicio(null);
+  setTimeout(()=>{
+    document.getElementById('modal-footer').innerHTML = `
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEjercicioInline()">💾 Guardar y añadir al entreno</button>`;
+  }, 120);
+}
+
+async function saveEjercicioInline() {
+  const id = await saveEjercicio(null, true);
+  if(!id) return;
+  const {data} = await sb.from('ejercicios').select('*').eq('id',id).single();
+  if(data) {
+    etEjerciciosSeleccionados.push({ejercicio_id:data.id,duracion_override:data.duracion||10,orden:etEjerciciosSeleccionados.length+1,notas:'',_data:data});
+    closeModal();
+    document.getElementById('et-ejes-list').innerHTML=etRenderEjsList();
+    etUpdateDurTotal();
+    showToast('✅ Ejercicio creado y añadido');
+  }
+}
+
+// ── PIZARRA ──────────────────────────────────────────────
+function initPizarra(diagramaData) {
+  const canvas=document.getElementById('pizarra-canvas'); if(!canvas) return;
+  pizarraCtx=canvas.getContext('2d');
+  pizarraHistory=[];
+  drawCourt(document.getElementById('ej-f-deporte')?.value==='Fútbol'?'futbol':'basket');
+  pizarraHistory=[canvas.toDataURL()];
+  if(diagramaData?.dataUrl) {
+    const img=new Image();
+    img.onload=()=>{ pizarraCtx.clearRect(0,0,canvas.width,canvas.height); pizarraCtx.drawImage(img,0,0); pizarraHistory=[canvas.toDataURL()]; };
+    img.src=diagramaData.dataUrl;
+  }
+  const getXY=(ev,c)=>{const r=c.getBoundingClientRect();const sx=c.width/r.width,sy=c.height/r.height;return[(ev.clientX-r.left)*sx,(ev.clientY-r.top)*sy];};
+  canvas.onmousedown=(ev)=>{
+    pizarraDrawing=true;
+    [pizarraLastX,pizarraLastY]=getXY(ev,canvas);
+    if(pizarraTool==='jugador'){drawCircle(pizarraLastX,pizarraLastY,12,pizarraColor);pizarraDrawing=false;pizarraSaveHistory();}
+    if(pizarraTool==='balon'){drawCircle(pizarraLastX,pizarraLastY,8,'#f5c400');pizarraDrawing=false;pizarraSaveHistory();}
+    if(pizarraTool==='texto'){const t=prompt('Texto:');if(t){pizarraCtx.font='bold 14px Barlow,sans-serif';pizarraCtx.fillStyle=pizarraColor;pizarraCtx.fillText(t,pizarraLastX,pizarraLastY);pizarraSaveHistory();}pizarraDrawing=false;}
+  };
+  canvas.onmousemove=(ev)=>{
+    if(!pizarraDrawing||!['linea','flecha'].includes(pizarraTool)) return;
+    const [x,y]=getXY(ev,canvas);
+    if(pizarraHistory.length){const img=new Image();img.src=pizarraHistory[pizarraHistory.length-1];pizarraCtx.clearRect(0,0,canvas.width,canvas.height);pizarraCtx.drawImage(img,0,0);}
+    pizarraCtx.beginPath();pizarraCtx.strokeStyle=pizarraColor;pizarraCtx.lineWidth=2.5;
+    pizarraCtx.moveTo(pizarraLastX,pizarraLastY);pizarraCtx.lineTo(x,y);pizarraCtx.stroke();
+    if(pizarraTool==='flecha') drawArrow(pizarraLastX,pizarraLastY,x,y);
+  };
+  canvas.onmouseup=canvas.onmouseleave=()=>{if(!pizarraDrawing)return;pizarraDrawing=false;pizarraSaveHistory();};
+  canvas.ontouchstart=(ev)=>{ev.preventDefault();canvas.onmousedown(ev.touches[0]);};
+  canvas.ontouchmove =(ev)=>{ev.preventDefault();canvas.onmousemove(ev.touches[0]);};
+  canvas.ontouchend  =(ev)=>{ev.preventDefault();canvas.onmouseup(ev.changedTouches[0]);};
+}
+
+function drawCircle(x,y,r,color){pizarraCtx.beginPath();pizarraCtx.arc(x,y,r,0,Math.PI*2);pizarraCtx.fillStyle=color;pizarraCtx.fill();pizarraCtx.strokeStyle='rgba(255,255,255,0.8)';pizarraCtx.lineWidth=1.5;pizarraCtx.stroke();}
+function drawArrow(x1,y1,x2,y2){const a=Math.atan2(y2-y1,x2-x1),l=12;pizarraCtx.beginPath();pizarraCtx.moveTo(x2,y2);pizarraCtx.lineTo(x2-l*Math.cos(a-0.4),y2-l*Math.sin(a-0.4));pizarraCtx.lineTo(x2-l*Math.cos(a+0.4),y2-l*Math.sin(a+0.4));pizarraCtx.closePath();pizarraCtx.fillStyle=pizarraColor;pizarraCtx.fill();}
+function setPizarraTool(t){pizarraTool=t;document.querySelectorAll('.pizarra-tool').forEach(b=>b.classList.remove('active'));const b=document.getElementById('pt-'+t);if(b)b.classList.add('active');}
+function pizarraSaveHistory(){const c=document.getElementById('pizarra-canvas');if(c){pizarraHistory.push(c.toDataURL());if(pizarraHistory.length>30)pizarraHistory.shift();}}
+function pizarraUndo(){const c=document.getElementById('pizarra-canvas');if(!c)return;if(pizarraHistory.length>=2){pizarraHistory.pop();const img=new Image();img.onload=()=>{pizarraCtx.clearRect(0,0,c.width,c.height);pizarraCtx.drawImage(img,0,0);};img.src=pizarraHistory[pizarraHistory.length-1];}else pizarraClear(false);}
+function pizarraClear(save=true){const c=document.getElementById('pizarra-canvas');if(!c)return;const dep=document.getElementById('ej-f-deporte')?.value;drawCourt(dep==='Fútbol'?'futbol':'basket');if(save){pizarraHistory=[c.toDataURL()];}}
+
+function drawCourt(tipo) {
+  const c=document.getElementById('pizarra-canvas'); if(!c)return;
+  const ctx=pizarraCtx,W=c.width,H=c.height;
+  ctx.fillStyle=tipo==='futbol'?'#2d6a4f':'#1a4731'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1.5;
+  if(tipo==='basket'){
+    ctx.strokeRect(20,20,W-40,H-40);
+    ctx.beginPath();ctx.moveTo(W/2,20);ctx.lineTo(W/2,H-20);ctx.stroke();
+    ctx.beginPath();ctx.arc(W/2,H/2,35,0,Math.PI*2);ctx.stroke();
+    ctx.strokeRect(20,H/2-55,90,110); ctx.strokeRect(W-110,H/2-55,90,110);
+    ctx.beginPath();ctx.arc(110,H/2,55,Math.PI*1.5,Math.PI*0.5);ctx.stroke();
+    ctx.beginPath();ctx.arc(W-110,H/2,55,Math.PI*0.5,Math.PI*1.5);ctx.stroke();
+    ctx.beginPath();ctx.arc(32,H/2,8,0,Math.PI*2);ctx.stroke();
+    ctx.beginPath();ctx.arc(W-32,H/2,8,0,Math.PI*2);ctx.stroke();
+    ctx.beginPath();ctx.arc(32,H/2,130,Math.PI*1.35,Math.PI*0.65);ctx.stroke();
+    ctx.beginPath();ctx.arc(W-32,H/2,130,Math.PI*0.35,Math.PI*1.65);ctx.stroke();
+  } else {
+    ctx.strokeRect(20,20,W-40,H-40);
+    ctx.beginPath();ctx.moveTo(W/2,20);ctx.lineTo(W/2,H-20);ctx.stroke();
+    ctx.beginPath();ctx.arc(W/2,H/2,50,0,Math.PI*2);ctx.stroke();
+    ctx.strokeRect(20,H/2-60,70,120); ctx.strokeRect(W-90,H/2-60,70,120);
+    ctx.strokeRect(20,H/2-25,12,50); ctx.strokeRect(W-32,H/2-25,12,50);
+    ctx.beginPath();ctx.arc(80,H/2,4,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.5)';ctx.fill();
+    ctx.beginPath();ctx.arc(W-80,H/2,4,0,Math.PI*2);ctx.fill();
+  }
+}
+
+function etShowPizarra(){document.getElementById('ej-pizarra-wrap').style.display='';document.getElementById('ej-img-wrap').style.display='none';document.getElementById('ej-tab-pizarra').style.cssText='background:var(--negro);color:var(--amarillo);';document.getElementById('ej-tab-img').style.cssText='';}
+function etShowImgUpload(){document.getElementById('ej-pizarra-wrap').style.display='none';document.getElementById('ej-img-wrap').style.display='';document.getElementById('ej-tab-img').style.cssText='background:var(--negro);color:var(--amarillo);';document.getElementById('ej-tab-pizarra').style.cssText='';}
+
+async function etPreviewImg(ev) {
+  const file=ev.target.files[0]; if(!file) return;
+  const ext=file.name.split('.').pop();
+  const path=`ejercicios/${Date.now()}.${ext}`;
+  const {error}=await sb.storage.from('ejercicios').upload(path,file,{upsert:true});
+  if(error){showToast('❌ Error al subir imagen');return;}
+  const {data:urlData}=sb.storage.from('ejercicios').getPublicUrl(path);
+  document.getElementById('ej-img-url').value=urlData.publicUrl;
+  document.getElementById('ej-img-preview').innerHTML=`<img src="${urlData.publicUrl}" style="max-width:100%;border-radius:7px;margin-top:6px;">`;
+  showToast('✅ Imagen subida');
+}
+
+// ── GUARDAR EJERCICIO ────────────────────────────────────
+async function saveEjercicio(editId, returnId=false) {
+  const tarea=(document.getElementById('ej-f-tarea')?.value||'').trim();
+  if(!tarea){showToast('⚠️ La tarea es obligatoria');return null;}
+  const tags=(document.getElementById('ej-f-tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean);
+  const canvas=document.getElementById('pizarra-canvas');
+  const diagrama = canvas ? {dataUrl:canvas.toDataURL('image/jpeg',0.7)} : null;
+  const payload = {
+    tarea,
+    descripcion: document.getElementById('ej-f-desc')?.value||'',
+    duracion:    parseInt(document.getElementById('ej-f-dur')?.value||10),
+    deporte:     document.getElementById('ej-f-deporte')?.value,
+    tipo:        document.getElementById('ej-f-tipo')?.value,
+    edad_minima: parseInt(document.getElementById('ej-f-emin')?.value)||null,
+    edad_maxima: parseInt(document.getElementById('ej-f-emax')?.value)||null,
+    etiquetas:   tags,
+    imagen_url:  document.getElementById('ej-img-url')?.value||null,
+    diagrama,
+    es_publico:  true,
+    created_by:  currentUser?.id,
+    autor_nombre:currentPerfil?.nombre||currentUser?.email?.split('@')[0]||''
+  };
+  const res = editId
+    ? await sb.from('ejercicios').update(payload).eq('id',editId).select().single()
+    : await sb.from('ejercicios').insert(payload).select().single();
+  if(res.error){showToast('❌ '+res.error.message);return null;}
+  if(returnId) return res.data?.id;
+  closeModal(); renderBiblioteca(); showToast('✅ Ejercicio guardado');
+  return res.data?.id;
+}
+
+// ── INTEGRACIÓN HORARIO → ENTRENO ────────────────────────
+function abrirEntrenoDesdeHorario(equipo, diaNum) {
+  showPanel('entrenamientos');
+  setTimeout(async()=>{
+    const {data}=await sb.from('entrenamientos').select('*').eq('contexto','Campus').eq('campus_dia',diaNum).eq('equipo',equipo).order('fecha',{ascending:false}).limit(1);
+    if(data?.length){ etEntrenamientos=data; openVerEntreno(data[0].id); }
+    else openNuevoEntreno(null,equipo,diaNum,'Campus');
+  },200);
+}
 
 // INIT — comprobar sesión activa
 // ════════════════════════════════════════════════════════
