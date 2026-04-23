@@ -304,6 +304,7 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
 
       <div class="nav-section-label">Campus</div>
       <div class="nav-item" onclick="showPanel('campus')"><span>🏕️</span><span>Campus Salamanca</span></div>
+      <div class="nav-item entrenador-only" onclick="showPlanificadorCampus()"><span>📋</span><span>Planificador Campus</span></div>
 
       <div class="nav-section-label entrenador-only">Entrenamientos</div>
       <div class="nav-item entrenador-only" onclick="showPanel('entrenamientos')"><span>📋</span><span>Planificador</span></div>
@@ -316,6 +317,7 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
 
       <div class="nav-section-label">Administración</div>
       <div class="nav-item admin-only" onclick="showPanel('usuarios')"><span>🔐</span><span>Usuarios</span></div>
+      <div class="nav-item admin-only" onclick="showPanel('modulos')"><span>⚙️</span><span>Módulos</span></div>
     </nav>
     <div class="sidebar-user">
       <div class="user-name" id="sidebar-user-name">—</div>
@@ -416,6 +418,15 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
         </div>
         <div id="view-equipos" style="display:none">
           <div class="equipos-wrapper" id="equipos-board"></div>
+        </div>
+      </div>
+
+      <!-- MÓDULOS -->
+      <div class="panel" id="panel-modulos">
+        <div style="max-width:640px;">
+          <p style="font-size:13.5px;color:var(--gris-medio);margin-bottom:20px;">Activa o desactiva los módulos disponibles. Los módulos activos aparecerán en el menú lateral y afectarán a los equipos disponibles en el planificador.</p>
+          <div id="modulos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;"></div>
+          <button class="btn btn-primary" style="margin-top:20px;" onclick="saveModulos()">💾 Guardar cambios</button>
         </div>
       </div>
 
@@ -627,6 +638,10 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
         <div class="integration-box">
           <h3>📅 Puertas Abiertas — desde 1 junio 2025</h3>
           <div class="pruebas-grid" id="pruebas-content"></div>
+        </div>
+        <div class="integration-box" id="campus-cal-box" style="display:none;">
+          <h3>🏕️ Campus Salamanca — Días disponibles (1–10 Jul)</h3>
+          <div id="campus-cal-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:8px;"></div>
         </div>
       </div>
 
@@ -1123,14 +1138,14 @@ function importCSV(event) {
 // ════════════════════════════════════════════════════════
 // NAVEGACIÓN
 // ════════════════════════════════════════════════════════
-const TITLES={dashboard:'Dashboard',inscritos:'Pruebas · Inscritos',usuarios:'Administración · Usuarios',integracion:'Pruebas · Integración',pruebas:'Pruebas · Calendario',campus:'Campus Salamanca',mensajes:'Mensajes','mi-ficha':'Mi Ficha',entrenamientos:'Planificador de Entrenamientos'};
+const TITLES={dashboard:'Dashboard',inscritos:'Pruebas · Inscritos',usuarios:'Administración · Usuarios',integracion:'Pruebas · Integración',pruebas:'Pruebas · Calendario',campus:'Campus Salamanca',mensajes:'Mensajes','mi-ficha':'Mi Ficha',entrenamientos:'Planificador de Entrenamientos',modulos:'Configuración · Módulos'};
 function showPanel(name){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   var panel = document.getElementById('panel-'+name);
   if(!panel) return;
   panel.classList.add('active');
-  document.querySelector('.nav-item[onclick*="'+name+'"]')?.classList.add('active');
+  document.querySelector('.nav-item[onclick*="\''+name+'\'"]')?.classList.add('active');
   document.getElementById('panel-title').textContent=TITLES[name]||name;
   if(name==='dashboard') renderDashboard();
   if(name==='inscritos') renderView();
@@ -1139,6 +1154,7 @@ function showPanel(name){
   if(name==='mensajes') renderMensajes();
   if(name==='mi-ficha') renderMiFicha();
   if(name==='entrenamientos') renderEntrenamientos();
+  if(name==='modulos') renderModulos();
 }
 
 // ════════════════════════════════════════════════════════
@@ -1779,6 +1795,32 @@ function renderPruebas(){
     </div>`;
 
   renderHorarios();
+
+  // ── Bloque campus ──────────────────────────────────────
+  const campusBox = document.getElementById('campus-cal-box');
+  const campusGrid = document.getElementById('campus-cal-grid');
+  if(campusBox && campusGrid && modulosActivos.includes('campus')) {
+    campusBox.style.display = '';
+    campusGrid.innerHTML = HOR_DIAS.map(d => {
+      const isSalida = d.label === 'Salida';
+      const isLlegada = d.label === 'Llegada';
+      const borderColor = isLlegada ? '#16a34a' : isSalida ? '#c0392b' : 'var(--amarillo)';
+      const badge = isLlegada
+        ? `<span style="background:#dcfce7;color:#166534;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:700;">Llegada</span>`
+        : isSalida
+        ? `<span style="background:#fce4ec;color:#c62828;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:700;">Salida</span>`
+        : '';
+      return `<div style="background:var(--blanco);border-radius:8px;border:2px solid ${borderColor};padding:12px;text-align:center;cursor:pointer;transition:box-shadow 0.15s;"
+        onclick="showPanel('campus')" onmouseover="this.style.boxShadow='0 2px 10px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;color:var(--amarillo);line-height:1;">${d.num}</div>
+        <div style="font-size:11px;font-weight:700;color:var(--negro);margin:2px 0;">${d.dia}</div>
+        <div style="font-size:11px;color:var(--gris-medio);">${d.fecha}</div>
+        ${badge ? `<div style="margin-top:4px;">${badge}</div>` : ''}
+      </div>`;
+    }).join('');
+  } else if(campusBox) {
+    campusBox.style.display = 'none';
+  }
 }
 
 // ════════════════════════════════════════════════════════
@@ -3375,6 +3417,9 @@ let etEjerciciosSeleccionados = [];
 let pizarraCtx = null, pizarraDrawing = false, pizarraTool = 'flecha', pizarraColor = '#c0392b';
 let pizarraHistory = [], pizarraLastX = 0, pizarraLastY = 0;
 
+// Módulos activos en la configuración del club
+let modulosActivos = JSON.parse(localStorage.getItem('sv_modulos_activos') || '["campus"]');
+
 const ET_TIPO_STYLE = {
   'Técnico':           {cls:'et-tag-tecnico',     icon:'🎯'},
   'Táctico':           {cls:'et-tag-tactico',     icon:'🧠'},
@@ -3385,10 +3430,16 @@ const ET_TIPO_STYLE = {
 };
 const ET_DEP_ICON = {Baloncesto:'🏀', Fútbol:'⚽', Ambos:'🏅'};
 
-function etGetEquipos() {
+function etGetEquipos(contexto) {
+  // Si se pasa contexto explícito Campus, o si el panel activo es campus, devuelve equipos de campus
   const panelId = document.querySelector('.panel.active')?.id || '';
-  if(panelId === 'panel-campus')
+  const ctxField = contexto || document.getElementById('et-f-contexto')?.value || '';
+  if(panelId === 'panel-campus' || ctxField === 'Campus')
     return ['Minibasket','Basket1','Basket2','Basket3','Basket4','Basket5','Basket 6','Futbol1','Futbol2','Futbol 3'];
+  // Si el módulo campus está activo en config, incluir también sus equipos
+  if(modulosActivos && modulosActivos.includes('campus'))
+    return ['Prebenjamín','Benjamín','Alevín','Infantil','Cadete','Juvenil','Junior','Sub-22','Senior',
+            '— Campus —','Minibasket','Basket1','Basket2','Basket3','Basket4','Basket5','Basket 6','Futbol1','Futbol2','Futbol 3'];
   return ['Prebenjamín','Benjamín','Alevín','Infantil','Cadete','Juvenil','Junior','Sub-22','Senior'];
 }
 
@@ -3593,7 +3644,7 @@ async function openNuevoEntreno(editId, prefillEquipo, prefillDia, prefillContex
         <input id="et-f-fecha" type="date" value="${editData?.fecha||new Date().toISOString().split('T')[0]}">
       </div>
       <div class="detail-field"><label>Contexto</label>
-        <select id="et-f-contexto" onchange="etToggleCampusDia()">
+        <select id="et-f-contexto" onchange="etToggleCampusDia();etRefreshEquipos()">
           ${['Temporada','Campus','Pruebas'].map(c=>`<option ${(editData?.contexto||ctxActual)===c?'selected':''}>${c}</option>`).join('')}
         </select>
       </div>
@@ -3633,6 +3684,106 @@ async function openNuevoEntreno(editId, prefillEquipo, prefillDia, prefillContex
 function etToggleCampusDia() {
   const v=document.getElementById('et-f-contexto')?.value;
   document.getElementById('et-campus-dia-row').style.display = v==='Campus'?'':'none';
+  // Actualizar fecha min/max si es campus
+  const fechaInput = document.getElementById('et-f-fecha');
+  if(fechaInput) {
+    if(v==='Campus') {
+      fechaInput.min = '2025-07-01';
+      fechaInput.max = '2025-07-10';
+      // Si la fecha actual no está en rango campus, resetear
+      const f = fechaInput.value;
+      if(!f || f < '2025-07-01' || f > '2025-07-10') fechaInput.value = '2025-07-01';
+    } else {
+      fechaInput.min = '';
+      fechaInput.max = '';
+    }
+  }
+}
+
+function etRefreshEquipos() {
+  const sel = document.getElementById('et-f-equipo');
+  if(!sel) return;
+  const current = sel.value;
+  const equipos = etGetEquipos();
+  sel.innerHTML = equipos.map(eq => {
+    if(eq.startsWith('—')) return `<option disabled>${eq}</option>`;
+    return `<option ${current===eq?'selected':''}>${eq}</option>`;
+  }).join('');
+}
+
+// Navegar al planificador con contexto campus preseleccionado
+function showPlanificadorCampus() {
+  showPanel('entrenamientos');
+  setTimeout(() => {
+    // Al abrir nuevo entreno desde campus, preseleccionar contexto Campus
+    document.getElementById('et-btn-nuevo-entreno').onclick = () => openNuevoEntreno(null, null, null, 'Campus');
+    etTab('lista');
+  }, 100);
+}
+
+// ════════════════════════════════════════════════════════
+// MÓDULOS
+// ════════════════════════════════════════════════════════
+const MODULOS_CONFIG = [
+  { id:'campus',          nombre:'Campus Salamanca',      icon:'🏕️', desc:'Gestión del campus de verano: participantes, horario, veladas, monitores y médico.' },
+  { id:'pruebas',         nombre:'Calendario de Pruebas', icon:'📅', desc:'Calendario de puertas abiertas y sesiones de prueba para nuevos fichajes.' },
+  { id:'entrenamientos',  nombre:'Planificador',           icon:'📋', desc:'Planificación de entrenamientos, biblioteca de ejercicios y pizarra táctica.' },
+  { id:'inscritos',       nombre:'Inscritos',              icon:'👥', desc:'CRM de jugadores inscritos a pruebas con vistas tabla, kanban y equipos.' },
+  { id:'mensajes',        nombre:'Mensajes',               icon:'💬', desc:'Chat 1 a 1 y canales de grupo por equipo.' },
+];
+
+function renderModulos() {
+  const grid = document.getElementById('modulos-grid');
+  if(!grid) return;
+  grid.innerHTML = MODULOS_CONFIG.map(m => {
+    const activo = modulosActivos.includes(m.id);
+    return `<div style="background:var(--blanco);border-radius:10px;border:2px solid ${activo?'var(--amarillo)':'var(--gris-claro)'};padding:18px;transition:border-color 0.15s;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:22px;">${m.icon}</span>
+          <strong style="font-size:14px;">${m.nombre}</strong>
+        </div>
+        <label style="position:relative;display:inline-block;width:42px;height:24px;cursor:pointer;">
+          <input type="checkbox" id="mod-${m.id}" ${activo?'checked':''} onchange="toggleModulo('${m.id}')"
+            style="opacity:0;width:0;height:0;position:absolute;">
+          <span style="position:absolute;inset:0;border-radius:24px;background:${activo?'var(--amarillo)':'var(--gris-claro)'};transition:0.2s;" id="mod-track-${m.id}">
+            <span style="position:absolute;height:18px;width:18px;left:${activo?'21':'3'}px;bottom:3px;border-radius:50%;background:${activo?'var(--negro)':'#aaa'};transition:0.2s;" id="mod-thumb-${m.id}"></span>
+          </span>
+        </label>
+      </div>
+      <p style="font-size:12.5px;color:var(--gris-medio);line-height:1.5;">${m.desc}</p>
+    </div>`;
+  }).join('');
+}
+
+function toggleModulo(id) {
+  const checked = document.getElementById('mod-'+id)?.checked;
+  const track = document.getElementById('mod-track-'+id);
+  const thumb = document.getElementById('mod-thumb-'+id);
+  const card = track?.closest('[style*="border:2px"]');
+  if(checked) {
+    if(!modulosActivos.includes(id)) modulosActivos.push(id);
+    if(track){ track.style.background='var(--amarillo)'; }
+    if(thumb){ thumb.style.left='21px'; thumb.style.background='var(--negro)'; }
+    if(card)  card.style.borderColor='var(--amarillo)';
+  } else {
+    modulosActivos = modulosActivos.filter(m=>m!==id);
+    if(track){ track.style.background='var(--gris-claro)'; }
+    if(thumb){ thumb.style.left='3px'; thumb.style.background='#aaa'; }
+    if(card)  card.style.borderColor='var(--gris-claro)';
+  }
+}
+
+function saveModulos() {
+  localStorage.setItem('sv_modulos_activos', JSON.stringify(modulosActivos));
+  showToast('✅ Módulos guardados');
+  // Refrescar visibilidad de items del sidebar
+  applyModulosVisibility();
+}
+
+function applyModulosVisibility() {
+  // El sidebar siempre muestra todo para admin, esta función es extensible
+  // En el planificador, los equipos de campus aparecen si módulo campus está activo
 }
 
 function etRenderEjsList() {
