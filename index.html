@@ -498,7 +498,7 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
           <button class="campus-tab active" onclick="campusTab('participantes')">👥 Participantes</button>
           <button class="campus-tab" onclick="campusTab('horario')">📅 Horario</button>
           <button class="campus-tab" onclick="campusTab('veladas')">🌙 Veladas</button>
-          <button class="campus-tab" onclick="campusTab('planificacion')">📋 Planificación</button>
+          <button class="campus-tab" onclick="campusTab('planificacion')">📚 Contenidos</button>
           <button class="campus-tab" onclick="campusTab('codigoEtico')">📜 Código Ético</button>
           <button class="campus-tab" onclick="campusTab('monitores')">👨‍🏫 Monitores</button>
           <button class="campus-tab" onclick="campusTab('medico')">🏥 Médico</button>
@@ -3012,130 +3012,83 @@ const INSTALACIONES_CAMPUS = {"Basket1": {"mañana": "Lazarillo Tormes 3", "tard
 const DIAS_CAMPUS = [{"num": 1, "dia": "Miércoles", "fecha": "1 Jul"}, {"num": 2, "dia": "Jueves", "fecha": "2 Jul"}, {"num": 3, "dia": "Viernes", "fecha": "3 Jul"}, {"num": 4, "dia": "Sábado", "fecha": "4 Jul"}, {"num": 5, "dia": "Domingo", "fecha": "5 Jul"}, {"num": 6, "dia": "Lunes", "fecha": "6 Jul"}, {"num": 7, "dia": "Martes", "fecha": "7 Jul"}, {"num": 8, "dia": "Miércoles", "fecha": "8 Jul"}, {"num": 9, "dia": "Jueves", "fecha": "9 Jul"}, {"num": 10, "dia": "Viernes", "fecha": "10 Jul"}];
 
 function renderContenido() {
-  const equipos = ['Basket1','Basket2','Basket3','Basket4','Basket5','Basket 6','Minibasket','Futbol1','Futbol2','Futbol 3'];
   const canEdit = currentPerfil?.rol === 'admin' || currentPerfil?.rol === 'entrenador';
 
-  // ── Extraer sesiones de entreno del horario por día ──
-  function getEntrenosDia(diaNum) {
-    const filas = getHorarioDia(diaNum);
-    return filas.filter(f => f.tipo === 'entreno');
-  }
-
-  // ── Renderizar chuleta de metodología ──
-  function renderChuleta(ct, turno, color) {
-    if(!ct) return '';
-    return `<div style="margin-bottom:10px;">
-      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:${color};margin-bottom:6px;padding:4px 10px;background:${color}18;border-radius:5px;">
-        ${turno === 'mañana' ? '☀️ MAÑANA' : '🌅 TARDE'}
-      </div>
-      ${Object.values(ct).map(bloque => `
-        <div style="margin-bottom:8px;">
-          <div style="font-size:11px;font-weight:700;display:flex;gap:6px;align-items:center;margin-bottom:4px;">
-            <span style="background:${color};color:#fff;padding:1px 7px;border-radius:20px;font-size:10px;white-space:nowrap;">${bloque.tiempo}</span>
-            <span style="font-weight:800;">${bloque.titulo}</span>
-          </div>
-          ${bloque.items.map(item => `<div style="font-size:11px;color:var(--gris-medio);padding:2px 0 2px 14px;border-left:2px solid ${color}55;margin-bottom:2px;">• ${item}</div>`).join('')}
-        </div>`).join('')}
-    </div>`;
+  function bloques(ct, color) {
+    return Object.values(ct).map(b => `
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+        <div style="min-width:52px;text-align:center;padding-top:1px;">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:${color};line-height:1;">${b.tiempo.replace(' min','')}</div>
+          <div style="font-size:8px;text-transform:uppercase;color:rgba(255,255,255,0.3);letter-spacing:1px;">min</div>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:800;color:#fff;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">${b.titulo}</div>
+          ${b.items.map(item=>`<div style="font-size:11.5px;color:rgba(255,255,255,0.65);padding:2px 0 2px 10px;border-left:2px solid ${color}66;margin-bottom:3px;line-height:1.5;">• ${item}</div>`).join('')}
+        </div>
+      </div>`).join('');
   }
 
   document.getElementById('contenido-grid').innerHTML = `
+    <div style="grid-column:1/-1;">
 
-    <!-- ── CHULETA METODOLOGÍA (fija arriba) ── -->
-    <div style="grid-column:1/-1;background:var(--negro);border-radius:12px;padding:20px 24px;margin-bottom:4px;border-bottom:4px solid var(--amarillo);">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--amarillo);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">📚 Chuleta Metodología — Baloncesto B1-6 + Minis</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-        <div>
-          ${renderChuleta(CONTENIDO_B123.mañana, 'mañana', '#f5c400')}
+      <!-- TÍTULO -->
+      <div style="margin-bottom:20px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--gris-medio);margin-bottom:4px;">Metodología oficial · Campus San Viator 2026</div>
+        <p style="font-size:13px;color:var(--gris-medio);line-height:1.5;">Estructura de referencia para todos los entrenadores. En el Planificador, usa <strong>📋 Cargar plantilla</strong> al seleccionar Baloncesto + Mañana/Tarde para auto-rellenar los bloques.</p>
+      </div>
+
+      <!-- BALONCESTO B1-6 -->
+      <div style="background:var(--negro);border-radius:12px;overflow:hidden;margin-bottom:16px;border:1px solid rgba(255,255,255,0.06);">
+        <div style="background:#1565c0;padding:14px 20px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:22px;">🏀</span>
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;">Baloncesto B1-6</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.6);">Basket1 · Basket2 · Basket3 · Basket4 · Basket5 · Basket 6</div>
+          </div>
         </div>
-        <div>
-          ${renderChuleta(CONTENIDO_B123.tarde, 'tarde', '#f5c400')}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+          <div style="padding:16px 20px;border-right:1px solid rgba(255,255,255,0.06);">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#f5c400;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(245,196,0,0.2);">☀️ MAÑANA — 135 min</div>
+            ${bloques(CONTENIDO_B123.mañana, '#f5c400')}
+          </div>
+          <div style="padding:16px 20px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#f97316;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(249,115,22,0.2);">🌅 TARDE — 120 min</div>
+            ${bloques(CONTENIDO_B123.tarde, '#f97316')}
+          </div>
         </div>
       </div>
-      <details style="margin-top:12px;">
-        <summary style="cursor:pointer;font-size:12px;color:rgba(255,255,255,0.5);font-weight:700;letter-spacing:1px;text-transform:uppercase;">▸ Ver metodología Basket4 + Minibasket</summary>
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1);">
-          ${renderChuleta(CONTENIDO_B4MINIS.mañana, 'mañana', '#f5c400')}
-        </div>
-      </details>
-    </div>
 
-    <!-- ── PLANIFICACIÓN POR EQUIPO ── -->
-    ${equipos.map(eq => {
-      const color = CAMPUS_EQUIPO_COLORS[eq] || '#888';
-      const key = 'contenido_' + eq;
-      const saved = campusContenido[key] || {};
-      const inst = INSTALACIONES_CAMPUS[eq] || {};
-      const isB123 = ['Basket1','Basket2','Basket3','Basket 6'].includes(eq);
-      const isB4Minis = ['Basket4','Basket5','Minibasket'].includes(eq);
-      const isFutbol = eq.toLowerCase().includes('futbol');
-      const monitor = CAMPUS_MONITORS.find(m => m.equipo === eq);
-      const eqId = eq.replace(/[ /]/g,'_');
-
-      return `<div class="contenido-card" id="cont-card-${eqId}" style="border-left-color:${color};">
-        <!-- Cabecera equipo -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <h4 style="color:${color};margin:0;font-size:16px;">${isFutbol ? '⚽' : '🏀'} ${eq}</h4>
-          <div style="text-align:right;">
-            <div style="font-size:12px;font-weight:700;">${monitor?.nombre || '—'}</div>
-            <div style="font-size:10.5px;color:var(--gris-medio);">${monitor?.puesto || ''}</div>
+      <!-- MINIBASKET -->
+      <div style="background:var(--negro);border-radius:12px;overflow:hidden;margin-bottom:16px;border:1px solid rgba(255,255,255,0.06);">
+        <div style="background:#7b3f9e;padding:14px 20px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:22px;">🏀</span>
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;">Minibasket</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.6);">Solo sesión de mañana</div>
           </div>
         </div>
+        <div style="padding:16px 20px;">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#c084fc;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(192,132,252,0.2);">☀️ MAÑANA</div>
+          ${bloques(CONTENIDO_B4MINIS.mañana, '#c084fc')}
+        </div>
+      </div>
 
-        <!-- SESIONES POR DÍA (del horario) -->
-        <div style="margin-bottom:16px;">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:8px;">🗓️ Sesiones de entrenamiento</div>
-          <div style="display:flex;flex-direction:column;gap:4px;">
-            ${DIAS_CAMPUS.map(d => {
-              const entrenosDia = getEntrenosDia(d.num);
-              // Filtrar sesiones relevantes para este equipo (sin equipos = todas, o si el equipo está en la lista)
-              const sesiones = entrenosDia.filter(s =>
-                !s.equipos || s.equipos.length === 0 || s.equipos.includes(eq)
-              );
-              if(!sesiones.length && d.num !== 1) return ''; // Día 1 es llegada, siempre mostrar
-              const pistas = JSON.parse(localStorage.getItem('sv_campus_pistas') || '{}');
-              const pistaMañana = pistas[`pistas_${eq}_d${d.num}_m`] || inst.mañana || '';
-              const pistaTarde  = pistas[`pistas_${eq}_d${d.num}_t`] || inst.tarde  || '';
-              const isLlegada = d.num === 1;
-              const isSalida  = d.num === 10;
-              return `<div style="display:flex;gap:8px;align-items:flex-start;padding:7px 10px;border-radius:6px;background:var(--gris-bg);border:1px solid var(--gris-claro);">
-                <div style="min-width:62px;text-align:center;">
-                  <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:${color};line-height:1;">${d.fecha}</div>
-                  <div style="font-size:9px;color:var(--gris-medio);font-weight:700;text-transform:uppercase;">${d.dia}</div>
-                  ${isLlegada?'<div style="font-size:9px;background:#dcfce7;color:#166534;border-radius:20px;padding:0 5px;font-weight:700;">Llegada</div>':''}
-                  ${isSalida ?'<div style="font-size:9px;background:#fce4ec;color:#c62828;border-radius:20px;padding:0 5px;font-weight:700;">Salida</div>' :''}
-                </div>
-                <div style="flex:1;min-width:0;">
-                  ${sesiones.length ? sesiones.map(s => `
-                    <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
-                      <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:${color};min-width:40px;">${s.hora}</span>
-                      <span style="font-size:12px;font-weight:600;">${s.act}</span>
-                    </div>`).join('')
-                  : `<span style="font-size:11.5px;color:var(--gris-medio);font-style:italic;">${isLlegada?'Llegada y acomodación':'Sin sesión de entreno'}</span>`}
-                  ${pistaMañana||pistaTarde ? `<div style="font-size:10.5px;color:var(--gris-medio);margin-top:3px;">📍 ${[pistaMañana,pistaTarde].filter(Boolean).join(' / ')}</div>` : ''}
-                </div>
-              </div>`;
-            }).join('')}
+      <!-- FÚTBOL (placeholder hasta recibir PDFs) -->
+      <div style="background:var(--negro);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
+        <div style="background:#166534;padding:14px 20px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:22px;">⚽</span>
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;">Fútbol F1-3</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.6);">Futbol1 · Futbol2 · Futbol 3</div>
           </div>
         </div>
-
-        <!-- NOTAS DEL ENTRENADOR por sesión -->
-        <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:6px;">📝 Notas del entrenador por sesión</div>
-          <select id="dia-select-${eqId}" onchange="loadContenidoDia('${eq}')"
-            style="width:100%;border:1.5px solid var(--gris-claro);border-radius:5px;padding:6px;font-size:12px;font-family:'Barlow',sans-serif;margin-bottom:6px;">
-            ${DIAS_CAMPUS.map(d=>`<option value="Día ${d.num}">${d.dia} ${d.fecha} (Día ${d.num})</option>`).join('')}
-          </select>
-          ${canEdit ? `
-          <textarea id="cont-${eqId}" class="contenido-textarea"
-            placeholder="Ejercicios específicos, grupos, observaciones de la sesión..."
-            onchange="saveContenido('${eq}')" style="border-color:${color}55;">${saved['Día 1']||''}</textarea>
-          <button class="btn btn-sm btn-primary" style="background:${color};border:none;margin-top:6px;" onclick="saveContenido('${eq}')">💾 Guardar nota</button>`
-          : `<div style="background:var(--gris-bg);border-radius:6px;padding:10px;font-size:13px;color:var(--gris-medio);">${saved['Día 1'] || 'Sin notas todavía'}</div>`}
+        <div style="padding:20px;text-align:center;color:rgba(255,255,255,0.3);font-size:13px;">
+          <div style="font-size:32px;margin-bottom:8px;">📄</div>
+          Pendiente de recibir PDFs de contenidos deportivos de fútbol
         </div>
-      </div>`;
-    }).join('')}
-  `;
+      </div>
+
+    </div>`;
 }
 
 function savePista(eq, diaNum, turno, val) {
@@ -3723,13 +3676,13 @@ async function openNuevoEntreno(editId, prefillEquipo, prefillDia, prefillContex
   document.getElementById('modal-body').innerHTML = `
     <div class="detail-row">
       <div class="detail-field"><label>Deporte *</label>
-        <select id="et-f-deporte">
+        <select id="et-f-deporte" onchange="etCheckPlantilla()">
           <option ${(editData?.deporte||'Baloncesto')==='Baloncesto'?'selected':''}>Baloncesto</option>
           <option ${editData?.deporte==='Fútbol'?'selected':''}>Fútbol</option>
         </select>
       </div>
       <div class="detail-field"><label>Sesión</label>
-        <select id="et-f-sesion">
+        <select id="et-f-sesion" onchange="etCheckPlantilla()">
           ${['Mañana','Tarde','Única'].map(s=>`<option ${(editData?.sesion||'Única')===s?'selected':''}>${s}</option>`).join('')}
         </select>
       </div>
@@ -3773,6 +3726,7 @@ async function openNuevoEntreno(editId, prefillEquipo, prefillDia, prefillContex
           <div style="font-size:11px;color:var(--gris-medio);margin-top:2px;">Total: <strong id="et-dur-total">${etEjerciciosSeleccionados.reduce((s,e)=>s+(e.duracion_override||e._data?.duracion||0),0)} min</strong></div>
         </div>
         <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm" id="et-btn-plantilla" onclick="etCargarPlantilla()" style="background:#fffbe6;color:#7a6200;border:1.5px solid var(--amarillo);display:none;">📋 Cargar plantilla</button>
           <button class="btn btn-sm btn-secondary" onclick="openAddEjercicioModal()">📚 Biblioteca</button>
           <button class="btn btn-sm btn-primary" onclick="openNuevoEjercicioInline()">+ Nuevo ejercicio</button>
         </div>
@@ -3784,6 +3738,8 @@ async function openNuevoEntreno(editId, prefillEquipo, prefillDia, prefillContex
     <button class="btn btn-primary" onclick="saveEntreno(${editId?`'${editId}'`:'null'})">💾 Guardar entrenamiento</button>`;
   document.getElementById('modal-overlay').classList.add('open');
   if(prefillDia) setTimeout(()=>{ const s=document.getElementById('et-f-campus-dia'); if(s) s.value=prefillDia; },150);
+  // Mostrar/ocultar botón plantilla según estado inicial
+  setTimeout(etCheckPlantilla, 50);
 }
 
 function etToggleCampusDia() {
@@ -3795,13 +3751,92 @@ function etToggleCampusDia() {
     if(v==='Campus') {
       fechaInput.min = '2025-07-01';
       fechaInput.max = '2025-07-10';
-      // Si la fecha actual no está en rango campus, resetear
       const f = fechaInput.value;
       if(!f || f < '2025-07-01' || f > '2025-07-10') fechaInput.value = '2025-07-01';
     } else {
       fechaInput.min = '';
       fechaInput.max = '';
     }
+  }
+}
+
+// Plantillas metodológicas como ejercicios locales (sin ID de Supabase)
+const ET_PLANTILLAS = {
+  'Baloncesto-Mañana': [
+    { tarea:'Activación', tipo:'Calentamiento', duracion:10, descripcion:'Juego/Competición de activación.' },
+    { tarea:'Bloque Tecnificación — Dribling / Fintas / Arrancadas', tipo:'Técnico', duracion:15, descripcion:'Dribling, fintas, arrancadas, paso 0, técnica de pase. Insistir en detalles, reto de dificultad, intensidad máxima.' },
+    { tarea:'Bloque Tecnificación — Finalizaciones', tipo:'Técnico', duracion:30, descripcion:'Finalizaciones con oposición, pasiva, coordinación+finalización, disociación. Apoyos largos-cortos, protección del balón. Pases en movimiento trabajando precisión y ejecución.' },
+    { tarea:'Bloque Táctica Individual — 1c1', tipo:'Táctico', duracion:20, descripcion:'2 ejercicios de 1c1 aplicando movimientos practicados. Normas de bote, espacios de tiro, toma de decisiones vertical al aro. Defensa intensa: mano en cadera + mano al pase.' },
+    { tarea:'Bloque Táctica Individual — 2c2', tipo:'Táctico', duracion:15, descripcion:'El jugador sin balón gana la espalda del defensor. Con balón: ventaja con mínimo número de botes. Defensores pendientes de balón y jugador.' },
+    { tarea:'Bloque Competición — Competiciones individuales', tipo:'Competición', duracion:30, descripcion:'Competiciones individuales según tabla de competiciones.' },
+    { tarea:'Vuelta a la Calma — Tiros libres + Estiramientos', tipo:'Vuelta a la calma', duracion:15, descripcion:"5' — Competición de tiros libres.\n10' — Estiramientos." },
+  ],
+  'Baloncesto-Tarde': [
+    { tarea:'Bloque Tiro — Técnica de tiro', tipo:'Técnico', duracion:10, descripcion:'Mecánica, tiro estático, tiro tras bote, posición pies y manos.' },
+    { tarea:'Bloque Tiro — Tiro en movimiento', tipo:'Técnico', duracion:20, descripcion:'Activación, ruedas de tiro, tiro por parejas.' },
+    { tarea:'Bloque Táctica Colectiva — Situaciones colectivas', tipo:'Táctico', duracion:15, descripcion:'Una situación/día: spacing, paso y me muevo, balón rápido, lectura bloqueos, continuaciones. Ayudas y CloseOut.' },
+    { tarea:'Bloque Táctica Colectiva — Con oposición', tipo:'Táctico', duracion:20, descripcion:'3c3, 4c4, 5c5 en medio campo ida y vuelta.' },
+    { tarea:'Bloque Competición — Play Off por equipos', tipo:'Competición', duracion:40, descripcion:'Partidos de Play Off por equipos.' },
+    { tarea:'Vuelta a la Calma — Tiros libres + Estiramientos', tipo:'Vuelta a la calma', duracion:15, descripcion:"5' — Competición de tiros libres.\n10' — Estiramientos." },
+  ],
+};
+
+function etCheckPlantilla() {
+  const dep = document.getElementById('et-f-deporte')?.value;
+  const ses = document.getElementById('et-f-sesion')?.value;
+  const btn = document.getElementById('et-btn-plantilla');
+  if(!btn) return;
+  const key = `${dep}-${ses}`;
+  const hasPlantilla = !!ET_PLANTILLAS[key];
+  btn.style.display = hasPlantilla ? '' : 'none';
+  if(hasPlantilla) btn.textContent = `📋 Cargar plantilla ${ses}`;
+}
+
+function etCargarPlantilla() {
+  const dep = document.getElementById('et-f-deporte')?.value;
+  const ses = document.getElementById('et-f-sesion')?.value;
+  const key = `${dep}-${ses}`;
+  const plantilla = ET_PLANTILLAS[key];
+  if(!plantilla) return;
+  if(etEjerciciosSeleccionados.length > 0) {
+    // Confirmar si ya hay ejercicios — usando modal para no bloquear
+    document.getElementById('modal-title').textContent = '📋 Cargar plantilla';
+    document.getElementById('modal-body').innerHTML = `<p style="font-size:14px;line-height:1.6;">Ya tienes ${etEjerciciosSeleccionados.length} ejercicio(s) añadidos. ¿Quieres <strong>reemplazarlos</strong> por la plantilla de ${dep} ${ses}?</p>`;
+    document.getElementById('modal-footer').innerHTML = `
+      <button class="btn btn-secondary" onclick="_restoreEntrenoForm()">Cancelar</button>
+      <button class="btn btn-primary" onclick="etAplicarPlantilla('${key}')">📋 Sí, cargar plantilla</button>`;
+    // Guardar snapshot para poder volver
+    _etFormSnapshot = {
+      deporte: dep, equipo: document.getElementById('et-f-equipo')?.value,
+      fecha: document.getElementById('et-f-fecha')?.value,
+      sesion: ses, contexto: document.getElementById('et-f-contexto')?.value,
+      campusDia: document.getElementById('et-f-campus-dia')?.value,
+      categoria: document.getElementById('et-f-categoria')?.value,
+      comentarios: document.getElementById('et-f-comentarios')?.value,
+      editId: _etCurrentEditId || null,
+    };
+    return;
+  }
+  etAplicarPlantilla(key);
+}
+
+function etAplicarPlantilla(key) {
+  const plantilla = ET_PLANTILLAS[key];
+  if(!plantilla) return;
+  etEjerciciosSeleccionados = plantilla.map((ej, i) => ({
+    ejercicio_id: null, // sin ID de BD, es plantilla local
+    duracion_override: ej.duracion,
+    orden: i + 1,
+    notas: '',
+    _data: { tarea: ej.tarea, tipo: ej.tipo, duracion: ej.duracion, descripcion: ej.descripcion, etiquetas: [] },
+  }));
+  if(_etFormSnapshot) {
+    _restoreEntrenoForm();
+  } else {
+    const ejList = document.getElementById('et-ejes-list');
+    if(ejList) ejList.innerHTML = etRenderEjsList();
+    etUpdateDurTotal();
+    showToast(`✅ Plantilla ${key.replace('-',' ')} cargada`);
   }
 }
 
@@ -4213,6 +4248,7 @@ function _restoreEntrenoForm() {
           <div style="font-size:11px;color:var(--gris-medio);margin-top:2px;">Total: <strong id="et-dur-total">${etEjerciciosSeleccionados.reduce((s,e)=>s+(e.duracion_override||e._data?.duracion||0),0)} min</strong></div>
         </div>
         <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm" id="et-btn-plantilla" onclick="etCargarPlantilla()" style="background:#fffbe6;color:#7a6200;border:1.5px solid var(--amarillo);display:none;">📋 Cargar plantilla</button>
           <button class="btn btn-sm btn-secondary" onclick="openAddEjercicioModal()">📚 Biblioteca</button>
           <button class="btn btn-sm btn-primary" onclick="openNuevoEjercicioInline()">+ Nuevo ejercicio</button>
         </div>
@@ -4223,6 +4259,7 @@ function _restoreEntrenoForm() {
     <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
     <button class="btn btn-primary" onclick="saveEntreno(${snap.editId?`'${snap.editId}'`:'null'})">💾 Guardar entrenamiento</button>`;
   document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(etCheckPlantilla, 50);
 }
 
 // ── PIZARRA ──────────────────────────────────────────────
