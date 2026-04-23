@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -304,10 +305,10 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
 
       <div class="nav-section-label">Campus</div>
       <div class="nav-item" onclick="showPanel('campus')"><span>🏕️</span><span>Campus Salamanca</span></div>
-      <div class="nav-item entrenador-only" onclick="showPlanificadorCampus()" style="display:none!important"><span>📋</span><span>Planificador Campus</span></div>
+      <div class="nav-item" onclick="showPlanificadorCampus()" style="display:none!important"><span>📋</span><span>Planificador Campus</span></div>
 
-      <div class="nav-section-label entrenador-only" style="display:none!important">Entrenamientos</div>
-      <div class="nav-item entrenador-only" onclick="showPanel('entrenamientos')" style="display:none!important"><span>📋</span><span>Planificador</span></div>
+      <div class="nav-section-label" style="display:none!important">Entrenamientos</div>
+      <div class="nav-item" onclick="showPanel('entrenamientos')" style="display:none!important"><span>📋</span><span>Planificador</span></div>
 
       <div class="nav-section-label jugador-only" style="display:none">Mi espacio</div>
       <div class="nav-item jugador-only" style="display:none" onclick="showPanel('mi-ficha')"><span>👤</span><span>Mi Ficha</span></div>
@@ -1466,7 +1467,7 @@ function kanbanCard(i,canEdit){
       ${badgeDeporte(i.deporte)}
       <span class="badge badge-${i.genero==='Femenino'?'f':'m'}">${i.genero==='Femenino'?'♀':'♂'}</span>
       ${badgeEstado(i.estado)}
-      ${i.esDelClub ? '<span class="badge" style="background:#fffbe6;color:#7a6200;font-size:10px;">🏟️ Jugador</span>' : ''}
+      
       ${i.seguir==='Sí' ? '<span class="badge badge-confirmado">✅ Continúa</span>' : i.seguir==='No' ? '<span class="badge badge-descartado">❌ No sigue</span>' : i.seguir==='Tal vez' ? '<span class="badge badge-contactado">🤔 Tal vez</span>' : ''}
     </div>
     ${i.telefono?`<div style="font-size:11.5px;color:var(--gris-medio)">📞 ${i.telefono}</div>`:''}
@@ -1522,9 +1523,9 @@ function openDetail(id){
       </div>
       ${waNum?`<a href="https://wa.me/34${waNum}?text=${generarMensajeWA(i)}" target="_blank" class="btn btn-wa btn-sm">💬 WhatsApp</a>`:''}
     </div>
-    ${i.esDelClub ? `
+    ${i.esDelClub && i.equipoClub ? `
     <div style="background:#fffbe6;border-radius:8px;padding:10px 12px;margin-bottom:12px;border-left:4px solid var(--amarillo);display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
-      <div><div style="font-size:9.5px;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);font-weight:700;">🏟️ Equipo esta temporada</div><div style="font-weight:700;font-size:13px;margin-top:2px;">${i.equipoClub||'—'}</div></div>
+      <div><div style="font-size:9.5px;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);font-weight:700;">🏟️ Equipo esta temporada</div><div style="font-weight:700;font-size:13px;margin-top:2px;">${i.equipoClub}</div></div>
       <div><div style="font-size:9.5px;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);font-weight:700;margin-bottom:4px;">🔄 ¿Continúa la próxima temporada?</div>
         <select id="e-seguir" style="border:1.5px solid var(--gris-claro);border-radius:5px;padding:5px 10px;font-size:13px;font-family:'Barlow',sans-serif;outline:none;">
           <option value="" ${!i.seguir?'selected':''}>— Sin respuesta —</option>
