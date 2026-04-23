@@ -582,7 +582,7 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
 
         <!-- PLANIFICACIÓN DEPORTIVA -->
         <div class="campus-section" id="cs-planificacion">
-          <p style="font-size:13.5px;color:var(--gris-medio);margin-bottom:16px;">Espacio para que cada entrenador planifique y suba el contenido deportivo de su equipo para cada sesión.</p>
+          <p style="font-size:13.5px;color:var(--gris-medio);margin-bottom:16px;">Sesiones de entrenamiento por equipo según el horario del campus, con chuleta metodológica y notas por sesión.</p>
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;" id="contenido-grid"></div>
         </div>
 
@@ -3015,88 +3015,111 @@ function renderContenido() {
   const equipos = ['Basket1','Basket2','Basket3','Basket4','Basket5','Basket 6','Minibasket','Futbol1','Futbol2','Futbol 3'];
   const canEdit = currentPerfil?.rol === 'admin' || currentPerfil?.rol === 'entrenador';
 
+  // ── Extraer sesiones de entreno del horario por día ──
+  function getEntrenosDia(diaNum) {
+    const filas = getHorarioDia(diaNum);
+    return filas.filter(f => f.tipo === 'entreno');
+  }
+
+  // ── Renderizar chuleta de metodología ──
+  function renderChuleta(ct, turno, color) {
+    if(!ct) return '';
+    return `<div style="margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:${color};margin-bottom:6px;padding:4px 10px;background:${color}18;border-radius:5px;">
+        ${turno === 'mañana' ? '☀️ MAÑANA' : '🌅 TARDE'}
+      </div>
+      ${Object.values(ct).map(bloque => `
+        <div style="margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:700;display:flex;gap:6px;align-items:center;margin-bottom:4px;">
+            <span style="background:${color};color:#fff;padding:1px 7px;border-radius:20px;font-size:10px;white-space:nowrap;">${bloque.tiempo}</span>
+            <span style="font-weight:800;">${bloque.titulo}</span>
+          </div>
+          ${bloque.items.map(item => `<div style="font-size:11px;color:var(--gris-medio);padding:2px 0 2px 14px;border-left:2px solid ${color}55;margin-bottom:2px;">• ${item}</div>`).join('')}
+        </div>`).join('')}
+    </div>`;
+  }
+
   document.getElementById('contenido-grid').innerHTML = `
-    <!-- CONTENIDO POR EQUIPO -->
+
+    <!-- ── CHULETA METODOLOGÍA (fija arriba) ── -->
+    <div style="grid-column:1/-1;background:var(--negro);border-radius:12px;padding:20px 24px;margin-bottom:4px;border-bottom:4px solid var(--amarillo);">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--amarillo);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">📚 Chuleta Metodología — Baloncesto B1-6 + Minis</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div>
+          ${renderChuleta(CONTENIDO_B123.mañana, 'mañana', '#f5c400')}
+        </div>
+        <div>
+          ${renderChuleta(CONTENIDO_B123.tarde, 'tarde', '#f5c400')}
+        </div>
+      </div>
+      <details style="margin-top:12px;">
+        <summary style="cursor:pointer;font-size:12px;color:rgba(255,255,255,0.5);font-weight:700;letter-spacing:1px;text-transform:uppercase;">▸ Ver metodología Basket4 + Minibasket</summary>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1);">
+          ${renderChuleta(CONTENIDO_B4MINIS.mañana, 'mañana', '#f5c400')}
+        </div>
+      </details>
+    </div>
+
+    <!-- ── PLANIFICACIÓN POR EQUIPO ── -->
     ${equipos.map(eq => {
       const color = CAMPUS_EQUIPO_COLORS[eq] || '#888';
       const key = 'contenido_' + eq;
       const saved = campusContenido[key] || {};
       const inst = INSTALACIONES_CAMPUS[eq] || {};
-      const isB123 = ['Basket1','Basket2','Basket3'].includes(eq);
-      const isB4Minis = ['Basket4','Minibasket'].includes(eq);
-      const isFutbol = eq.toLowerCase().includes('futbol') || eq.toLowerCase().includes('fútbol');
+      const isB123 = ['Basket1','Basket2','Basket3','Basket 6'].includes(eq);
+      const isB4Minis = ['Basket4','Basket5','Minibasket'].includes(eq);
+      const isFutbol = eq.toLowerCase().includes('futbol');
       const monitor = CAMPUS_MONITORS.find(m => m.equipo === eq);
       const eqId = eq.replace(/[ /]/g,'_');
 
-      return `<div class="contenido-card" id="cont-card-${eqId}">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <h4 style="color:${color};margin:0;">${eq.toLowerCase().includes('basket')||eq.toLowerCase().includes('mini') ? '🏀' : '⚽'} ${eq}</h4>
+      return `<div class="contenido-card" id="cont-card-${eqId}" style="border-left-color:${color};">
+        <!-- Cabecera equipo -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <h4 style="color:${color};margin:0;font-size:16px;">${isFutbol ? '⚽' : '🏀'} ${eq}</h4>
           <div style="text-align:right;">
             <div style="font-size:12px;font-weight:700;">${monitor?.nombre || '—'}</div>
             <div style="font-size:10.5px;color:var(--gris-medio);">${monitor?.puesto || ''}</div>
           </div>
         </div>
 
-        <!-- CALENDARIO DE PISTAS -->
-        <div style="margin-bottom:14px;">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:8px;">📍 Calendario de Instalaciones</div>
-          <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;font-size:11.5px;">
-              <thead><tr style="background:${color};color:#fff;">
-                <th style="padding:5px 8px;text-align:left;font-size:10px;">Día</th>
-                <th style="padding:5px 8px;text-align:left;font-size:10px;">Mañana</th>
-                <th style="padding:5px 8px;text-align:left;font-size:10px;">Tarde</th>
-              </tr></thead>
-              <tbody id="pistas-${eqId}">
-                ${DIAS_CAMPUS.map((d,di) => {
-                  const sk = `pistas_${eq}_d${d.num}`;
-                  const pistaSaved = JSON.parse(localStorage.getItem('sv_campus_pistas') || '{}');
-                  const pistaMañana = pistaSaved[sk+'_m'] || inst.mañana || '';
-                  const pistaTarde = pistaSaved[sk+'_t'] || inst.tarde || '';
-                  const isPending = pistaMañana.includes('Pendiente') || pistaTarde.includes('Pendiente');
-                  return `<tr style="border-bottom:1px solid var(--gris-claro);">
-                    <td style="padding:4px 8px;font-weight:700;font-size:11px;white-space:nowrap;">${d.dia}<br><span style="color:${color};font-family:'Barlow Condensed',sans-serif;font-size:14px;">${d.fecha}</span></td>
-                    <td style="padding:4px 6px;">
-                      ${canEdit ? `<input type="text" value="${pistaMañana}" onchange="savePista('${eq}','${d.num}','m',this.value)"
-                        style="width:100%;border:1px solid ${isPending?'#f97316':'var(--gris-claro)'};border-radius:4px;padding:3px 5px;font-size:11px;font-family:'Barlow',sans-serif;background:${isPending?'#fff3e0':'var(--blanco)'};outline:none;">`
-                        : `<span style="color:${isPending?'#f97316':'inherit'}">${pistaMañana||'—'}</span>`}
-                    </td>
-                    <td style="padding:4px 6px;">
-                      ${canEdit ? `<input type="text" value="${pistaTarde}" onchange="savePista('${eq}','${d.num}','t',this.value)"
-                        style="width:100%;border:1px solid ${isPending?'#f97316':'var(--gris-claro)'};border-radius:4px;padding:3px 5px;font-size:11px;font-family:'Barlow',sans-serif;background:${isPending?'#fff3e0':'var(--blanco)'};outline:none;">`
-                        : `<span style="color:${isPending?'#f97316':'inherit'}">${pistaTarde||'—'}</span>`}
-                    </td>
-                  </tr>`;
-                }).join('')}
-              </tbody>
-            </table>
+        <!-- SESIONES POR DÍA (del horario) -->
+        <div style="margin-bottom:16px;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:8px;">🗓️ Sesiones de entrenamiento</div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            ${DIAS_CAMPUS.map(d => {
+              const entrenosDia = getEntrenosDia(d.num);
+              // Filtrar sesiones relevantes para este equipo (sin equipos = todas, o si el equipo está en la lista)
+              const sesiones = entrenosDia.filter(s =>
+                !s.equipos || s.equipos.length === 0 || s.equipos.includes(eq)
+              );
+              if(!sesiones.length && d.num !== 1) return ''; // Día 1 es llegada, siempre mostrar
+              const pistas = JSON.parse(localStorage.getItem('sv_campus_pistas') || '{}');
+              const pistaMañana = pistas[`pistas_${eq}_d${d.num}_m`] || inst.mañana || '';
+              const pistaTarde  = pistas[`pistas_${eq}_d${d.num}_t`] || inst.tarde  || '';
+              const isLlegada = d.num === 1;
+              const isSalida  = d.num === 10;
+              return `<div style="display:flex;gap:8px;align-items:flex-start;padding:7px 10px;border-radius:6px;background:var(--gris-bg);border:1px solid var(--gris-claro);">
+                <div style="min-width:62px;text-align:center;">
+                  <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:${color};line-height:1;">${d.fecha}</div>
+                  <div style="font-size:9px;color:var(--gris-medio);font-weight:700;text-transform:uppercase;">${d.dia}</div>
+                  ${isLlegada?'<div style="font-size:9px;background:#dcfce7;color:#166534;border-radius:20px;padding:0 5px;font-weight:700;">Llegada</div>':''}
+                  ${isSalida ?'<div style="font-size:9px;background:#fce4ec;color:#c62828;border-radius:20px;padding:0 5px;font-weight:700;">Salida</div>' :''}
+                </div>
+                <div style="flex:1;min-width:0;">
+                  ${sesiones.length ? sesiones.map(s => `
+                    <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+                      <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:${color};min-width:40px;">${s.hora}</span>
+                      <span style="font-size:12px;font-weight:600;">${s.act}</span>
+                    </div>`).join('')
+                  : `<span style="font-size:11.5px;color:var(--gris-medio);font-style:italic;">${isLlegada?'Llegada y acomodación':'Sin sesión de entreno'}</span>`}
+                  ${pistaMañana||pistaTarde ? `<div style="font-size:10.5px;color:var(--gris-medio);margin-top:3px;">📍 ${[pistaMañana,pistaTarde].filter(Boolean).join(' / ')}</div>` : ''}
+                </div>
+              </div>`;
+            }).join('')}
           </div>
         </div>
 
-        <!-- METODOLOGÍA -->
-        ${(isB123 || isB4Minis) ? `
-        <div style="margin-bottom:14px;">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:8px;">📚 Metodología y Contenidos</div>
-          ${['mañana','tarde'].filter(t => isB123 ? true : t === 'mañana').map(turno => {
-            const ct = isB123 ? CONTENIDO_B123[turno] : CONTENIDO_B4MINIS[turno];
-            if(!ct) return '';
-            return `<div style="margin-bottom:10px;">
-              <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:${color};margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--gris-claro);">
-                ${turno === 'mañana' ? '☀️ MAÑANA' : '🌅 TARDE'}
-              </div>
-              ${Object.values(ct).map(bloque => `
-                <div style="margin-bottom:8px;">
-                  <div style="font-size:11px;font-weight:700;display:flex;gap:6px;align-items:center;margin-bottom:4px;">
-                    <span style="background:${color};color:#fff;padding:1px 7px;border-radius:20px;font-size:10px;">${bloque.tiempo}</span>
-                    ${bloque.titulo}
-                  </div>
-                  ${bloque.items.map(item => `<div style="font-size:11.5px;color:var(--gris-medio);padding:2px 0 2px 12px;border-left:2px solid var(--gris-claro);margin-bottom:3px;">• ${item}</div>`).join('')}
-                </div>`).join('')}
-            </div>`;
-          }).join('')}
-        </div>` : ''}
-
-        <!-- NOTAS DEL ENTRENADOR por día -->
+        <!-- NOTAS DEL ENTRENADOR por sesión -->
         <div>
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;margin-bottom:6px;">📝 Notas del entrenador por sesión</div>
           <select id="dia-select-${eqId}" onchange="loadContenidoDia('${eq}')"
@@ -3105,9 +3128,9 @@ function renderContenido() {
           </select>
           ${canEdit ? `
           <textarea id="cont-${eqId}" class="contenido-textarea"
-            placeholder="Escribe el contenido específico de esta sesión: ejercicios, grupos, observaciones..."
-            onchange="saveContenido('${eq}')">${saved['Día 1']||''}</textarea>
-          <button class="btn btn-sm btn-primary" style="background:${color};margin-top:6px;" onclick="saveContenido('${eq}')">💾 Guardar nota</button>`
+            placeholder="Ejercicios específicos, grupos, observaciones de la sesión..."
+            onchange="saveContenido('${eq}')" style="border-color:${color}55;">${saved['Día 1']||''}</textarea>
+          <button class="btn btn-sm btn-primary" style="background:${color};border:none;margin-top:6px;" onclick="saveContenido('${eq}')">💾 Guardar nota</button>`
           : `<div style="background:var(--gris-bg);border-radius:6px;padding:10px;font-size:13px;color:var(--gris-medio);">${saved['Día 1'] || 'Sin notas todavía'}</div>`}
         </div>
       </div>`;
