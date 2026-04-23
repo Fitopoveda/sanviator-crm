@@ -3073,19 +3073,112 @@ function renderContenido() {
         </div>
       </div>
 
-      <!-- FÚTBOL (placeholder hasta recibir PDFs) -->
+      <!-- FÚTBOL -->
       <div style="background:var(--negro);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
         <div style="background:#166534;padding:14px 20px;display:flex;align-items:center;gap:10px;">
           <span style="font-size:22px;">⚽</span>
           <div>
             <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;">Fútbol F1-3</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.6);">Futbol1 · Futbol2 · Futbol 3</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.6);">Futbol1 · Futbol2 · Futbol 3 · <a href="https://javieribanezz.wixsite.com/futbolsanvi" target="_blank" style="color:#4ade80;">Modelo de juego CD San Viator ↗</a></div>
           </div>
         </div>
-        <div style="padding:20px;text-align:center;color:rgba(255,255,255,0.3);font-size:13px;">
-          <div style="font-size:32px;margin-bottom:8px;">📄</div>
-          Pendiente de recibir PDFs de contenidos deportivos de fútbol
+
+        <!-- OBJETIVOS GENERALES -->
+        <div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.06);">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#4ade80;margin-bottom:10px;">🎯 OBJETIVOS GENERALES</div>
+          ${[
+            ['⚽','Técnica individual','Control de balón, dribbling, pase, tiro, perfilaciones y destrezas fundamentales según modelo de juego.'],
+            ['🧠','Táctica','Salida de balón, posesión, juego de posición, superioridades, contraataque, presión tras pérdida, repliegue, transiciones.'],
+            ['💪','Físico','Condición física, velocidad, resistencia y agilidad.'],
+            ['🤝','Trabajo en equipo','Colaboración, comunicación y estrategias de equipo.'],
+            ['🌟','Valores','Disciplina, esfuerzo, resiliencia, respeto y liderazgo.'],
+            ['😄','Disfrute','Ambiente divertido y motivador donde aprender y superarse.'],
+          ].map(([ico,tit,desc])=>`
+            <div style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+              <span style="font-size:16px;min-width:22px;">${ico}</span>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:#fff;">${tit}</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.55);line-height:1.5;margin-top:2px;">${desc}</div>
+              </div>
+            </div>`).join('')}
         </div>
+
+        <!-- SESIONES POR DÍA -->
+        <div style="padding:16px 20px;">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#4ade80;margin-bottom:12px;">🗓️ CONTENIDOS POR DÍA</div>
+          ${[
+            { dia:'Día 1', label:'Miérc 1 Jul', sesiones:[
+              { turno:'Tarde', nivel:'Básico', items:['Técnica individual: ejercicios básicos de calentamiento según modelo SV','Táctica ofensiva y defensiva: salida de balón, posesión, superioridades, contraataque, presión, repliegue','Partidos 3x3 — compañerismo y diversión'] }
+            ]},
+            { dia:'Día 2', label:'Juev 2 Jul', sesiones:[
+              { turno:'Mañana', nivel:'Básico', items:['Técnica individual: ejercicios básicos','Táctica ofensiva y defensiva: ejercicios básicos','Partidos finales — compañerismo'] },
+              { turno:'Tarde', nivel:'', items:['Partidos 3x3 — compañerismo y diversión'] },
+              { turno:'Noche', nivel:'', items:['Sesión de vídeo'] },
+            ]},
+            { dia:'Día 3', label:'Vie 3 Jul', sesiones:[
+              { turno:'Tarde', nivel:'Básico', items:['1ª parte: Técnica individual básica + Táctica ofensiva y defensiva básica','2ª parte: Partidos 3x3 — compañerismo y diversión'] },
+            ]},
+            { dia:'Día 4', label:'Sáb 4 Jul', sesiones:[
+              { turno:'Mañana', nivel:'Básico', items:['Técnica individual: ejercicios básicos','Táctica ofensiva y defensiva: ejercicios básicos','Partidos finales'] },
+              { turno:'Tarde', nivel:'', items:['Partidos 3x3 — compañerismo y diversión'] },
+              { turno:'Noche', nivel:'', items:['Sesión de vídeo'] },
+            ]},
+            { dia:'Día 5', label:'Lun 6 Jul', sesiones:[
+              { turno:'Mañana', nivel:'Complejo', items:['Técnica individual: ejercicios complejos','Táctica ofensiva y defensiva: ejercicios complejos','Partidos finales'] },
+              { turno:'Tarde', nivel:'', items:['Partidos 3x3 — compañerismo y diversión'] },
+              { turno:'Noche', nivel:'', items:['Sesión de vídeo'] },
+            ]},
+            { dia:'Día 6', label:'Mar 7 Jul', sesiones:[
+              { turno:'Mañana', nivel:'Complejo', items:['Técnica individual: ejercicios complejos','Táctica ofensiva y defensiva: ejercicios complejos','Partidos finales'] },
+              { turno:'Tarde', nivel:'', items:['Partidos 3x3 — compañerismo y diversión'] },
+            ]},
+            { dia:'Día 7', label:'Miérc 8 Jul', sesiones:[
+              { turno:'Mañana', nivel:'Complejo', items:['Técnica individual: ejercicios complejos','Táctica ofensiva y defensiva: ejercicios complejos','Partidos finales'] },
+              { turno:'Tarde', nivel:'', items:['Partidos 3x3 — compañerismo y diversión'] },
+              { turno:'Noche', nivel:'', items:['Sesión de vídeo'] },
+            ]},
+            { dia:'Día 8', label:'Juev 9 Jul', sesiones:[
+              { turno:'Mañana', nivel:'', items:['Juegos de habilidades técnicas'] },
+            ]},
+          ].map(d => {
+            const turnoColors = { Mañana:'#f5c400', Tarde:'#f97316', Noche:'#818cf8' };
+            const nivelBadge = n => n ? `<span style="background:${n==='Básico'?'#166534':'#7c3aed'};color:#fff;padding:1px 6px;border-radius:20px;font-size:9px;font-weight:700;margin-left:6px;">${n}</span>` : '';
+            return `<div style="margin-bottom:10px;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:3px solid #166534;">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:#4ade80;margin-bottom:6px;">${d.dia} — ${d.label}</div>
+              ${d.sesiones.map(s=>`
+                <div style="margin-bottom:6px;">
+                  <div style="font-size:11px;font-weight:800;color:${turnoColors[s.turno]||'#aaa'};text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">
+                    ${s.turno === 'Mañana' ? '☀️' : s.turno === 'Tarde' ? '🌅' : '🌙'} ${s.turno}${nivelBadge(s.nivel)}
+                  </div>
+                  ${s.items.map(item=>`<div style="font-size:11px;color:rgba(255,255,255,0.6);padding:2px 0 2px 10px;border-left:2px solid #16653466;margin-bottom:2px;line-height:1.5;">• ${item}</div>`).join('')}
+                </div>`).join('')}
+            </div>`;
+          }).join('')}
+        </div>
+
+        <!-- SESIÓN DE VÍDEO -->
+        <details style="margin:0 16px 16px;">
+          <summary style="cursor:pointer;background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px;list-style:none;">
+            🎬 Ver objetivos sesión de vídeo
+          </summary>
+          <div style="padding:12px 14px;background:rgba(255,255,255,0.02);border-radius:0 0 8px 8px;margin-top:2px;">
+            ${[
+              ['🧠','Comprensión táctica','Posicionamiento defensivo y ofensivo, desplazamientos, control del espacio y transiciones.'],
+              ['🔍','Revisión de situaciones','Contragolpe, jugadas a balón parado, 1vs1. Identificar errores recurrentes en toma de decisiones.'],
+              ['⚡','Toma de decisiones','Evaluar rapidez bajo presión. Fomentar visión de juego y anticipación.'],
+              ['🎯','Habilidades individuales','Recepción, pase, conducción, disparo. Postura corporal y detalles técnicos.'],
+              ['🛡️','Comportamientos defensivos','Posicionamiento, cierre de espacios, comunicación y coberturas.'],
+              ['👏','Feedback positivo','Destacar aciertos y áreas de mejora mediante ejemplos visuales para motivar.'],
+            ].map(([ico,tit,desc])=>`
+              <div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+                <span style="font-size:14px;min-width:20px;">${ico}</span>
+                <div>
+                  <div style="font-size:11.5px;font-weight:700;color:#fff;">${tit}</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:1px;line-height:1.4;">${desc}</div>
+                </div>
+              </div>`).join('')}
+          </div>
+        </details>
       </div>
 
     </div>`;
