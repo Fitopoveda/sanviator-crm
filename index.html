@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -305,10 +304,10 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
 
       <div class="nav-section-label">Campus</div>
       <div class="nav-item" onclick="showPanel('campus')"><span>🏕️</span><span>Campus Salamanca</span></div>
-      <div class="nav-item" onclick="showPlanificadorCampus()" style="display:none!important"><span>📋</span><span>Planificador Campus</span></div>
+      <div class="nav-item entrenador-only" onclick="showPlanificadorCampus()" style="display:none!important"><span>📋</span><span>Planificador Campus</span></div>
 
-      <div class="nav-section-label" style="display:none!important">Entrenamientos</div>
-      <div class="nav-item" onclick="showPanel('entrenamientos')" style="display:none!important"><span>📋</span><span>Planificador</span></div>
+      <div class="nav-section-label entrenador-only" style="display:none!important">Entrenamientos</div>
+      <div class="nav-item entrenador-only" onclick="showPanel('entrenamientos')" style="display:none!important"><span>📋</span><span>Planificador</span></div>
 
       <div class="nav-section-label jugador-only" style="display:none">Mi espacio</div>
       <div class="nav-item jugador-only" style="display:none" onclick="showPanel('mi-ficha')"><span>👤</span><span>Mi Ficha</span></div>
@@ -1105,32 +1104,48 @@ async function syncFromSheets() {
     const text=await res.text();
     const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
     if(lines.length<2){showToast('⚠️ Hoja vacía');return;}
-    let nuevos=0;
-    const toInsert=[];
+    let nuevos=0, actualizados=0;
+    const toUpsert=[];
     for(let i=1;i<lines.length;i++){
       const v=parseCSVLine(lines[i]);
       const g=(idx)=>(idx>=0&&v[idx])?v[idx].trim():'';
       const nombre=g(3); if(!nombre) continue;
       const email=g(1);
-      if(inscritos.find(x=>x.nombre.toLowerCase()===nombre.toLowerCase()&&(x.email||'').toLowerCase()===email.toLowerCase())) continue;
       let fecha=new Date().toISOString();
       const ts=g(0); if(ts){const p=new Date(ts);if(!isNaN(p))fecha=p.toISOString();}
       const deporte=normDeporte(g(6));
       const nac=g(7);
-      toInsert.push({
-        nombre,email,telefono:g(4),tutor:g(5),deporte,
-        genero:detectarGenero(nombre),
-        categoria:calcularCategoria(nac,deporte),
-        nacimiento:nac,estado:'Nuevo',equipo:'',asiste:null,notas:g(8),fecha
-      });
-      nuevos++;
+      // Buscar si ya existe en Supabase (por nombre+email o solo nombre si no hay email)
+      const existente = inscritos.find(x =>
+        x.nombre.toLowerCase()===nombre.toLowerCase() &&
+        (email ? (x.email||'').toLowerCase()===email.toLowerCase() : true) &&
+        !String(x.id).startsWith('club_')
+      );
+      if(existente) {
+        // Ya existe en Supabase → actualizar campos básicos del formulario
+        toUpsert.push({ id: existente.id, nombre, email, telefono:g(4), tutor:g(5), deporte,
+          genero: existente.genero || detectarGenero(nombre),
+          categoria: existente.categoria || calcularCategoria(nac,deporte),
+          nacimiento: nac || existente.nacimiento, notas: g(8) || existente.notas, fecha });
+        actualizados++;
+      } else {
+        // Nuevo inscrito
+        toUpsert.push({ nombre, email, telefono:g(4), tutor:g(5), deporte,
+          genero: detectarGenero(nombre),
+          categoria: calcularCategoria(nac,deporte),
+          nacimiento: nac, estado:'Nuevo', equipo:'', asiste:null, notas:g(8), fecha });
+        nuevos++;
+      }
     }
-    if(toInsert.length){
-      await sb.from('inscritos').insert(toInsert);
+    if(toUpsert.length){
+      await sb.from('inscritos').upsert(toUpsert, { onConflict: 'id', ignoreDuplicates: false });
       await loadInscritos();
       mergeSocios();
       renderDashboard(); renderView();
-      showToast(`🎉 ${nuevos} nuevo${nuevos>1?'s':''} inscrito${nuevos>1?'s':''}`);
+      const msg = [];
+      if(nuevos) msg.push(`${nuevos} nuevo${nuevos>1?'s':''}`);
+      if(actualizados) msg.push(`${actualizados} actualizado${actualizados>1?'s':''}`);
+      showToast(`🎉 ${msg.join(', ')} inscrito${nuevos+actualizados>1?'s':''}`);
     } else {
       await loadInscritos();
       mergeSocios();
@@ -1467,7 +1482,7 @@ function kanbanCard(i,canEdit){
       ${badgeDeporte(i.deporte)}
       <span class="badge badge-${i.genero==='Femenino'?'f':'m'}">${i.genero==='Femenino'?'♀':'♂'}</span>
       ${badgeEstado(i.estado)}
-      
+      ${i.esDelClub ? '<span class="badge" style="background:#fffbe6;color:#7a6200;font-size:10px;">🏟️ Jugador</span>' : ''}
       ${i.seguir==='Sí' ? '<span class="badge badge-confirmado">✅ Continúa</span>' : i.seguir==='No' ? '<span class="badge badge-descartado">❌ No sigue</span>' : i.seguir==='Tal vez' ? '<span class="badge badge-contactado">🤔 Tal vez</span>' : ''}
     </div>
     ${i.telefono?`<div style="font-size:11.5px;color:var(--gris-medio)">📞 ${i.telefono}</div>`:''}
@@ -1523,9 +1538,9 @@ function openDetail(id){
       </div>
       ${waNum?`<a href="https://wa.me/34${waNum}?text=${generarMensajeWA(i)}" target="_blank" class="btn btn-wa btn-sm">💬 WhatsApp</a>`:''}
     </div>
-    ${i.esDelClub && i.equipoClub ? `
+    ${i.esDelClub ? `
     <div style="background:#fffbe6;border-radius:8px;padding:10px 12px;margin-bottom:12px;border-left:4px solid var(--amarillo);display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
-      <div><div style="font-size:9.5px;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);font-weight:700;">🏟️ Equipo esta temporada</div><div style="font-weight:700;font-size:13px;margin-top:2px;">${i.equipoClub}</div></div>
+      <div><div style="font-size:9.5px;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);font-weight:700;">🏟️ Equipo esta temporada</div><div style="font-weight:700;font-size:13px;margin-top:2px;">${i.equipoClub||'—'}</div></div>
       <div><div style="font-size:9.5px;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);font-weight:700;margin-bottom:4px;">🔄 ¿Continúa la próxima temporada?</div>
         <select id="e-seguir" style="border:1.5px solid var(--gris-claro);border-radius:5px;padding:5px 10px;font-size:13px;font-family:'Barlow',sans-serif;outline:none;">
           <option value="" ${!i.seguir?'selected':''}>— Sin respuesta —</option>
@@ -1641,17 +1656,48 @@ async function saveEdit(){
   const btn = document.querySelector('#modal-footer .btn-primary');
   if(btn){ btn.textContent='⏳ Guardando...'; btn.disabled=true; }
 
-  // Socios del club (DEPORTISTAS_CLUB): guardar cambios en localStorage
+  // Jugadores del club (DEPORTISTAS_CLUB): si tienen id club_XXXXX no están en Supabase aún → insertar primero
   if(i.esDelClub || String(editingId).startsWith('club_')) {
+    // Construir payload completo para Supabase (sin el id club_XXXXX ni campos internos)
+    const payload = {
+      nombre:    i.nombre,
+      email:     i.email    || '',
+      telefono:  i.telefono || '',
+      tutor:     i.tutor    || '',
+      deporte:   updates.deporte   || i.deporte,
+      genero:    updates.genero    || i.genero,
+      categoria: updates.categoria || i.categoria,
+      estado:    updates.estado    || i.estado,
+      equipo:    updates.equipo    !== undefined ? updates.equipo : (i.equipo || ''),
+      asiste:    updates.asiste    !== undefined ? updates.asiste : i.asiste,
+      seguir:    updates.seguir    !== undefined ? updates.seguir : (i.seguir || null),
+      nacimiento:i.nacimiento || '',
+      notas:     i.notas     || '',
+      esDelClub: true,
+      equipoClub:i.equipoClub || '',
+      fecha:     i.fecha || new Date().toISOString()
+    };
+    // Comprobar si ya existe en Supabase por nombre (puede haberse insertado en sync anterior)
+    const { data: existing } = await sb.from('inscritos').select('id').eq('nombre', i.nombre).maybeSingle();
+    let sbError;
+    if(existing?.id) {
+      // Ya existe → UPDATE
+      const { error } = await sb.from('inscritos').update(payload).eq('id', existing.id);
+      sbError = error;
+    } else {
+      // No existe → INSERT
+      const { error } = await sb.from('inscritos').insert(payload);
+      sbError = error;
+    }
+    if(sbError){ showToast('❌ Error al guardar: ' + sbError.message); console.error(sbError); if(btn){ btn.textContent='💾 Guardar'; btn.disabled=false; } return; }
+    // También persistir en localStorage como respaldo
     const clubUpdates = JSON.parse(localStorage.getItem('sv_club_updates') || '{}');
     clubUpdates[editingId] = { ...((clubUpdates[editingId])||{}), ...updates };
     localStorage.setItem('sv_club_updates', JSON.stringify(clubUpdates));
-    // Apply update to in-memory array
-    const idx = inscritos.findIndex(x=>x.id===editingId);
-    if(idx>=0) inscritos[idx] = { ...inscritos[idx], ...updates };
+    await loadInscritos(); mergeSocios();
     if(btn){ btn.textContent='💾 Guardar'; btn.disabled=false; }
     closeModal(); renderView(); renderDashboard();
-    showToast('✅ Cambios guardados (jugador del club)');
+    showToast('✅ Cambios guardados');
     return;
   }
 
