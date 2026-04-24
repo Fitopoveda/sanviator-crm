@@ -782,6 +782,9 @@ const CAMPUS_GASTOS_KEY = 'sv_campus_gastos';
 const CAMPUS_GASTOS_TABLE = 'campus_gastos';
 let campusGastoEditingId = null;
 let campusGastosCache = null;
+let campusGastoImageData = '';
+let campusGastoImageNombre = '';
+
 
 function normalizeText(v){ return String(v||'').normalize('NFD').replace(/[̀-ͯ]/g,'').trim().toLowerCase(); }
 function normalizePhone(v){ return String(v||'').replace(/\D/g,''); }
@@ -2950,7 +2953,11 @@ async function saveCampusGastoToDB(payload){
     factura: payload.factura || '',
     fecha: payload.fecha || new Date().toISOString().slice(0,10),
     cuenta: payload.cuenta || 'Otros',
-    comentario: payload.comentario || ''
+    comentario: payload.comentario || '',
+    metodo_pago: payload.metodo_pago || '',
+    metodo_pago_otro: payload.metodo_pago_otro || '',
+    factura_imagen_data: payload.factura_imagen_data || '',
+    factura_imagen_nombre: payload.factura_imagen_nombre || ''
   };
   const { data, error } = await sb.from(CAMPUS_GASTOS_TABLE)
     .upsert(dbPayload, { onConflict:'id' })
@@ -2958,6 +2965,62 @@ async function saveCampusGastoToDB(payload){
     .single();
   if(error) throw error;
   return data || dbPayload;
+}
+function toggleCampusMetodoPagoOtro(){
+  const sel = document.getElementById('cg-metodo-pago');
+  const wrap = document.getElementById('cg-metodo-otro-wrap');
+  if(!sel || !wrap) return;
+  wrap.style.display = sel.value === 'Otro' ? '' : 'none';
+}
+function renderCampusFacturaPreview(){
+  const box = document.getElementById('cg-factura-preview');
+  if(!box) return;
+  if(campusGastoImageData){
+    box.innerHTML = `
+      <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+        <a href="${campusGastoImageData}" target="_blank" rel="noopener noreferrer" style="display:block;">
+          <img src="${campusGastoImageData}" alt="Factura" style="width:110px;height:110px;object-fit:cover;border:1px solid var(--gris-claro);border-radius:8px;background:#fff;">
+        </a>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="font-size:12px;color:var(--gris-medio);max-width:240px;word-break:break-word;">${escHtml(campusGastoImageNombre || 'Imagen de factura')}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a class="btn btn-secondary btn-sm" href="${campusGastoImageData}" target="_blank" rel="noopener noreferrer">Ver imagen</a>
+            <button type="button" class="btn btn-danger btn-sm" onclick="clearCampusFacturaImage()">Quitar imagen</button>
+          </div>
+        </div>
+      </div>`;
+  } else {
+    box.innerHTML = '<div style="font-size:12px;color:var(--gris-medio);">No hay imagen adjunta.</div>';
+  }
+}
+function clearCampusFacturaImage(){
+  campusGastoImageData = '';
+  campusGastoImageNombre = '';
+  const input = document.getElementById('cg-factura-imagen');
+  if(input) input.value = '';
+  renderCampusFacturaPreview();
+}
+function handleCampusFacturaImageChange(ev){
+  const file = ev && ev.target && ev.target.files ? ev.target.files[0] : null;
+  if(!file) return;
+  if(!String(file.type || '').startsWith('image/')){
+    showToast('⚠️ Selecciona una imagen válida');
+    ev.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    campusGastoImageData = String(reader.result || '');
+    campusGastoImageNombre = file.name || 'factura';
+    renderCampusFacturaPreview();
+  };
+  reader.onerror = () => showToast('⚠️ No se pudo leer la imagen');
+  reader.readAsDataURL(file);
+}
+function campusMetodoPagoLabel(g){
+  if(!g) return '—';
+  if(g.metodo_pago === 'Otro') return g.metodo_pago_otro ? `Otro: ${g.metodo_pago_otro}` : 'Otro';
+  return g.metodo_pago || '—';
 }
 async function deleteCampusGastoFromDB(gastoId){
   const { error } = await sb.from(CAMPUS_GASTOS_TABLE).delete().eq('id', gastoId);
@@ -2968,6 +3031,8 @@ function openCampusGasto(gastoId=null){
   const gastos = getCampusGastos();
   const gasto = gastoId ? gastos.find(g => String(g.id) === String(gastoId)) : null;
   campusGastoEditingId = gasto ? gasto.id : null;
+  campusGastoImageData = gasto?.factura_imagen_data || '';
+  campusGastoImageNombre = gasto?.factura_imagen_nombre || '';
   document.getElementById('modal-title').textContent = gasto ? 'Editar gasto del campus' : 'Nuevo gasto del campus';
   document.getElementById('modal-body').innerHTML = `
     <div class="detail-row">
@@ -2987,6 +3052,26 @@ function openCampusGasto(gastoId=null){
       </div>
     </div>
     <div class="detail-row">
+      <div class="detail-field"><label>Método de pago</label>
+        <select id="cg-metodo-pago" onchange="toggleCampusMetodoPagoOtro()">
+          <option value="" ${!gasto?.metodo_pago?'selected':''}>— Seleccionar —</option>
+          <option value="Tarjeta Club" ${gasto?.metodo_pago==='Tarjeta Club'?'selected':''}>Tarjeta Club</option>
+          <option value="Otro" ${gasto?.metodo_pago==='Otro'?'selected':''}>Otro</option>
+        </select>
+      </div>
+      <div class="detail-field" id="cg-metodo-otro-wrap" style="display:${gasto?.metodo_pago==='Otro'?'':'none'};">
+        <label>Otro método de pago</label>
+        <input id="cg-metodo-pago-otro" type="text" placeholder="Ej. Transferencia, efectivo, Bizum…" value="${escHtml(gasto?.metodo_pago_otro || '')}">
+      </div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-field">
+        <label>Imagen de factura</label>
+        <input id="cg-factura-imagen" type="file" accept="image/*" onchange="handleCampusFacturaImageChange(event)">
+        <div id="cg-factura-preview" style="margin-top:10px;"></div>
+      </div>
+    </div>
+    <div class="detail-row">
       <div class="detail-field"><label>Comentario</label><textarea id="cg-comentario" placeholder="Observaciones internas, forma de pago, vencimiento, etc.">${escHtml(gasto?.comentario || '')}</textarea></div>
     </div>`;
   document.getElementById('modal-footer').innerHTML = `
@@ -2995,6 +3080,8 @@ function openCampusGasto(gastoId=null){
     <button class="btn btn-primary" onclick="saveCampusGasto()">💾 Guardar gasto</button>
   `;
   openModal();
+  toggleCampusMetodoPagoOtro();
+  renderCampusFacturaPreview();
 }
 async function saveCampusGasto(){
   const concepto = document.getElementById('cg-concepto').value.trim();
@@ -3004,13 +3091,20 @@ async function saveCampusGasto(){
   const fecha = document.getElementById('cg-fecha').value || new Date().toISOString().slice(0,10);
   const cuenta = document.getElementById('cg-cuenta').value;
   const comentario = document.getElementById('cg-comentario').value.trim();
+  const metodoPago = (document.getElementById('cg-metodo-pago')?.value || '').trim();
+  const metodoPagoOtro = metodoPago === 'Otro' ? (document.getElementById('cg-metodo-pago-otro')?.value || '').trim() : '';
   if(!concepto){ showToast('⚠️ Escribe el concepto'); return; }
   if(!(importe > 0)){ showToast('⚠️ Indica un importe válido'); return; }
+  if(metodoPago === 'Otro' && !metodoPagoOtro){ showToast('⚠️ Especifica el otro método de pago'); return; }
   const gastos = getCampusGastos().slice();
   const payload = {
     id: campusGastoEditingId || (crypto.randomUUID ? crypto.randomUUID() : ('gasto_' + Date.now())),
     modulo: 'Campus Salamanca',
     concepto, importe, proveedor, factura, fecha, cuenta, comentario,
+    metodo_pago: metodoPago,
+    metodo_pago_otro: metodoPagoOtro,
+    factura_imagen_data: campusGastoImageData || '',
+    factura_imagen_nombre: campusGastoImageNombre || '',
     updated_at: new Date().toISOString()
   };
   try {
@@ -3107,7 +3201,7 @@ async function renderCuentasCampus(force=false) {
       </div>
       <div class="table-container">
         <table>
-          <thead><tr><th>Concepto</th><th>Cuenta</th><th>Proveedor</th><th>Factura / recibo</th><th>Fecha</th><th>Importe</th><th>Comentario</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>Concepto</th><th>Cuenta</th><th>Proveedor</th><th>Factura / recibo</th><th>Fecha</th><th>Método de pago</th><th>Factura img</th><th>Importe</th><th>Comentario</th><th>Acciones</th></tr></thead>
           <tbody>${gastos.length ? gastos.map(g => `
             <tr>
               <td><strong>${escHtml(g.concepto||'')}</strong></td>
@@ -3115,6 +3209,8 @@ async function renderCuentasCampus(force=false) {
               <td>${escHtml(g.proveedor||'—')}</td>
               <td>${escHtml(g.factura||'—')}</td>
               <td>${escHtml(g.fecha || '—')}</td>
+              <td>${escHtml(campusMetodoPagoLabel(g))}</td>
+              <td>${g.factura_imagen_data ? `<a class="btn btn-sm btn-secondary" href="${g.factura_imagen_data}" target="_blank" rel="noopener noreferrer">Ver</a>` : '—'}</td>
               <td style="font-weight:700;">${campusMoney(g.importe)}</td>
               <td>${escHtml(g.comentario||'—')}</td>
               <td>
@@ -3124,7 +3220,7 @@ async function renderCuentasCampus(force=false) {
                 </div>
               </td>
             </tr>
-          `).join('') : '<tr><td colspan="8"><div class="empty-state" style="padding:20px 10px;"><div class="icon">🧾</div><p>No hay gastos registrados todavía.</p></div></td></tr>'}</tbody>
+          `).join('') : '<tr><td colspan="10"><div class="empty-state" style="padding:20px 10px;"><div class="icon">🧾</div><p>No hay gastos registrados todavía.</p></div></td></tr>'}</tbody>
         </table>
       </div>
     </div>`;
