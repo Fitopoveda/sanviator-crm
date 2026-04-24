@@ -821,6 +821,32 @@ function mergePendingInscritosIntoState(){
   });
   inscritos.sort((a,b)=> new Date(b.fecha||0) - new Date(a.fecha||0));
 }
+function normalizeInscritoFechaForDB(value){
+  if(!value) return new Date().toISOString();
+  if(value instanceof Date && !isNaN(value)) return value.toISOString();
+  if(typeof value === 'string'){
+    const v = value.trim();
+    if(!v) return new Date().toISOString();
+    const direct = new Date(v);
+    if(!isNaN(direct)) return direct.toISOString();
+    const m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if(m){
+      const dd = String(m[1]).padStart(2,'0');
+      const mm = String(m[2]).padStart(2,'0');
+      const yy = m[3];
+      const parsed = new Date(`${yy}-${mm}-${dd}T00:00:00`);
+      if(!isNaN(parsed)) return parsed.toISOString();
+    }
+  }
+  return new Date().toISOString();
+}
+function getRemoteInscritoMap(){
+  try { return JSON.parse(localStorage.getItem('sv_remote_inscrito_ids') || '{}') || {}; }
+  catch(_){ return {}; }
+}
+function setRemoteInscritoMap(map){
+  localStorage.setItem('sv_remote_inscrito_ids', JSON.stringify(map || {}));
+}
 function sanitizeInscritoForDB(raw){
   const payload = {
     nombre: raw && raw.nombre || '',
@@ -833,19 +859,21 @@ function sanitizeInscritoForDB(raw){
     estado: raw && raw.estado || 'Nuevo',
     equipo: raw && raw.equipo != null ? raw.equipo : '',
     asiste: raw && raw.asiste !== undefined ? raw.asiste : null,
-    seguir: raw && raw.seguir !== undefined ? raw.seguir : null,
     nacimiento: raw && raw.nacimiento || '',
     notas: raw && raw.notas || '',
-    fecha: raw && raw.fecha || new Date().toISOString(),
-    esDelClub: !!(raw && raw.esDelClub),
-    equipoClub: raw && raw.equipoClub || ''
+    fecha: normalizeInscritoFechaForDB(raw && raw.fecha)
   };
   Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
   return payload;
 }
 async function upsertSingleInscrito(raw, preferredId){
   const payload = sanitizeInscritoForDB(raw || {});
+  const remoteMap = getRemoteInscritoMap();
+  const rawId = raw && raw.id ? String(raw.id) : '';
+  const clubMappedId = raw && raw._clubId ? remoteMap['club_' + raw._clubId] : null;
   let targetId = preferredId && !isTempInscritoId(preferredId) ? preferredId : null;
+  if(!targetId && rawId && remoteMap[rawId]) targetId = remoteMap[rawId];
+  if(!targetId && clubMappedId) targetId = clubMappedId;
   if(!targetId){
     const localExisting = inscritos.find(x => !isTempInscritoId(x.id) && !String(x.id||'').startsWith('club_') && buildInscritoIdentity(x) === buildInscritoIdentity(raw));
     if(localExisting && localExisting.id) targetId = localExisting.id;
@@ -857,7 +885,6 @@ async function upsertSingleInscrito(raw, preferredId){
     } catch(_){ }
   }
 
-  // 1) Intento principal por RPC para guardar de verdad en Supabase aunque RLS bloquee insert/update directos
   try {
     const rpc = await sb.rpc('upsert_inscrito_from_app', {
       p_preferred_id: targetId ? String(targetId) : null,
@@ -865,23 +892,23 @@ async function upsertSingleInscrito(raw, preferredId){
     });
     if(!rpc.error){
       const row = Array.isArray(rpc.data) ? (rpc.data[0] || null) : rpc.data;
+      const finalId = row?.id || targetId || null;
+      if(finalId && rawId){
+        remoteMap[rawId] = finalId;
+        if(raw && raw._clubId) remoteMap['club_' + raw._clubId] = finalId;
+        setRemoteInscritoMap(remoteMap);
+      }
       return {
         data: row,
         error: null,
         action: row?.action || (targetId ? 'updated' : 'inserted'),
-        id: row?.id || targetId || null
+        id: finalId
       };
     }
-  } catch(_rpcErr){ }
-
-  // 2) Fallback legado directo
-  if(targetId){
-    const res = await sb.from('inscritos').update(Object.assign({}, payload, { updated_at:new Date().toISOString() })).eq('id', targetId).select().maybeSingle();
-    if(!res.error) return { data: res.data, error: null, action:'updated', id: targetId };
+    if(rpc.error) return { data:null, error: rpc.error, action:'error', id: targetId || null };
+  } catch(rpcErr){
+    return { data:null, error: rpcErr, action:'error', id: targetId || null };
   }
-  const ins = await sb.from('inscritos').insert(payload).select().maybeSingle();
-  if(!ins.error) return { data: ins.data, error: null, action:'inserted', id: ins.data && ins.data.id || null };
-  return { data: null, error: ins.error, action:'error', id: null };
 }
 
 const CAT_ORDER = ['Benjamín','Alevín','Infantil','Cadete','Juvenil','Junior','Sub-22','Senior'];
@@ -2049,7 +2076,7 @@ async function setEquipo(id,val){
       Object.assign(i, updates);
       renderView();
       renderDashboard();
-      showToast('⚠️ Equipo guardado en este navegador');
+      showToast('⚠️ No se ha guardado en base de datos. Solo en este navegador');
       return;
     }
 
@@ -2060,7 +2087,7 @@ async function setEquipo(id,val){
       Object.assign(i, updates);
       renderView();
       renderDashboard();
-      showToast('⚠️ Equipo pendiente en este navegador');
+      showToast('⚠️ No se ha guardado en base de datos. Solo en este navegador');
       return;
     }
 
