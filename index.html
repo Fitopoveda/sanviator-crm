@@ -294,20 +294,14 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
       <div class="club-sub">Club Deportivo · Madrid</div>
     </div>
     <nav class="sidebar-nav">
-      <div class="nav-section-label">Principal</div>
-      <div class="nav-item active" onclick="showPanel('dashboard')"><span>📊</span><span>Dashboard</span></div>
-
       <div class="nav-section-label">Pruebas</div>
-      <div class="nav-item" onclick="showPanel('inscritos')"><span>👥</span><span>Inscritos</span></div>
+      <div class="nav-item active" onclick="showPanel('inscritos')"><span>👥</span><span>Inscritos</span></div>
       <div class="nav-item" onclick="showPanel('pruebas')"><span>📅</span><span>Calendario</span></div>
       <div class="nav-item admin-only" onclick="showPanel('integracion')"><span>🔗</span><span>Integración</span></div>
 
       <div class="nav-section-label">Campus</div>
       <div class="nav-item" onclick="showPanel('campus')"><span>🏕️</span><span>Campus Salamanca</span></div>
-      <div class="nav-item entrenador-only" onclick="showPlanificadorCampus()" style="display:none!important"><span>📋</span><span>Planificador Campus</span></div>
 
-      <div class="nav-section-label entrenador-only" style="display:none!important">Entrenamientos</div>
-      <div class="nav-item entrenador-only" onclick="showPanel('entrenamientos')" style="display:none!important"><span>📋</span><span>Planificador</span></div>
 
       <div class="nav-section-label jugador-only" style="display:none">Mi espacio</div>
       <div class="nav-item jugador-only" style="display:none" onclick="showPanel('mi-ficha')"><span>👤</span><span>Mi Ficha</span></div>
@@ -500,9 +494,10 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
           <button class="campus-tab" onclick="campusTab('veladas')">🌙 Veladas</button>
           <button class="campus-tab" onclick="campusTab('planificacion')">📚 Contenidos</button>
           <button class="campus-tab" onclick="campusTab('codigoEtico')">📜 Código Ético</button>
-          <button class="campus-tab" onclick="campusTab('monitores')">👨‍🏫 Monitores</button>
+          <button class="campus-tab admin-only" onclick="campusTab('monitores')">👨‍🏫 Monitores</button>
           <button class="campus-tab" onclick="campusTab('medico')">🏥 Médico</button>
-          <button class="campus-tab entrenador-only" onclick="campusTab('planificadorEntrenos')">🗒️ Planificador</button>
+          <button class="campus-tab" onclick="campusTab('planificadorEntrenos')">🗒️ Planificador</button>
+          <button class="campus-tab admin-only" onclick="campusTab('cuentas')">💰 Cuentas</button>
         </div>
 
         <!-- PARTICIPANTES -->
@@ -717,6 +712,15 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
             </div>
           </div>
         </div>
+        <!-- CUENTAS (solo admin) -->
+        <div class="campus-section" id="cs-cuentas">
+          <div style="text-align:center;padding:40px 20px;color:var(--gris-medio);">
+            <div style="font-size:48px;margin-bottom:12px;">💰</div>
+            <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;margin-bottom:8px;">Sección Cuentas</h3>
+            <p style="font-size:13px;">Aquí irá la gestión de cuentas del Campus Salamanca.</p>
+          </div>
+        </div>
+
       </div>
 
     </div>
