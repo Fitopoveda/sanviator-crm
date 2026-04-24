@@ -2033,10 +2033,40 @@ async function toggleAsiste(id){
 }
 
 async function setEquipo(id,val){
+  const i = inscritos.find(x => x.id === id);
   const updates={equipo:val};
   if(val==='Descartado') updates.estado='Descartado';
   const res = await persistQuickInscritoChange(id, updates);
-  if(!res.ok){ console.error(res.error); showToast('❌ No se ha podido guardar el equipo'); return; }
+  if(!res.ok){
+    console.error(res.error);
+
+    // Fallback útil para jugadores del club / temporales: conservar el equipo en la app
+    // aunque la persistencia remota falle, evitando que el cambio se pierda visualmente.
+    if(i && (i.esDelClub || String(id).startsWith('club_') || isTempInscritoId(id))){
+      const clubUpdates = JSON.parse(localStorage.getItem('sv_club_updates') || '{}');
+      clubUpdates[id] = Object.assign({}, clubUpdates[id] || {}, updates, { updated_at:new Date().toISOString() });
+      localStorage.setItem('sv_club_updates', JSON.stringify(clubUpdates));
+      Object.assign(i, updates);
+      renderView();
+      renderDashboard();
+      showToast('⚠️ Equipo guardado en este navegador');
+      return;
+    }
+
+    // Fallback para inscritos aún no consolidados
+    if(i){
+      const merged = Object.assign({}, i, updates, { updated_at:new Date().toISOString(), _syncPending:true });
+      savePendingSheetInscrito(merged);
+      Object.assign(i, updates);
+      renderView();
+      renderDashboard();
+      showToast('⚠️ Equipo pendiente en este navegador');
+      return;
+    }
+
+    showToast('❌ No se ha podido guardar el equipo');
+    return;
+  }
   showToast('✅ Equipo guardado');
 }
 
