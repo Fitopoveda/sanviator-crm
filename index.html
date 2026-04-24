@@ -294,14 +294,20 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
       <div class="club-sub">Club Deportivo · Madrid</div>
     </div>
     <nav class="sidebar-nav">
+      <div class="nav-section-label">Principal</div>
+      <div class="nav-item" onclick="showPanel('dashboard')" style="display:none!important"><span>📊</span><span>Dashboard</span></div>
+
       <div class="nav-section-label">Pruebas</div>
-      <div class="nav-item active" onclick="showPanel('inscritos')"><span>👥</span><span>Inscritos</span></div>
+      <div class="nav-item" onclick="showPanel('inscritos')"><span>👥</span><span>Inscritos</span></div>
       <div class="nav-item" onclick="showPanel('pruebas')"><span>📅</span><span>Calendario</span></div>
       <div class="nav-item admin-only" onclick="showPanel('integracion')"><span>🔗</span><span>Integración</span></div>
 
       <div class="nav-section-label">Campus</div>
       <div class="nav-item" onclick="showPanel('campus')"><span>🏕️</span><span>Campus Salamanca</span></div>
+      <div class="nav-item entrenador-only" onclick="showPlanificadorCampus()" style="display:none!important"><span>📋</span><span>Planificador Campus</span></div>
 
+      <div class="nav-section-label entrenador-only" style="display:none!important">Entrenamientos</div>
+      <div class="nav-item entrenador-only" onclick="showPanel('entrenamientos')" style="display:none!important"><span>📋</span><span>Planificador</span></div>
 
       <div class="nav-section-label jugador-only" style="display:none">Mi espacio</div>
       <div class="nav-item jugador-only" style="display:none" onclick="showPanel('mi-ficha')"><span>👤</span><span>Mi Ficha</span></div>
@@ -322,7 +328,7 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
 
   <div class="main">
     <div class="topbar">
-      <div class="topbar-title" id="panel-title">Dashboard</div>
+      <div class="topbar-title" id="panel-title">Pruebas · Inscritos</div>
       <div class="topbar-actions">
         <span class="sync-info" id="sync-label"></span>
         <button class="btn btn-secondary btn-sm admin-only" id="sync-btn" onclick="syncFromSheets()">🔄 Sincronizar</button>
@@ -333,35 +339,36 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
     <div class="content">
 
       <!-- DASHBOARD -->
-      <div class="panel active" id="panel-dashboard">
-        <div class="stats-grid">
-          <div class="stat-card"><div class="stat-label">Total inscritos</div><div class="stat-number" id="st-total">0</div><div class="stat-icon">👥</div></div>
-          <div class="stat-card"><div class="stat-label">⚽ Fútbol</div><div class="stat-number" id="st-fut">0</div></div>
-          <div class="stat-card"><div class="stat-label">🏀 Baloncesto</div><div class="stat-number" id="st-bal">0</div></div>
-          <div class="stat-card"><div class="stat-label">✅ Asisten</div><div class="stat-number" id="st-asisten">0</div></div>
-          <div class="stat-card"><div class="stat-label">🏆 Confirmados</div><div class="stat-number" id="st-conf">0</div></div>
-        </div>
-        <div class="chart-row">
-          <div class="chart-box"><h4>Por categoría</h4><div id="chart-cat"></div></div>
-          <div class="chart-box"><h4>Por género</h4>
-            <div style="display:flex;gap:20px;align-items:center;justify-content:center;padding-top:16px;">
-              <div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:900;color:#1565c0" id="d-masc">0</div><div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);font-weight:700;">Masculino</div></div>
-              <div style="width:1px;height:60px;background:var(--gris-claro)"></div>
-              <div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:900;color:#c62828" id="d-fem">0</div><div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);font-weight:700;">Femenino</div></div>
-            </div>
-          </div>
-        </div>
-        <div style="background:var(--blanco);border:1px solid var(--gris-claro);border-radius:10px;padding:18px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <h4 style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">Últimas inscripciones</h4>
-            <span onclick="showPanel('inscritos')" style="font-size:12px;cursor:pointer;font-weight:700;text-decoration:underline;">Ver todos →</span>
-          </div>
-          <div id="recent-list"></div>
-        </div>
-      </div>
+      <div class="panel" id="panel-dashboard" style="display:none!important"></div>
 
       <!-- INSCRITOS -->
-      <div class="panel" id="panel-inscritos">
+      <div class="panel active" id="panel-inscritos">
+        <div id="pruebas-dashboard-inline">
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-label">Total inscritos</div><div class="stat-number" id="st-total">0</div><div class="stat-icon">👥</div></div>
+            <div class="stat-card"><div class="stat-label">⚽ Fútbol</div><div class="stat-number" id="st-fut">0</div></div>
+            <div class="stat-card"><div class="stat-label">🏀 Baloncesto</div><div class="stat-number" id="st-bal">0</div></div>
+            <div class="stat-card"><div class="stat-label">✅ Asisten</div><div class="stat-number" id="st-asisten">0</div></div>
+            <div class="stat-card"><div class="stat-label">🏆 Confirmados</div><div class="stat-number" id="st-conf">0</div></div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-box"><h4>Por categoría</h4><div id="chart-cat"></div></div>
+            <div class="chart-box"><h4>Por género</h4>
+              <div style="display:flex;gap:20px;align-items:center;justify-content:center;padding-top:16px;">
+                <div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:900;color:#1565c0" id="d-masc">0</div><div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);font-weight:700;">Masculino</div></div>
+                <div style="width:1px;height:60px;background:var(--gris-claro)"></div>
+                <div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:900;color:#c62828" id="d-fem">0</div><div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);font-weight:700;">Femenino</div></div>
+              </div>
+            </div>
+          </div>
+          <div style="background:var(--blanco);border:1px solid var(--gris-claro);border-radius:10px;padding:18px;margin-bottom:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h4 style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">Últimas inscripciones</h4>
+            </div>
+            <div id="recent-list"></div>
+          </div>
+        </div>
+
         <div class="toolbar">
           <input class="filter-input" type="text" placeholder="🔍 Buscar..." id="search-input" oninput="renderView()">
           <select class="filter-select" id="f-deporte" onchange="renderView()">
@@ -496,7 +503,7 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
           <button class="campus-tab" onclick="campusTab('codigoEtico')">📜 Código Ético</button>
           <button class="campus-tab admin-only" onclick="campusTab('monitores')">👨‍🏫 Monitores</button>
           <button class="campus-tab" onclick="campusTab('medico')">🏥 Médico</button>
-          <button class="campus-tab" onclick="campusTab('planificadorEntrenos')">🗒️ Planificador</button>
+          <button class="campus-tab entrenador-only" onclick="campusTab('planificadorEntrenos')">🗒️ Planificador</button>
           <button class="campus-tab admin-only" onclick="campusTab('cuentas')">💰 Cuentas</button>
         </div>
 
@@ -605,6 +612,17 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
           <div id="medico-grid" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
 
+
+
+        <!-- CUENTAS -->
+        <div class="campus-section" id="cs-cuentas">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px;flex-wrap:wrap;">
+            <p style="font-size:13.5px;color:var(--gris-medio);margin:0;">Resumen económico del campus. Visible solo para administradores.</p>
+            <button class="btn btn-primary admin-only" style="background:#c0392b;" onclick="renderCuentasCampus()">↻ Actualizar</button>
+          </div>
+          <div id="campus-cuentas-content"></div>
+        </div>
+
         <!-- PLANIFICADOR ENTRENOS (dentro de campus) -->
         <div class="campus-section" id="cs-planificadorEntrenos">
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
@@ -645,14 +663,21 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
           <h3>📅 Puertas Abiertas — desde 1 junio 2025</h3>
           <div class="pruebas-grid" id="pruebas-content"></div>
         </div>
-        <div class="integration-box" id="campus-cal-box" style="display:none;">
-          <h3>🏕️ Campus Salamanca — Días disponibles (1–10 Jul)</h3>
-          <div id="campus-cal-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:8px;"></div>
+        <div class="integration-box">
+          <h3>🗒️ Planificador de Pruebas</h3>
+          <p style="font-size:13.5px;color:var(--gris-medio);margin-bottom:12px;">Los entrenamientos creados aquí solo se verán en <strong>Pruebas Temporada</strong>. Los ejercicios se cargan desde la biblioteca común.</p>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+            <button class="btn btn-primary entrenador-only" onclick="openNuevoEntreno(null,null,null,'Pruebas')">+ Nuevo entrenamiento de Pruebas</button>
+            <button class="btn btn-secondary entrenador-only" onclick="openNuevoEjercicio(null)">+ Nuevo ejercicio común</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;" id="pruebas-entrenos-grid">
+            <div class="empty-state"><div class="icon">📋</div><p>Cargando...</p></div>
+          </div>
         </div>
       </div>
 
       <!-- PLANIFICADOR DE ENTRENAMIENTOS -->
-      <div class="panel" id="panel-entrenamientos">
+      <div class="panel" id="panel-entrenamientos" style="display:none!important">
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
           <div style="display:flex;gap:4px;background:var(--blanco);border:1px solid var(--gris-claro);border-radius:7px;padding:3px;">
             <button id="et-tab-lista" onclick="etTab('lista')" class="btn btn-sm" style="background:var(--negro);color:var(--amarillo);">📋 Entrenamientos</button>
@@ -712,15 +737,6 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
             </div>
           </div>
         </div>
-        <!-- CUENTAS (solo admin) -->
-        <div class="campus-section" id="cs-cuentas">
-          <div style="text-align:center;padding:40px 20px;color:var(--gris-medio);">
-            <div style="font-size:48px;margin-bottom:12px;">💰</div>
-            <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;margin-bottom:8px;">Sección Cuentas</h3>
-            <p style="font-size:13px;">Aquí irá la gestión de cuentas del Campus Salamanca.</p>
-          </div>
-        </div>
-
       </div>
 
     </div>
@@ -813,6 +829,32 @@ async function initApp(user) {
   await loadInscritos();
   mergeSocios();
   renderDashboard();
+  showPanel(currentPerfil?.rol === 'jugador' ? 'mi-ficha' : 'inscritos');
+}
+
+function hasModuloAccess(moduloNombre){
+  const rol = currentPerfil?.rol || 'invitado';
+  if(rol === 'admin') return true;
+  const mods = currentPerfil?.modulos_permitidos || [];
+  if(!mods.length) return true;
+  return mods.includes(moduloNombre);
+}
+
+function buildPruebasCategoriaPermiso(i){
+  if(!i) return '';
+  const dep = (i.deporte||'').toLowerCase();
+  const gen = (i.genero||'').toLowerCase();
+  const cat = i.categoria || '';
+  if(dep.includes('fút') || dep.includes('fut')) {
+    if(cat === 'Senior') return 'Aficionado Fútbol';
+    return `${cat} Fútbol`;
+  }
+  if(dep.includes('balon') || dep.includes('basket')) {
+    if(cat === 'Sub-22') return 'S22 Masculino Baloncesto';
+    const g = gen.includes('fem') ? 'femenino' : 'masculino';
+    return `${cat} ${g} Baloncesto`;
+  }
+  return cat;
 }
 
 function applyRoleUI() {
@@ -824,8 +866,24 @@ function applyRoleUI() {
   document.querySelectorAll('.can-edit').forEach(el => el.style.display = canEdit ? '' : 'none');
   document.querySelectorAll('.entrenador-only').forEach(el => el.style.display = canEdit ? '' : 'none');
   document.querySelectorAll('.jugador-only').forEach(el => el.style.display = isJugador ? '' : 'none');
+
+  const navMap = [
+    {sel: '.nav-item[onclick*="inscritos"]', mod:'Pruebas Temporada'},
+    {sel: '.nav-item[onclick*="pruebas"]', mod:'Pruebas Temporada'},
+    {sel: '.nav-item[onclick*="integracion"]', mod:'Pruebas Temporada'},
+    {sel: '.nav-item[onclick*="campus"]', mod:'Campus Salamanca'},
+    {sel: '.nav-item[onclick*="mensajes"]', mod:'Mensajes'},
+    {sel: '.nav-item[onclick*="usuarios"]', mod:'Administración'},
+    {sel: '.nav-item[onclick*="modulos"]', mod:'Administración'}
+  ];
+  navMap.forEach(item => {
+    const el = document.querySelector(item.sel);
+    if(!el) return;
+    if(isJugador && !el.classList.contains('jugador-only')) return;
+    el.style.display = hasModuloAccess(item.mod) ? '' : 'none';
+  });
+
   if(isJugador) {
-    // Hide all nav items except Campus, Mensajes and Mi Ficha
     document.querySelectorAll('.nav-item').forEach(el => {
       const txt = el.textContent.trim();
       const show = txt.includes('Campus') || txt.includes('Mensajes') || txt.includes('Mi Ficha');
@@ -836,8 +894,28 @@ function applyRoleUI() {
       if(lbl !== 'Campus' && lbl !== 'Comunicación' && lbl !== 'Mi espacio') el.style.display = 'none';
     });
     setTimeout(() => showPanel('mi-ficha'), 150);
+    return;
   }
+
+  const pruebasAllowed = hasModuloAccess('Pruebas Temporada');
+  const campusAllowed = hasModuloAccess('Campus Salamanca');
+  const msgAllowed = hasModuloAccess('Mensajes');
+  const adminAllowed = isAdmin || hasModuloAccess('Administración');
+
+  document.querySelectorAll('.nav-section-label').forEach(el => {
+    const lbl = el.textContent.trim();
+    if(lbl === 'Pruebas') el.style.display = pruebasAllowed ? '' : 'none';
+    if(lbl === 'Campus') el.style.display = campusAllowed ? '' : 'none';
+    if(lbl === 'Comunicación') el.style.display = msgAllowed ? '' : 'none';
+    if(lbl === 'Administración') el.style.display = adminAllowed ? '' : 'none';
+  });
+
+  const campusMon = document.querySelector('.campus-tab[onclick*="monitores"]');
+  const campusCue = document.querySelector('.campus-tab[onclick*="cuentas"]');
+  if(campusMon) campusMon.style.display = isAdmin ? '' : 'none';
+  if(campusCue) campusCue.style.display = isAdmin ? '' : 'none';
 }
+
 
 // ════════════════════════════════════════════════════════
 // DATOS — Supabase
@@ -914,7 +992,6 @@ async function changeRol(userId, newRol) {
   loadUsers();
 }
 
-const MODULOS_DISPONIBLES = ['Pruebas Temporada', 'Campus Salamanca', 'Campus Madrid', 'Tecnificación', 'Escuela'];
 
 async function editUserPermisos(userId, userName) {
   // Cargar datos actuales del usuario
@@ -939,9 +1016,9 @@ async function editUserPermisos(userId, userName) {
       <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;color:var(--gris-medio);margin-bottom:10px;">🏷️ Categorías con acceso</div>
       <p style="font-size:12.5px;color:var(--gris-medio);margin-bottom:10px;">Si no seleccionas ninguna, tendrá acceso a todas.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
-        ${CAT_ORDER.map(c=>`
+        ${PRUEBAS_CATEGORIAS_PERMISOS.concat(CAMPUS_CATEGORIAS).map(c=>`
           <label style="display:flex;align-items:center;gap:8px;padding:8px;border:1.5px solid var(--gris-claro);border-radius:6px;cursor:pointer;">
-            <input type="checkbox" value="${c}" id="cat-${c}" style="accent-color:var(--amarillo);" ${currentCats.includes(c)?'checked':''}> ${c}
+            <input type="checkbox" value="${c}" id="cat-${c.replace(/\s+/g,'-')}" style="accent-color:var(--amarillo);" ${currentCats.includes(c)?'checked':''}> ${c}
           </label>`).join('')}
       </div>
     </div>`;
@@ -955,7 +1032,8 @@ async function editUserPermisos(userId, userName) {
 function editUserCats(userId, userName) { editUserPermisos(userId, userName); }
 
 async function savePermisos(userId) {
-  const cats = CAT_ORDER.filter(c => document.getElementById('cat-'+c)?.checked);
+  const allCats = PRUEBAS_CATEGORIAS_PERMISOS.concat(CAMPUS_CATEGORIAS);
+  const cats = allCats.filter(c => document.getElementById('cat-'+c.replace(/\s+/g,'-'))?.checked);
   const mods = MODULOS_DISPONIBLES.filter(m => document.getElementById('mod-'+m.replace(/\s/g,'-'))?.checked);
   await sb.from('perfiles').update({ categorias_permitidas: cats, modulos_permitidos: mods }).eq('id', userId);
   closeModal(); loadUsers(); showToast('✅ Permisos guardados');
@@ -992,18 +1070,10 @@ function openAddUserModal() {
       <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;color:var(--gris-medio);margin-bottom:10px;">📦 Acceso a módulos</div>
       <p style="font-size:12px;color:var(--gris-medio);margin-bottom:10px;">Sin selección = acceso a todos los módulos permitidos por su rol.</p>
       <div style="display:flex;flex-direction:column;gap:7px;">
-        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1.5px solid var(--gris-claro);border-radius:7px;cursor:pointer;background:var(--blanco);">
-          <input type="checkbox" value="Pruebas Temporada" id="nu-mod-pruebas" style="accent-color:var(--amarillo);width:15px;height:15px;">
-          <div><div style="font-size:13px;font-weight:600;">⚽ Pruebas de temporada</div><div style="font-size:11px;color:var(--gris-medio);">Inscritos, calendario de pruebas e integración</div></div>
-        </label>
-        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1.5px solid var(--gris-claro);border-radius:7px;cursor:pointer;background:var(--blanco);">
-          <input type="checkbox" value="Campus Salamanca" id="nu-mod-campus" style="accent-color:var(--amarillo);width:15px;height:15px;">
-          <div><div style="font-size:13px;font-weight:600;">🏕️ Campus Salamanca</div><div style="font-size:11px;color:var(--gris-medio);">Participantes, horario, veladas y planificación</div></div>
-        </label>
-        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1.5px solid var(--gris-claro);border-radius:7px;cursor:pointer;background:var(--blanco);">
-          <input type="checkbox" value="Mensajes" id="nu-mod-mensajes" style="accent-color:var(--amarillo);width:15px;height:15px;">
-          <div><div style="font-size:13px;font-weight:600;">💬 Mensajes</div><div style="font-size:11px;color:var(--gris-medio);">Chat directo y canales de equipo</div></div>
-        </label>
+        ${MODULOS_DISPONIBLES.map((m,idx)=>`<label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1.5px solid var(--gris-claro);border-radius:7px;cursor:pointer;background:var(--blanco);">
+          <input type="checkbox" value="${m}" id="nu-mod-${idx}" style="accent-color:var(--amarillo);width:15px;height:15px;">
+          <div><div style="font-size:13px;font-weight:600;">${m}</div></div>
+        </label>`).join('')}
       </div>
     </div>
     <p style="font-size:12.5px;color:var(--gris-medio);margin-top:10px;background:#fffbe6;padding:10px;border-radius:6px;">
@@ -1032,10 +1102,7 @@ async function createUser() {
   if (pass !== pass2) { showToast('⚠️ Las contraseñas no coinciden'); return; }
 
   // Recoger módulos seleccionados
-  const modulos_permitidos = ['nu-mod-pruebas','nu-mod-campus','nu-mod-mensajes']
-    .map(id => document.getElementById(id))
-    .filter(el => el && el.checked)
-    .map(el => el.value);
+  const modulos_permitidos = MODULOS_DISPONIBLES.map((m,idx) => document.getElementById('nu-mod-'+idx)).filter(el => el && el.checked).map(el => el.value);
 
   const btn = document.querySelector('#modal-footer .btn-primary');
   if(btn) { btn.textContent = '⏳ Creando...'; btn.disabled = true; }
@@ -1142,7 +1209,9 @@ async function syncFromSheets() {
       }
     }
     if(toUpsert.length){
-      await sb.from('inscritos').upsert(toUpsert, { onConflict: 'id', ignoreDuplicates: false });
+      localStorage.setItem('sv_last_sheet_import', JSON.stringify({ fecha:new Date().toISOString(), total:toUpsert.length, data:toUpsert }));
+      const { error: syncErr } = await sb.from('inscritos').upsert(toUpsert, { onConflict: 'id', ignoreDuplicates: false });
+      if(syncErr) { console.error(syncErr); showToast('⚠️ Error al guardar en Supabase: ' + syncErr.message); }
       await loadInscritos();
       mergeSocios();
       renderDashboard(); renderView();
@@ -1201,8 +1270,14 @@ function importCSV(event) {
 // ════════════════════════════════════════════════════════
 // NAVEGACIÓN
 // ════════════════════════════════════════════════════════
-const TITLES={dashboard:'Dashboard',inscritos:'Pruebas · Inscritos',usuarios:'Administración · Usuarios',integracion:'Pruebas · Integración',pruebas:'Pruebas · Calendario',campus:'Campus Salamanca',mensajes:'Mensajes','mi-ficha':'Mi Ficha',entrenamientos:'Planificador de Entrenamientos',modulos:'Configuración · Módulos'};
+const TITLES={dashboard:'Pruebas · Inscritos',inscritos:'Pruebas · Inscritos',usuarios:'Administración · Usuarios',integracion:'Pruebas · Integración',pruebas:'Pruebas · Calendario',campus:'Campus Salamanca',mensajes:'Mensajes','mi-ficha':'Mi Ficha',entrenamientos:'Planificador de Entrenamientos',modulos:'Configuración · Módulos'};
+const MODULOS_DISPONIBLES = ['Pruebas Temporada','Campus Salamanca','Campus Madrid','Tecnificación','Escuela','Mensajes','Administración'];
+const PRUEBAS_CATEGORIAS_PERMISOS = ['Benjamín Fútbol','Benjamín masculino Baloncesto','Benjamín femenino Baloncesto','Alevín Fútbol','Alevín masculino Baloncesto','Alevín femenino Baloncesto','Infantil Fútbol','Infantil masculino Baloncesto','Infantil femenino Baloncesto','Cadete Fútbol','Cadete masculino Baloncesto','Cadete femenino Baloncesto','Juvenil Fútbol','Junior masculino Baloncesto','Junior femenino Baloncesto','Aficionado Fútbol','S22 Masculino Baloncesto','Senior masculino Baloncesto','Senior femenino Baloncesto'];
+const CAMPUS_CATEGORIAS = ['Basket 1','Basket 2','Basket 3','Basket 4','Basket 5','Basket 6','Minibasket','Fútbol 1','Fútbol 2','Fútbol 3'];
 function showPanel(name){
+  if(name==='dashboard') name='inscritos';
+  const guard = {inscritos:'Pruebas Temporada',pruebas:'Pruebas Temporada',integracion:'Pruebas Temporada',campus:'Campus Salamanca',mensajes:'Mensajes',usuarios:'Administración',modulos:'Administración'};
+  if(guard[name] && !hasModuloAccess(guard[name]) && currentPerfil?.rol!=='admin' && currentPerfil?.rol!=='jugador') { showToast('⛔ No tienes acceso a ese módulo'); return; }
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   var panel = document.getElementById('panel-'+name);
@@ -1210,8 +1285,7 @@ function showPanel(name){
   panel.classList.add('active');
   document.querySelector('.nav-item[onclick*="\''+name+'\'"]')?.classList.add('active');
   document.getElementById('panel-title').textContent=TITLES[name]||name;
-  if(name==='dashboard') renderDashboard();
-  if(name==='inscritos') renderView();
+  if(name==='inscritos'){ renderDashboard(); renderView(); }
   if(name==='usuarios') loadUsers();
   if(name==='pruebas') renderPruebas();
   if(name==='mensajes') renderMensajes();
@@ -1262,7 +1336,7 @@ function getFiltered(){
   // Filtro por categorías permitidas (entrenador/invitado)
   const cats=currentPerfil?.categorias_permitidas||[];
   return inscritos.filter(i=>{
-    if(cats.length&&!cats.includes(i.categoria)) return false;
+    if(cats.length){ const permisoCat = buildPruebasCategoriaPermiso(i); if(!cats.includes(permisoCat)) return false; }
     if(q&&!i.nombre.toLowerCase().includes(q)&&!(i.email||'').toLowerCase().includes(q)&&!(i.telefono||'').includes(q)) return false;
     if(dep&&i.deporte!==dep) return false;
     if(gen&&i.genero!==gen) return false;
@@ -1910,32 +1984,7 @@ function renderPruebas(){
     </div>`;
 
   renderHorarios();
-
-  // ── Bloque campus ──────────────────────────────────────
-  const campusBox = document.getElementById('campus-cal-box');
-  const campusGrid = document.getElementById('campus-cal-grid');
-  if(campusBox && campusGrid && modulosActivos.includes('campus')) {
-    campusBox.style.display = '';
-    campusGrid.innerHTML = HOR_DIAS.map(d => {
-      const isSalida = d.label === 'Salida';
-      const isLlegada = d.label === 'Llegada';
-      const borderColor = isLlegada ? '#16a34a' : isSalida ? '#c0392b' : 'var(--amarillo)';
-      const badge = isLlegada
-        ? `<span style="background:#dcfce7;color:#166534;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:700;">Llegada</span>`
-        : isSalida
-        ? `<span style="background:#fce4ec;color:#c62828;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:700;">Salida</span>`
-        : '';
-      return `<div style="background:var(--blanco);border-radius:8px;border:2px solid ${borderColor};padding:12px;text-align:center;cursor:pointer;transition:box-shadow 0.15s;"
-        onclick="showPanel('campus')" onmouseover="this.style.boxShadow='0 2px 10px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;color:var(--amarillo);line-height:1;">${d.num}</div>
-        <div style="font-size:11px;font-weight:700;color:var(--negro);margin:2px 0;">${d.dia}</div>
-        <div style="font-size:11px;color:var(--gris-medio);">${d.fecha}</div>
-        ${badge ? `<div style="margin-top:4px;">${badge}</div>` : ''}
-      </div>`;
-    }).join('');
-  } else if(campusBox) {
-    campusBox.style.display = 'none';
-  }
+  renderEntrenosPruebas();
 }
 
 // ════════════════════════════════════════════════════════
@@ -2409,6 +2458,7 @@ function saveEquiposActividad(diaNum, idx) {
 }
 
 function campusTab(tab) {
+  if((tab==='monitores' || tab==='cuentas') && currentPerfil?.rol !== 'admin') { showToast('⛔ Solo administración'); return; }
   document.querySelectorAll('.campus-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.campus-section').forEach(s => s.classList.remove('active'));
   document.querySelector(`.campus-tab[onclick*="${tab}"]`).classList.add('active');
@@ -2421,13 +2471,69 @@ function campusTab(tab) {
   if(tab === 'monitores') renderMonitores();
   if(tab === 'medico') renderMedico();
   if(tab === 'planificadorEntrenos') renderEntrenosCampus();
+  if(tab === 'cuentas') renderCuentasCampus();
+}
+
+
+
+async function renderEntrenosPruebas() {
+  const grid = document.getElementById('pruebas-entrenos-grid');
+  if(!grid) return;
+  grid.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>Cargando...</p></div>';
+  const { data } = await sb.from('entrenamientos').select('*').or('modulo.eq.Pruebas Temporada,contexto.eq.Pruebas').order('fecha',{ascending:false});
+  const entrenos = data || [];
+  etEntrenamientos = entrenos;
+  if(!entrenos.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Sin entrenamientos de pruebas todavía.</p></div>';
+    return;
+  }
+  grid.innerHTML = entrenos.map(e => {
+    const depColor = e.deporte==='Baloncesto' ? {bg:'#dbeafe',c:'#1e40af'} : {bg:'#dcfce7',c:'#166534'};
+    const ejes = (e.ejercicios||[]).length;
+    return `<div class="et-card" onclick="openVerEntreno('${e.id}')">
+      <div class="et-card-header">
+        <div>
+          <div class="et-card-title">${ET_DEP_ICON[e.deporte]||''} ${e.equipo||'—'} ${e.categoria?'· '+e.categoria:''}</div>
+          <div class="et-card-meta">📅 ${e.fecha} · ⏱️ ${e.duracion_total||0} min · ${ejes} ejercicio${ejes!==1?'s':''}</div>
+          <div class="et-card-meta">👤 ${e.autor_nombre||'—'}${e.sesion?' · '+e.sesion:''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <span class="et-tag" style="background:#e3f2fd;color:#1565c0;">📅 Pruebas</span>
+          <span class="et-tag" style="background:${depColor.bg};color:${depColor.c};">${e.deporte||'—'}</span>
+        </div>
+      </div>
+      ${e.comentarios ? `<div style="font-size:12px;color:var(--gris-medio);border-top:1px solid var(--gris-claro);padding-top:8px;margin-top:6px;line-height:1.5;">${e.comentarios}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderCuentasCampus() {
+  const el = document.getElementById('campus-cuentas-content');
+  if(!el) return;
+  const ps = CAMPUS_PARTICIPANTS || [];
+  const total = ps.reduce((s,p)=>s + (Number(p.total)||0), 0);
+  const pagado = ps.reduce((s,p)=> s + (Number(p.cuota1)||0) + (Number(p.cuota2)||0) + (Number(p.cuota3)||0) + (Number(p.cuota4)||0), 0);
+  const pendiente = total - pagado;
+  const rows = ps.slice().sort((a,b)=> ((a.equipo||'')+' '+(a.nombre||'')).localeCompare((b.equipo||'')+' '+(b.nombre||'')));
+  el.innerHTML = `
+    <div class="stats-grid" style="margin-bottom:16px;">
+      <div class="stat-card"><div class="stat-label">Total presupuestado</div><div class="stat-number" style="font-size:34px;">${Math.round(total)}€</div></div>
+      <div class="stat-card"><div class="stat-label">Cobrado</div><div class="stat-number" style="font-size:34px;color:#16a34a;">${Math.round(pagado)}€</div></div>
+      <div class="stat-card"><div class="stat-label">Pendiente</div><div class="stat-number" style="font-size:34px;color:#c0392b;">${Math.round(pendiente)}€</div></div>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead><tr><th>Participante</th><th>Equipo</th><th>Total</th><th>Pagado</th><th>Pendiente</th></tr></thead>
+        <tbody>${rows.map(p=>{ const pag=(Number(p.cuota1)||0)+(Number(p.cuota2)||0)+(Number(p.cuota3)||0)+(Number(p.cuota4)||0); const pen=(Number(p.total)||0)-pag; return `<tr><td>${p.nombre||''} ${p.apellidos||''}</td><td>${p.equipo||'—'}</td><td>${Math.round(Number(p.total)||0)}€</td><td>${Math.round(pag)}€</td><td style="color:${pen>0?'#c0392b':'#16a34a'};font-weight:700;">${Math.round(pen)}€</td></tr>`;}).join('')}</tbody>
+      </table>
+    </div>`;
 }
 
 async function renderEntrenosCampus() {
   const grid = document.getElementById('cs-entrenos-grid');
   if(!grid) return;
   grid.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>Cargando...</p></div>';
-  const { data } = await sb.from('entrenamientos').select('*').eq('contexto','Campus').order('campus_dia',{ascending:true}).order('fecha',{ascending:true});
+  const { data } = await sb.from('entrenamientos').select('*').or('modulo.eq.Campus Salamanca,contexto.eq.Campus').order('campus_dia',{ascending:true}).order('fecha',{ascending:true});
   const entrenos = data || [];
   if(!entrenos.length) {
     grid.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Sin entrenamientos de campus. Crea el primero con <strong>+ Nuevo entreno Campus</strong>.</p></div>';
@@ -3655,7 +3761,7 @@ let pizarraCtx = null, pizarraDrawing = false, pizarraTool = 'flecha', pizarraCo
 let pizarraHistory = [], pizarraLastX = 0, pizarraLastY = 0;
 
 // Módulos activos en la configuración del club
-let modulosActivos = JSON.parse(localStorage.getItem('sv_modulos_activos') || '["campus"]');
+let modulosActivos = JSON.parse(localStorage.getItem('sv_modulos_activos') || '["pruebas","campus","mensajes","admin"]');
 
 const ET_TIPO_STYLE = {
   'Técnico':           {cls:'et-tag-tecnico',     icon:'🎯'},
@@ -3700,7 +3806,10 @@ async function renderEntrenamientos() {
   const grid = document.getElementById('et-entrenos-grid');
   if(!grid) return;
   grid.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>Cargando...</p></div>';
-  const { data, error } = await sb.from('entrenamientos').select('*').order('fecha', {ascending:false});
+  const activeCampus = document.getElementById('cs-planificadorEntrenos')?.classList.contains('active');
+  let q = sb.from('entrenamientos').select('*').order('fecha', {ascending:false});
+  if(activeCampus) q = q.or('modulo.eq.Campus Salamanca,contexto.eq.Campus');
+  const { data, error } = await q;
   etEntrenamientos = data || [];
   if(!etEntrenamientos.length) {
     grid.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Sin entrenamientos aún. Crea el primero pulsando <strong>+ Nuevo entreno</strong>.</p></div>';
@@ -3847,11 +3956,11 @@ async function confirmDeleteEntreno(id, fromCampus) {
   etEntrenamientos = etEntrenamientos.filter(x => x.id !== id);
   showToast('🗑️ Entrenamiento eliminado');
   // Refrescar la vista correcta
-  if(fromCampus) {
+  if(fromCampus || document.getElementById('panel-campus')?.classList.contains('active')) {
     renderEntrenosCampus();
-  } else {
-    renderEntrenamientos();
   }
+  if(document.getElementById('panel-pruebas')?.classList.contains('active')) renderEntrenosPruebas();
+  renderEntrenamientos();
 }
 
 // ── CREAR / EDITAR ENTRENAMIENTO ─────────────────────────
@@ -3870,7 +3979,7 @@ async function openNuevoEntreno(editId, prefillEquipo, prefillDia, prefillContex
     etEjerciciosSeleccionados = editData.ejercicios.map(ej=>({...ej,_data:em[ej.ejercicio_id]||{}}));
   }
   const equipos = etGetEquipos();
-  const ctxActual = prefillContexto||(document.querySelector('.panel.active')?.id==='panel-campus'?'Campus':'Temporada');
+  const ctxActual = prefillContexto||(document.querySelector('.panel.active')?.id==='panel-campus'?'Campus':'Pruebas');
 
   document.getElementById('modal-title').textContent = editId ? '✏️ Editar entrenamiento' : '+ Nuevo entrenamiento';
   document.getElementById('modal-body').innerHTML = `
@@ -3903,7 +4012,7 @@ async function openNuevoEntreno(editId, prefillEquipo, prefillDia, prefillContex
       </div>
       <div class="detail-field"><label>Contexto</label>
         <select id="et-f-contexto" onchange="etToggleCampusDia();etRefreshEquipos()">
-          ${['Temporada','Campus','Pruebas'].map(c=>`<option ${(editData?.contexto||ctxActual)===c?'selected':''}>${c}</option>`).join('')}
+          ${['Pruebas','Campus'].map(c=>`<option ${(editData?.contexto||ctxActual)===c?'selected':''}>${c}</option>`).join('')}
         </select>
       </div>
     </div>
@@ -4053,23 +4162,18 @@ function etRefreshEquipos() {
 
 // Navegar al planificador con contexto campus preseleccionado
 function showPlanificadorCampus() {
-  showPanel('entrenamientos');
-  setTimeout(() => {
-    // Al abrir nuevo entreno desde campus, preseleccionar contexto Campus
-    document.getElementById('et-btn-nuevo-entreno').onclick = () => openNuevoEntreno(null, null, null, 'Campus');
-    etTab('lista');
-  }, 100);
+  showPanel('campus');
+  setTimeout(() => { campusTab('planificadorEntrenos'); }, 120);
 }
 
 // ════════════════════════════════════════════════════════
 // MÓDULOS
 // ════════════════════════════════════════════════════════
 const MODULOS_CONFIG = [
-  { id:'campus',          nombre:'Campus Salamanca',      icon:'🏕️', desc:'Gestión del campus de verano: participantes, horario, veladas, monitores y médico.' },
-  { id:'pruebas',         nombre:'Calendario de Pruebas', icon:'📅', desc:'Calendario de puertas abiertas y sesiones de prueba para nuevos fichajes.' },
-  { id:'entrenamientos',  nombre:'Planificador',           icon:'📋', desc:'Planificación de entrenamientos, biblioteca de ejercicios y pizarra táctica.' },
-  { id:'inscritos',       nombre:'Inscritos',              icon:'👥', desc:'CRM de jugadores inscritos a pruebas con vistas tabla, kanban y equipos.' },
-  { id:'mensajes',        nombre:'Mensajes',               icon:'💬', desc:'Chat 1 a 1 y canales de grupo por equipo.' },
+  { id:'pruebas',         nombre:'Pruebas Temporada', icon:'📅', desc:'Incluye inscritos, calendario e integración de pruebas.' },
+  { id:'campus',          nombre:'Campus Salamanca',  icon:'🏕️', desc:'Gestión del campus de verano: participantes, horario, veladas, médico y planificador.' },
+  { id:'mensajes',        nombre:'Mensajes',          icon:'💬', desc:'Chat 1 a 1 y canales de grupo por equipo.' },
+  { id:'admin',           nombre:'Administración',    icon:'⚙️', desc:'Usuarios, permisos y configuración de módulos.' },
 ];
 
 function renderModulos() {
@@ -4121,10 +4225,7 @@ function saveModulos() {
   applyModulosVisibility();
 }
 
-function applyModulosVisibility() {
-  // El sidebar siempre muestra todo para admin, esta función es extensible
-  // En el planificador, los equipos de campus aparecen si módulo campus está activo
-}
+function applyModulosVisibility() { applyRoleUI(); }
 
 function etRenderEjsList() {
   if(!etEjerciciosSeleccionados.length)
@@ -4242,11 +4343,12 @@ async function saveEntreno(editId) {
   if(!equipo||!fecha){showToast('⚠️ Equipo y fecha son obligatorios');return;}
   const contexto  = document.getElementById('et-f-contexto')?.value;
   const campusDia = contexto==='Campus'?parseInt(document.getElementById('et-f-campus-dia')?.value||1):null;
+  const modulo = contexto==='Campus' ? 'Campus Salamanca' : contexto==='Pruebas' ? 'Pruebas Temporada' : 'Pruebas Temporada';
   const payload = {
     deporte, equipo, fecha,
     categoria:     document.getElementById('et-f-categoria')?.value||'',
     sesion:        document.getElementById('et-f-sesion')?.value||'Única',
-    contexto, campus_dia: campusDia,
+    modulo, contexto, campus_dia: campusDia,
     comentarios:   document.getElementById('et-f-comentarios')?.value||'',
     duracion_total: etEjerciciosSeleccionados.reduce((s,e)=>s+(e.duracion_override||e._data?.duracion||0),0),
     ejercicios:    etEjerciciosSeleccionados.map((ej,i)=>({ejercicio_id:ej.ejercicio_id,duracion_override:ej.duracion_override||10,orden:i+1,notas:ej.notas||''})),
@@ -4257,7 +4359,10 @@ async function saveEntreno(editId) {
     ? await sb.from('entrenamientos').update(payload).eq('id',editId)
     : await sb.from('entrenamientos').insert(payload);
   if(error){showToast('❌ '+error.message);return;}
-  closeModal(); showPanel('entrenamientos'); showToast('✅ Entrenamiento guardado');
+  closeModal();
+  if(modulo==='Campus Salamanca'){ renderEntrenosCampus(); if(document.getElementById('panel-campus')?.classList.contains('active')) campusTab('planificadorEntrenos'); }
+  else { renderEntrenosPruebas(); if(document.getElementById('panel-pruebas')?.classList.contains('active')) renderPruebas(); }
+  showToast('✅ Entrenamiento guardado');
 }
 
 // ── CREAR EJERCICIO ──────────────────────────────────────
@@ -4272,7 +4377,7 @@ function openNuevoEjercicio(editId) {
     </div>
     <div class="detail-row">
       <div class="detail-field"><label>Deporte *</label>
-        <select id="ej-f-deporte" onchange="pizarraClear(true)">
+        <select id="ej-f-deporte" onchange="syncPizarraTipoWithDeporte();pizarraClear(true)">
           <option ${(e?.deporte||'Baloncesto')==='Baloncesto'?'selected':''}>Baloncesto</option>
           <option ${e?.deporte==='Fútbol'?'selected':''}>Fútbol</option>
           <option ${e?.deporte==='Ambos'?'selected':''}>Ambos</option>
@@ -4281,6 +4386,16 @@ function openNuevoEjercicio(editId) {
       <div class="detail-field"><label>Tipo</label>
         <select id="ej-f-tipo">
           ${Object.keys(ET_TIPO_STYLE).map(t=>`<option ${e?.tipo===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-field"><label>Pizarra</label>
+        <select id="ej-f-pizarra-tipo" onchange="this.dataset.userChanged='1';pizarraClear(true)">
+          <option value="Baloncesto" ${(e?.pizarra_tipo||((e?.deporte||'Baloncesto')==='Fútbol'?'Fútbol':'Baloncesto'))==='Baloncesto'?'selected':''}>Baloncesto</option>
+          <option value="1/2 Baloncesto" ${(e?.pizarra_tipo||'')==='1/2 Baloncesto'?'selected':''}>1/2 Baloncesto</option>
+          <option value="Fútbol" ${(e?.pizarra_tipo||'')==='Fútbol'?'selected':''}>Fútbol</option>
+          <option value="1/2 Fútbol" ${(e?.pizarra_tipo||'')==='1/2 Fútbol'?'selected':''}>1/2 Fútbol</option>
         </select>
       </div>
     </div>
@@ -4341,7 +4456,7 @@ function openNuevoEjercicio(editId) {
     <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
     <button class="btn btn-primary" onclick="saveEjercicio(${editId?`'${editId}'`:'null'})">💾 Guardar ejercicio</button>`;
   document.getElementById('modal-overlay').classList.add('open');
-  setTimeout(()=>{ initPizarra(e?.diagrama); }, 80);
+  setTimeout(()=>{ initPizarra(e?.diagrama); syncPizarraTipoWithDeporte(); }, 80);
 }
 
 function openNuevoEjercicioInline() {
@@ -4392,7 +4507,7 @@ function _restoreEntrenoForm() {
   // NO llamar a openNuevoEntreno porque resetea etEjerciciosSeleccionados = []
   // Reconstruir el modal del entreno manualmente preservando los ejercicios en memoria
   const equipos = etGetEquipos(snap.contexto);
-  const ctxActual = snap.contexto || 'Temporada';
+  const ctxActual = snap.contexto || 'Pruebas';
 
   document.getElementById('modal-title').textContent = snap.editId ? '✏️ Editar entrenamiento' : '+ Nuevo entrenamiento';
   document.getElementById('modal-body').innerHTML = `
@@ -4425,7 +4540,7 @@ function _restoreEntrenoForm() {
       </div>
       <div class="detail-field"><label>Contexto</label>
         <select id="et-f-contexto" onchange="etToggleCampusDia();etRefreshEquipos()">
-          ${['Temporada','Campus','Pruebas'].map(c=>`<option ${ctxActual===c?'selected':''}>${c}</option>`).join('')}
+          ${['Pruebas','Campus'].map(c=>`<option ${ctxActual===c?'selected':''}>${c}</option>`).join('')}
         </select>
       </div>
     </div>
@@ -4463,11 +4578,14 @@ function _restoreEntrenoForm() {
 }
 
 // ── PIZARRA ──────────────────────────────────────────────
+function syncPizarraTipoWithDeporte(){ const dep=document.getElementById('ej-f-deporte')?.value; const sel=document.getElementById('ej-f-pizarra-tipo'); if(!sel) return; if(!sel.dataset.userChanged){ if(dep==='Fútbol'){ if(!['Fútbol','1/2 Fútbol'].includes(sel.value)) sel.value='Fútbol'; } else if(dep==='Baloncesto'){ if(!['Baloncesto','1/2 Baloncesto'].includes(sel.value)) sel.value='Baloncesto'; } } }
+
 function initPizarra(diagramaData) {
   const canvas=document.getElementById('pizarra-canvas'); if(!canvas) return;
   pizarraCtx=canvas.getContext('2d');
   pizarraHistory=[];
-  drawCourt(document.getElementById('ej-f-deporte')?.value==='Fútbol'?'futbol':'basket');
+  const pTipo=(document.getElementById('ej-f-pizarra-tipo')?.value)||((document.getElementById('ej-f-deporte')?.value==='Fútbol')?'Fútbol':'Baloncesto');
+  drawCourt(pTipo);
   pizarraHistory=[canvas.toDataURL()];
   if(diagramaData?.dataUrl) {
     const img=new Image();
@@ -4501,32 +4619,53 @@ function drawArrow(x1,y1,x2,y2){const a=Math.atan2(y2-y1,x2-x1),l=12;pizarraCtx.
 function setPizarraTool(t){pizarraTool=t;document.querySelectorAll('.pizarra-tool').forEach(b=>b.classList.remove('active'));const b=document.getElementById('pt-'+t);if(b)b.classList.add('active');}
 function pizarraSaveHistory(){const c=document.getElementById('pizarra-canvas');if(c){pizarraHistory.push(c.toDataURL());if(pizarraHistory.length>30)pizarraHistory.shift();}}
 function pizarraUndo(){const c=document.getElementById('pizarra-canvas');if(!c)return;if(pizarraHistory.length>=2){pizarraHistory.pop();const img=new Image();img.onload=()=>{pizarraCtx.clearRect(0,0,c.width,c.height);pizarraCtx.drawImage(img,0,0);};img.src=pizarraHistory[pizarraHistory.length-1];}else pizarraClear(false);}
-function pizarraClear(save=true){const c=document.getElementById('pizarra-canvas');if(!c)return;const dep=document.getElementById('ej-f-deporte')?.value;drawCourt(dep==='Fútbol'?'futbol':'basket');if(save){pizarraHistory=[c.toDataURL()];}}
+function pizarraClear(save=true){const c=document.getElementById('pizarra-canvas');if(!c)return;const tipo=document.getElementById('ej-f-pizarra-tipo')?.value||((document.getElementById('ej-f-deporte')?.value==='Fútbol')?'Fútbol':'Baloncesto');drawCourt(tipo);if(save){pizarraHistory=[c.toDataURL()];}}
 
 function drawCourt(tipo) {
   const c=document.getElementById('pizarra-canvas'); if(!c)return;
   const ctx=pizarraCtx,W=c.width,H=c.height;
-  ctx.fillStyle=tipo==='futbol'?'#2d6a4f':'#1a4731'; ctx.fillRect(0,0,W,H);
-  ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1.5;
-  if(tipo==='basket'){
-    ctx.strokeRect(20,20,W-40,H-40);
-    ctx.beginPath();ctx.moveTo(W/2,20);ctx.lineTo(W/2,H-20);ctx.stroke();
-    ctx.beginPath();ctx.arc(W/2,H/2,35,0,Math.PI*2);ctx.stroke();
-    ctx.strokeRect(20,H/2-55,90,110); ctx.strokeRect(W-110,H/2-55,90,110);
-    ctx.beginPath();ctx.arc(110,H/2,55,Math.PI*1.5,Math.PI*0.5);ctx.stroke();
-    ctx.beginPath();ctx.arc(W-110,H/2,55,Math.PI*0.5,Math.PI*1.5);ctx.stroke();
-    ctx.beginPath();ctx.arc(32,H/2,8,0,Math.PI*2);ctx.stroke();
-    ctx.beginPath();ctx.arc(W-32,H/2,8,0,Math.PI*2);ctx.stroke();
-    ctx.beginPath();ctx.arc(32,H/2,130,Math.PI*1.35,Math.PI*0.65);ctx.stroke();
-    ctx.beginPath();ctx.arc(W-32,H/2,130,Math.PI*0.35,Math.PI*1.65);ctx.stroke();
+  const t = (tipo||'Baloncesto').toLowerCase();
+  const isFut = t.includes('fútbol') || t.includes('futbol');
+  const isHalf = t.includes('1/2');
+  ctx.fillStyle=isFut?'#2d6a4f':'#1a4731'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=1.5;
+  if(!isFut){
+    if(isHalf){
+      ctx.strokeRect(20,20,W-40,H-40);
+      ctx.beginPath();ctx.arc(32,H/2,8,0,Math.PI*2);ctx.stroke();
+      ctx.strokeRect(20,H/2-55,90,110);
+      ctx.beginPath();ctx.arc(110,H/2,55,Math.PI*1.5,Math.PI*0.5);ctx.stroke();
+      ctx.beginPath();ctx.arc(32,H/2,130,Math.PI*1.35,Math.PI*0.65);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(W-20,20);ctx.lineTo(W-20,H-20);ctx.stroke();
+    } else {
+      ctx.strokeRect(20,20,W-40,H-40);
+      ctx.beginPath();ctx.moveTo(W/2,20);ctx.lineTo(W/2,H-20);ctx.stroke();
+      ctx.beginPath();ctx.arc(W/2,H/2,35,0,Math.PI*2);ctx.stroke();
+      ctx.strokeRect(20,H/2-55,90,110); ctx.strokeRect(W-110,H/2-55,90,110);
+      ctx.beginPath();ctx.arc(110,H/2,55,Math.PI*1.5,Math.PI*0.5);ctx.stroke();
+      ctx.beginPath();ctx.arc(W-110,H/2,55,Math.PI*0.5,Math.PI*1.5);ctx.stroke();
+      ctx.beginPath();ctx.arc(32,H/2,8,0,Math.PI*2);ctx.stroke();
+      ctx.beginPath();ctx.arc(W-32,H/2,8,0,Math.PI*2);ctx.stroke();
+      ctx.beginPath();ctx.arc(32,H/2,130,Math.PI*1.35,Math.PI*0.65);ctx.stroke();
+      ctx.beginPath();ctx.arc(W-32,H/2,130,Math.PI*0.35,Math.PI*1.65);ctx.stroke();
+    }
   } else {
-    ctx.strokeRect(20,20,W-40,H-40);
-    ctx.beginPath();ctx.moveTo(W/2,20);ctx.lineTo(W/2,H-20);ctx.stroke();
-    ctx.beginPath();ctx.arc(W/2,H/2,50,0,Math.PI*2);ctx.stroke();
-    ctx.strokeRect(20,H/2-60,70,120); ctx.strokeRect(W-90,H/2-60,70,120);
-    ctx.strokeRect(20,H/2-25,12,50); ctx.strokeRect(W-32,H/2-25,12,50);
-    ctx.beginPath();ctx.arc(80,H/2,4,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.5)';ctx.fill();
-    ctx.beginPath();ctx.arc(W-80,H/2,4,0,Math.PI*2);ctx.fill();
+    if(isHalf){
+      ctx.strokeRect(20,20,W-40,H-40);
+      ctx.strokeRect(20,H/2-60,70,120);
+      ctx.strokeRect(20,H/2-25,12,50);
+      ctx.beginPath();ctx.arc(80,H/2,4,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.6)';ctx.fill();
+      ctx.beginPath();ctx.arc(80,H/2,50,Math.PI*1.3,Math.PI*0.7);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(W-20,20);ctx.lineTo(W-20,H-20);ctx.stroke();
+    } else {
+      ctx.strokeRect(20,20,W-40,H-40);
+      ctx.beginPath();ctx.moveTo(W/2,20);ctx.lineTo(W/2,H-20);ctx.stroke();
+      ctx.beginPath();ctx.arc(W/2,H/2,50,0,Math.PI*2);ctx.stroke();
+      ctx.strokeRect(20,H/2-60,70,120); ctx.strokeRect(W-90,H/2-60,70,120);
+      ctx.strokeRect(20,H/2-25,12,50); ctx.strokeRect(W-32,H/2-25,12,50);
+      ctx.beginPath();ctx.arc(80,H/2,4,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.6)';ctx.fill();
+      ctx.beginPath();ctx.arc(W-80,H/2,4,0,Math.PI*2);ctx.fill();
+    }
   }
 }
 
@@ -4563,6 +4702,7 @@ async function saveEjercicio(editId, returnId=false) {
     etiquetas:   tags,
     imagen_url:  document.getElementById('ej-img-url')?.value||null,
     diagrama,
+    pizarra_tipo: document.getElementById('ej-f-pizarra-tipo')?.value || null,
     es_publico:  true,
     created_by:  currentUser?.id,
     autor_nombre:currentPerfil?.nombre||currentUser?.email?.split('@')[0]||''
@@ -4578,12 +4718,13 @@ async function saveEjercicio(editId, returnId=false) {
 
 // ── INTEGRACIÓN HORARIO → ENTRENO ────────────────────────
 function abrirEntrenoDesdeHorario(equipo, diaNum) {
-  showPanel('entrenamientos');
+  showPanel('campus');
   setTimeout(async()=>{
-    const {data}=await sb.from('entrenamientos').select('*').eq('contexto','Campus').eq('campus_dia',diaNum).eq('equipo',equipo).order('fecha',{ascending:false}).limit(1);
+    campusTab('planificadorEntrenos');
+    const {data}=await sb.from('entrenamientos').select('*').or('modulo.eq.Campus Salamanca,contexto.eq.Campus').eq('campus_dia',diaNum).eq('equipo',equipo).order('fecha',{ascending:false}).limit(1);
     if(data?.length){ etEntrenamientos=data; openVerEntreno(data[0].id); }
     else openNuevoEntreno(null,equipo,diaNum,'Campus');
-  },200);
+  },220);
 }
 
 // INIT — comprobar sesión activa
