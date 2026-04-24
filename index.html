@@ -15,6 +15,8 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Barlow',sans-serif;background:var(--gris-bg);color:var(--negro);min-height:100vh;}
 
+.sidebar-hidden{display:none !important;}
+
 /* ── LOGIN ── */
 #login-screen{
   display:flex;align-items:center;justify-content:center;
@@ -304,10 +306,10 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
 
       <div class="nav-section-label">Campus</div>
       <div class="nav-item" onclick="showPanel('campus')"><span>🏕️</span><span>Campus Salamanca</span></div>
-      <div class="nav-item entrenador-only" onclick="showPlanificadorCampus()" style="display:none!important"><span>📋</span><span>Planificador Campus</span></div>
+      <div class="nav-item entrenador-only sidebar-hidden" onclick="showPlanificadorCampus()"><span>📋</span><span>Planificador Campus</span></div>
 
-      <div class="nav-section-label entrenador-only" style="display:none!important">Entrenamientos</div>
-      <div class="nav-item entrenador-only" onclick="showPanel('entrenamientos')" style="display:none!important"><span>📋</span><span>Planificador</span></div>
+      <div class="nav-section-label entrenador-only sidebar-hidden">Entrenamientos</div>
+      <div class="nav-item entrenador-only sidebar-hidden" onclick="showPanel('entrenamientos')"><span>📋</span><span>Planificador</span></div>
 
       <div class="nav-section-label jugador-only" style="display:none">Mi espacio</div>
       <div class="nav-item jugador-only" style="display:none" onclick="showPanel('mi-ficha')"><span>👤</span><span>Mi Ficha</span></div>
@@ -864,7 +866,7 @@ function applyRoleUI() {
   const isJugador = rol === 'jugador';
   document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? '' : 'none');
   document.querySelectorAll('.can-edit').forEach(el => el.style.display = canEdit ? '' : 'none');
-  document.querySelectorAll('.entrenador-only').forEach(el => el.style.display = canEdit ? '' : 'none');
+  document.querySelectorAll('.entrenador-only').forEach(el => { if(el.classList.contains('sidebar-hidden')) { el.style.display='none'; } else { el.style.display = canEdit ? '' : 'none'; } });
   document.querySelectorAll('.jugador-only').forEach(el => el.style.display = isJugador ? '' : 'none');
 
   const navMap = [
