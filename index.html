@@ -1971,18 +1971,73 @@ function kanbanCard(i,canEdit){
   </div>`;
 }
 
+async function persistQuickInscritoChange(id, updates){
+  const i = inscritos.find(x => x.id === id);
+  if(!i) return { ok:false, error:new Error('Inscrito no encontrado') };
+
+  // Jugadores del club / con estrella: hay que persistir con upsert y override local,
+  // no con update directo por id, porque muchos no existen todavía como fila normal.
+  if(i.esDelClub || String(id).startsWith('club_') || isTempInscritoId(id)) {
+    const payload = {
+      nombre: i.nombre,
+      email: i.email || '',
+      telefono: i.telefono || '',
+      tutor: i.tutor || '',
+      deporte: i.deporte || 'Baloncesto',
+      genero: i.genero || 'Masculino',
+      categoria: i.categoria || '',
+      estado: updates.estado !== undefined ? updates.estado : (i.estado || 'Nuevo'),
+      equipo: updates.equipo !== undefined ? updates.equipo : (i.equipo || ''),
+      asiste: updates.asiste !== undefined ? updates.asiste : i.asiste,
+      seguir: i.seguir || null,
+      nacimiento: i.nacimiento || '',
+      notas: i.notas || '',
+      esDelClub: !!i.esDelClub,
+      equipoClub: i.equipoClub || '',
+      fecha: i.fecha || new Date().toISOString()
+    };
+
+    const persist = await upsertSingleInscrito(payload, (!isTempInscritoId(id) && !String(id).startsWith('club_')) ? id : null);
+    if(persist.error) return { ok:false, error:persist.error };
+
+    const clubUpdates = JSON.parse(localStorage.getItem('sv_club_updates') || '{}');
+    clubUpdates[id] = Object.assign({}, clubUpdates[id] || {}, updates);
+    localStorage.setItem('sv_club_updates', JSON.stringify(clubUpdates));
+    removePendingSheetInscritoByIdentity(payload);
+    await loadInscritos();
+    mergeSocios();
+    renderView();
+    renderDashboard();
+    return { ok:true };
+  }
+
+  // Inscritos normales
+  const merged = Object.assign({}, i, updates, { updated_at:new Date().toISOString() });
+  const persist = await upsertSingleInscrito(merged, !isTempInscritoId(id) ? id : null);
+  if(persist.error) return { ok:false, error:persist.error };
+
+  removePendingSheetInscritoByIdentity(merged);
+  await loadInscritos();
+  mergeSocios();
+  renderView();
+  renderDashboard();
+  return { ok:true };
+}
+
 async function toggleAsiste(id){
   const i=inscritos.find(x=>x.id===id); if(!i) return;
   const newVal=i.asiste===null?true:i.asiste===true?false:null;
-  await sb.from('inscritos').update({asiste:newVal}).eq('id',id);
-  await loadInscritos(); renderView(); renderDashboard();
+  const res = await persistQuickInscritoChange(id, { asiste:newVal });
+  if(!res.ok){ console.error(res.error); showToast('❌ No se ha podido guardar la asistencia'); return; }
+  showToast('✅ Asistencia guardada');
 }
 
 async function setEquipo(id,val){
   const updates={equipo:val};
   if(val==='Descartado') updates.estado='Descartado';
-  await sb.from('inscritos').update(updates).eq('id',id);
-  await loadInscritos(); renderView(); renderDashboard();
+  const res = await persistQuickInscritoChange(id, updates);
+  if(!res.ok){ console.error(res.error); showToast('❌ No se ha podido guardar el equipo'); return; }
+  showToast('✅ Equipo guardado');
 }
 
 // ════════════════════════════════════════════════════════
