@@ -859,6 +859,74 @@ function buildPruebasCategoriaPermiso(i){
   return cat;
 }
 
+function normalizeAccessText(value){
+  return (value || '')
+    .toString()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function normalizeCampusCategoria(value){
+  return normalizeAccessText(value).replace(/\s+/g, '');
+}
+
+function getAllowedCategorias(){
+  return Array.isArray(currentPerfil?.categorias_permitidas)
+    ? currentPerfil.categorias_permitidas.filter(Boolean)
+    : [];
+}
+
+function hasPruebasCategoryAccess(item){
+  const allowed = getAllowedCategorias();
+  if(!allowed.length) return true;
+  const permisoCat = buildPruebasCategoriaPermiso(item);
+  return allowed.some(cat => normalizeAccessText(cat) === normalizeAccessText(permisoCat));
+}
+
+function getVisibleInscritos(){
+  return inscritos.filter(i => hasPruebasCategoryAccess(i));
+}
+
+function hasCampusCategoryAccess(participant){
+  const allowed = getAllowedCategorias();
+  if(!allowed.length) return true;
+  const allowedCampus = allowed.filter(cat => CAMPUS_CATEGORIAS.some(c => normalizeCampusCategoria(c) === normalizeCampusCategoria(cat)));
+  if(!allowedCampus.length) return false;
+  const equipo = participant?.equipo || '';
+  return allowedCampus.some(cat => normalizeCampusCategoria(cat) === normalizeCampusCategoria(equipo));
+}
+
+function syncPruebasCategoryFilterOptions(){
+  const select = document.getElementById('f-cat');
+  if(!select) return;
+  const currentValue = select.value;
+  const visibles = [...new Set(getVisibleInscritos().map(i => i.categoria).filter(Boolean))];
+  const options = getAllowedCategorias().length
+    ? CAT_ORDER.filter(cat => visibles.includes(cat))
+    : CAT_ORDER.slice();
+  select.innerHTML = '<option value="">Todas las categorías</option>' + options.map(cat => `<option>${cat}</option>`).join('');
+  if(currentValue && options.includes(currentValue)) select.value = currentValue;
+}
+
+function syncCampusTeamFilterOptions(){
+  const select = document.getElementById('cp-equipo');
+  if(!select) return;
+  const currentValue = select.value;
+  const allowed = getAllowedCategorias();
+  let equipos = CAMPUS_CATEGORIAS.slice();
+  if(allowed.length){
+    equipos = CAMPUS_CATEGORIAS.filter(c => allowed.some(ac => normalizeCampusCategoria(ac) === normalizeCampusCategoria(c)));
+  }
+  select.innerHTML = '<option value="">Todos los equipos</option>' + equipos.map(eq => `<option>${eq}</option>`).join('');
+  if(currentValue && equipos.some(eq => normalizeCampusCategoria(eq) === normalizeCampusCategoria(currentValue))){
+    const restored = equipos.find(eq => normalizeCampusCategoria(eq) === normalizeCampusCategoria(currentValue));
+    select.value = restored || '';
+  }
+}
+
 function applyRoleUI() {
   const rol = currentPerfil?.rol || 'invitado';
   const isAdmin = rol === 'admin';
@@ -916,6 +984,9 @@ function applyRoleUI() {
   const campusCue = document.querySelector('.campus-tab[onclick*="cuentas"]');
   if(campusMon) campusMon.style.display = isAdmin ? '' : 'none';
   if(campusCue) campusCue.style.display = isAdmin ? '' : 'none';
+
+  syncPruebasCategoryFilterOptions();
+  syncCampusTeamFilterOptions();
 }
 
 
@@ -926,7 +997,9 @@ async function loadInscritos() {
   const { data, error } = await sb.from('inscritos').select('*, comentarios(*)').order('fecha', { ascending: false });
   if (error) { console.error(error); return; }
   inscritos = data || [];
+  syncPruebasCategoryFilterOptions();
 }
+
 
 async function saveInscrito(obj) {
   const { comentarios, ...data } = obj;
@@ -1300,22 +1373,23 @@ function showPanel(name){
 // DASHBOARD
 // ════════════════════════════════════════════════════════
 function renderDashboard(){
-  const total=inscritos.length;
+  const visibles = getVisibleInscritos();
+  const total=visibles.length;
   document.getElementById('st-total').textContent=total;
-  document.getElementById('st-fut').textContent=inscritos.filter(i=>i.deporte==='Fútbol').length;
-  document.getElementById('st-bal').textContent=inscritos.filter(i=>i.deporte==='Baloncesto').length;
-  document.getElementById('st-asisten').textContent=inscritos.filter(i=>i.asiste===true).length;
-  document.getElementById('st-conf').textContent=inscritos.filter(i=>i.estado==='Confirmado').length;
-  document.getElementById('d-masc').textContent=inscritos.filter(i=>i.genero==='Masculino').length;
-  document.getElementById('d-fem').textContent=inscritos.filter(i=>i.genero==='Femenino').length;
+  document.getElementById('st-fut').textContent=visibles.filter(i=>i.deporte==='Fútbol').length;
+  document.getElementById('st-bal').textContent=visibles.filter(i=>i.deporte==='Baloncesto').length;
+  document.getElementById('st-asisten').textContent=visibles.filter(i=>i.asiste===true).length;
+  document.getElementById('st-conf').textContent=visibles.filter(i=>i.estado==='Confirmado').length;
+  document.getElementById('d-masc').textContent=visibles.filter(i=>i.genero==='Masculino').length;
+  document.getElementById('d-fem').textContent=visibles.filter(i=>i.genero==='Femenino').length;
   const cats={};
-  CAT_ORDER.forEach(c=>cats[c]=inscritos.filter(i=>i.categoria===c).length);
+  CAT_ORDER.forEach(c=>cats[c]=visibles.filter(i=>i.categoria===c).length);
   const maxC=Math.max(...Object.values(cats),1);
   document.getElementById('chart-cat').innerHTML=CAT_ORDER.filter(c=>cats[c]>0).map(c=>`
     <div class="bar-row"><span class="bar-label">${c}</span>
     <div class="bar-track"><div class="bar-fill" style="width:${cats[c]/maxC*100}%;background:${CAT_COLORS[c]}"></div></div>
     <span class="bar-val">${cats[c]}</span></div>`).join('');
-  const recent=[...inscritos].slice(0,5);
+  const recent=[...visibles].slice(0,5);
   document.getElementById('recent-list').innerHTML=recent.length?recent.map(i=>`
     <div onclick="openDetail('${i.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gris-claro);cursor:pointer;">
       <div style="display:flex;align-items:center;gap:9px;">
@@ -1335,10 +1409,7 @@ function getFiltered(){
   const gen=document.getElementById('f-genero').value;
   const cat=document.getElementById('f-cat').value;
   const est=document.getElementById('f-estado').value;
-  // Filtro por categorías permitidas (entrenador/invitado)
-  const cats=currentPerfil?.categorias_permitidas||[];
-  return inscritos.filter(i=>{
-    if(cats.length){ const permisoCat = buildPruebasCategoriaPermiso(i); if(!cats.includes(permisoCat)) return false; }
+  return getVisibleInscritos().filter(i=>{
     if(q&&!i.nombre.toLowerCase().includes(q)&&!(i.email||'').toLowerCase().includes(q)&&!(i.telefono||'').includes(q)) return false;
     if(dep&&i.deporte!==dep) return false;
     if(gen&&i.genero!==gen) return false;
@@ -1597,6 +1668,7 @@ async function setEquipo(id,val){
 // ════════════════════════════════════════════════════════
 function openDetail(id){
   const i=inscritos.find(x=>x.id===id); if(!i) return;
+  if(!hasPruebasCategoryAccess(i) && currentPerfil?.rol !== 'admin') { showToast('⛔ No tienes acceso a esa categoría'); return; }
   editingId=id;
   const canEdit=currentPerfil?.rol!=='invitado';
   const waNum=(i.telefono||'').replace(/\D/g,'');
@@ -2582,20 +2654,22 @@ async function renderEntrenosCampus() {
 
 // PARTICIPANTES
 function renderCampusParticipants() {
+  syncCampusTeamFilterOptions();
   const q = (document.getElementById('cp-search')?.value || '').toLowerCase();
   const eq = document.getElementById('cp-equipo')?.value || '';
   const dep = document.getElementById('cp-deporte')?.value || '';
   const alergia = document.getElementById('cp-alergia')?.value || '';
   
-  let filtered = CAMPUS_PARTICIPANTS.filter(p => {
+  const visiblesBase = CAMPUS_PARTICIPANTS.filter(p => hasCampusCategoryAccess(p));
+  let filtered = visiblesBase.filter(p => {
     if(q && !(`${p.nombre} ${p.apellidos}`).toLowerCase().includes(q)) return false;
-    if(eq && p.equipo !== eq) return false;
-    if(dep && p.deporte.toLowerCase() !== dep.toLowerCase()) return false;
+    if(eq && normalizeCampusCategoria(p.equipo) !== normalizeCampusCategoria(eq)) return false;
+    if(dep && normalizeAccessText(p.deporte) !== normalizeAccessText(dep)) return false;
     if(alergia && !(p.alergias && p.alergias.length > 2 && !['ninguna','no','nada','nan'].some(x => p.alergias.toLowerCase().includes(x)))) return false;
     return true;
   });
 
-  document.getElementById('cp-count').textContent = `${filtered.length} de ${CAMPUS_PARTICIPANTS.length} participantes`;
+  document.getElementById('cp-count').textContent = `${filtered.length} de ${visiblesBase.length} participantes`;
   
   document.getElementById('cp-grid').innerHTML = filtered.map(p => {
     const hasAlergia = p.alergias && p.alergias.length > 2 && !['ninguna','no','nada','nan',''].some(x => p.alergias.toLowerCase().trim() === x);
