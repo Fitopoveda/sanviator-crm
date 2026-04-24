@@ -896,6 +896,42 @@ function getPermOverrideFor(obj){
   return null;
 }
 
+async function savePermisosRemoto(userId, payload){
+  const rpcPayload = {
+    p_target_user_id: userId,
+    p_modulos_permitidos: payload.modulos_permitidos && payload.modulos_permitidos.length ? payload.modulos_permitidos : null,
+    p_categorias_permitidas: payload.categorias_permitidas && payload.categorias_permitidas.length ? payload.categorias_permitidas : null
+  };
+  const { data, error } = await sb.rpc('sv_update_profile_permissions', rpcPayload);
+  if(!error) return { data, error: null, method: 'rpc' };
+  const { data: updated, error: updateError } = await sb
+    .from('perfiles')
+    .update({
+      modulos_permitidos: rpcPayload.p_modulos_permitidos,
+      categorias_permitidas: rpcPayload.p_categorias_permitidas,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', userId)
+    .select('id,email,nombre,rol,modulos_permitidos,categorias_permitidas')
+    .single();
+  return { data: updated, error: updateError || error, method: updateError ? 'error' : 'update' };
+}
+
+async function saveRolRemoto(userId, newRol){
+  const { data, error } = await sb.rpc('sv_update_profile_role', {
+    p_target_user_id: userId,
+    p_new_role: newRol
+  });
+  if(!error) return { data, error: null, method: 'rpc' };
+  const { data: updated, error: updateError } = await sb
+    .from('perfiles')
+    .update({ rol: newRol, updated_at: new Date().toISOString() })
+    .eq('id', userId)
+    .select('id,email,nombre,rol,modulos_permitidos,categorias_permitidas')
+    .single();
+  return { data: updated, error: updateError || error, method: updateError ? 'error' : 'update' };
+}
+
 function mergePerfilPermisos(basePerfil, userRef){
   const perfil = basePerfil ? { ...basePerfil } : {};
   if(userRef?.id && !perfil.id) perfil.id = userRef.id;
@@ -1100,12 +1136,27 @@ async function loadUsers() {
 }
 
 async function changeRol(userId, newRol) {
-  const { data: perfilRow } = await sb.from('perfiles').select('id,email,nombre').eq('id', userId).single();
-  const { error } = await sb.from('perfiles').update({ rol: newRol }).eq('id', userId);
-  if (error) console.warn('Rol update warning:', error.message);
-  setPermOverride([userId, perfilRow?.email], { rol: newRol, nombre: perfilRow?.nombre || undefined });
-  showToast(error ? '⚠️ Rol guardado en este navegador' : '✅ Rol actualizado');
-  loadUsers();
+  const { data: perfilRow } = await sb.from('perfiles').select('id,email,nombre,modulos_permitidos,categorias_permitidas').eq('id', userId).single();
+  const result = await saveRolRemoto(userId, newRol);
+  if (result.error) {
+    console.warn('Rol update warning:', result.error.message);
+    setPermOverride([userId, perfilRow?.email], { rol: newRol, nombre: perfilRow?.nombre || undefined });
+    showToast('⚠️ No se pudo guardar el rol en Supabase. Revisa el SQL de permisos.');
+  } else {
+    const merged = mergePerfilPermisos({ ...(perfilRow || {}), rol: newRol }, { id: userId, email: perfilRow?.email });
+    setPermOverride([userId, perfilRow?.email], {
+      rol: merged.rol,
+      nombre: merged.nombre || perfilRow?.nombre || undefined,
+      modulos_permitidos: merged.modulos_permitidos ?? perfilRow?.modulos_permitidos ?? null,
+      categorias_permitidas: merged.categorias_permitidas ?? perfilRow?.categorias_permitidas ?? null
+    });
+    if (currentPerfil?.id === userId) {
+      currentPerfil = mergePerfilPermisos({ ...currentPerfil, rol: newRol }, currentUser);
+      applyRoleUI();
+    }
+    showToast('✅ Rol actualizado en Supabase');
+  }
+  await loadUsers();
 }
 
 
@@ -1158,28 +1209,29 @@ async function savePermisos(userId) {
   };
 
   const { data: perfilRow } = await sb.from('perfiles').select('id,email,nombre,rol').eq('id', userId).single();
-  setPermOverride([userId, perfilRow?.email], {
+  const result = await savePermisosRemoto(userId, payload);
+
+  if (result.error) {
+    console.warn('Permisos update warning:', result.error.message);
+    setPermOverride([userId, perfilRow?.email], {
+      ...payload,
+      nombre: perfilRow?.nombre || undefined,
+      rol: perfilRow?.rol || undefined,
+      updated_at: new Date().toISOString()
+    });
+    closeModal();
+    await loadUsers();
+    showToast('⚠️ No se pudo guardar en Supabase. Revisa el SQL de permisos.');
+    return;
+  }
+
+  const savedPayload = {
     ...payload,
     nombre: perfilRow?.nombre || undefined,
     rol: perfilRow?.rol || undefined,
     updated_at: new Date().toISOString()
-  });
-
-  let saveError = null;
-  const { error: updateError } = await sb.from('perfiles').update(payload).eq('id', userId);
-  if (updateError) {
-    saveError = updateError;
-    const upsertPayload = {
-      id: userId,
-      email: perfilRow?.email,
-      nombre: perfilRow?.nombre,
-      rol: perfilRow?.rol || 'invitado',
-      ...payload
-    };
-    const { error: upsertError } = await sb.from('perfiles').upsert(upsertPayload, { onConflict: 'id' });
-    if (!upsertError) saveError = null;
-    else console.warn('Permisos upsert warning:', upsertError.message);
-  }
+  };
+  setPermOverride([userId, perfilRow?.email], savedPayload);
 
   if (currentPerfil?.id === userId) {
     currentPerfil = mergePerfilPermisos({ ...currentPerfil, ...payload }, currentUser);
@@ -1188,7 +1240,7 @@ async function savePermisos(userId) {
 
   closeModal();
   await loadUsers();
-  showToast(saveError ? '⚠️ Permisos guardados en este navegador. Revisa las policies de perfiles.' : '✅ Permisos guardados');
+  showToast('✅ Permisos guardados en Supabase');
 }
 
 
