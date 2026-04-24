@@ -774,6 +774,86 @@ let currentUser = null;
 let currentPerfil = null;
 let inscritos = [];
 let sortField = 'fecha', sortDir = -1, editingId = null, currentView = 'table';
+const PENDING_SHEETS_KEY = 'sv_pending_inscritos_sheets';
+
+function normalizeText(v){ return String(v||'').normalize('NFD').replace(/[̀-ͯ]/g,'').trim().toLowerCase(); }
+function normalizePhone(v){ return String(v||'').replace(/\D/g,''); }
+function isTempInscritoId(id){ const s=String(id||''); return !s || s.startsWith('sheet_') || s.startsWith('local_') || s.startsWith('tmp_'); }
+function buildInscritoIdentity(i){
+  const nombre = normalizeText(i && i.nombre);
+  const email = normalizeText(i && i.email);
+  const tel = normalizePhone(i && i.telefono);
+  if(nombre && email) return 'ne:' + nombre + '|' + email;
+  if(nombre && tel) return 'nt:' + nombre + '|' + tel;
+  return 'n:' + nombre;
+}
+function getPendingSheetInscritos(){ try { const arr = JSON.parse(localStorage.getItem(PENDING_SHEETS_KEY) || '[]'); return Array.isArray(arr) ? arr : []; } catch(_){ return []; } }
+function setPendingSheetInscritos(arr){ localStorage.setItem(PENDING_SHEETS_KEY, JSON.stringify(Array.isArray(arr) ? arr : [])); }
+function savePendingSheetInscrito(item){
+  const arr = getPendingSheetInscritos();
+  const key = buildInscritoIdentity(item);
+  const idx = arr.findIndex(x => buildInscritoIdentity(x) === key);
+  const payload = Object.assign({}, item, { id: item.id || ('sheet_' + Date.now() + '_' + Math.random().toString(36).slice(2,8)), _pendingSync:true });
+  if(idx >= 0) arr[idx] = Object.assign({}, arr[idx], payload); else arr.push(payload);
+  setPendingSheetInscritos(arr);
+}
+function removePendingSheetInscritoByIdentity(item){
+  const key = buildInscritoIdentity(item);
+  setPendingSheetInscritos(getPendingSheetInscritos().filter(x => buildInscritoIdentity(x) !== key));
+}
+function mergePendingInscritosIntoState(){
+  const pending = getPendingSheetInscritos();
+  if(!pending.length) return;
+  const existingKeys = new Set(inscritos.map(buildInscritoIdentity));
+  pending.forEach(p => {
+    const key = buildInscritoIdentity(p);
+    if(!existingKeys.has(key)) { inscritos.push(Object.assign({ comentarios:[] }, p, { _pendingSync:true })); existingKeys.add(key); }
+  });
+  inscritos.sort((a,b)=> new Date(b.fecha||0) - new Date(a.fecha||0));
+}
+function sanitizeInscritoForDB(raw){
+  const payload = {
+    nombre: raw && raw.nombre || '',
+    email: raw && raw.email || '',
+    telefono: raw && raw.telefono || '',
+    tutor: raw && raw.tutor || '',
+    deporte: raw && raw.deporte || 'Baloncesto',
+    genero: raw && raw.genero || 'Masculino',
+    categoria: raw && raw.categoria || '',
+    estado: raw && raw.estado || 'Nuevo',
+    equipo: raw && raw.equipo != null ? raw.equipo : '',
+    asiste: raw && raw.asiste !== undefined ? raw.asiste : null,
+    seguir: raw && raw.seguir !== undefined ? raw.seguir : null,
+    nacimiento: raw && raw.nacimiento || '',
+    notas: raw && raw.notas || '',
+    fecha: raw && raw.fecha || new Date().toISOString(),
+    esDelClub: !!(raw && raw.esDelClub),
+    equipoClub: raw && raw.equipoClub || ''
+  };
+  Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+  return payload;
+}
+async function upsertSingleInscrito(raw, preferredId){
+  const payload = sanitizeInscritoForDB(raw || {});
+  let targetId = preferredId && !isTempInscritoId(preferredId) ? preferredId : null;
+  if(!targetId){
+    const localExisting = inscritos.find(x => !isTempInscritoId(x.id) && !String(x.id||'').startsWith('club_') && buildInscritoIdentity(x) === buildInscritoIdentity(raw));
+    if(localExisting && localExisting.id) targetId = localExisting.id;
+  }
+  if(!targetId && payload.email && payload.nombre){
+    try {
+      const q = await sb.from('inscritos').select('id').eq('email', payload.email).eq('nombre', payload.nombre).limit(1).maybeSingle();
+      if(q && q.data && q.data.id) targetId = q.data.id;
+    } catch(_){ }
+  }
+  if(targetId){
+    const res = await sb.from('inscritos').update(Object.assign({}, payload, { updated_at:new Date().toISOString() })).eq('id', targetId).select().maybeSingle();
+    if(!res.error) return { data: res.data, error: null, action:'updated', id: targetId };
+  }
+  const ins = await sb.from('inscritos').insert(payload).select().maybeSingle();
+  if(!ins.error) return { data: ins.data, error: null, action:'inserted', id: ins.data && ins.data.id || null };
+  return { data: null, error: ins.error, action:'error', id: null };
+}
 
 const CAT_ORDER = ['Benjamín','Alevín','Infantil','Cadete','Juvenil','Junior','Sub-22','Senior'];
 const CAT_COLORS = {
@@ -1379,66 +1459,76 @@ async function syncFromSheets() {
     const res=await fetch(CSV_URL+'&t='+Date.now());
     if(!res.ok) throw new Error('HTTP '+res.status);
     const text=await res.text();
-    const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
+    const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l);
     if(lines.length<2){showToast('⚠️ Hoja vacía');return;}
-    let nuevos=0, actualizados=0;
-    const toUpsert=[];
+
+    let nuevos=0, actualizados=0, pendientes=0;
+    const importedAt = new Date().toISOString();
+    localStorage.setItem('sv_last_sheet_import', JSON.stringify({ fecha:importedAt, total:lines.length-1 }));
+
     for(let i=1;i<lines.length;i++){
       const v=parseCSVLine(lines[i]);
       const g=(idx)=>(idx>=0&&v[idx])?v[idx].trim():'';
       const nombre=g(3); if(!nombre) continue;
       const email=g(1);
-      let fecha=new Date().toISOString();
-      const ts=g(0); if(ts){const p=new Date(ts);if(!isNaN(p))fecha=p.toISOString();}
+      const telefono=g(4);
+      const tutor=g(5);
       const deporte=normDeporte(g(6));
       const nac=g(7);
-      // Buscar si ya existe en Supabase (por nombre+email o solo nombre si no hay email)
-      const existente = inscritos.find(x =>
-        x.nombre.toLowerCase()===nombre.toLowerCase() &&
-        (email ? (x.email||'').toLowerCase()===email.toLowerCase() : true) &&
-        !String(x.id).startsWith('club_')
-      );
-      if(existente) {
-        // Ya existe en Supabase → actualizar campos básicos del formulario
-        toUpsert.push({ id: existente.id, nombre, email, telefono:g(4), tutor:g(5), deporte,
-          genero: existente.genero || detectarGenero(nombre),
-          categoria: existente.categoria || calcularCategoria(nac,deporte),
-          nacimiento: nac || existente.nacimiento, notas: g(8) || existente.notas, fecha });
-        actualizados++;
-      } else {
-        // Nuevo inscrito
-        toUpsert.push({ nombre, email, telefono:g(4), tutor:g(5), deporte,
-          genero: detectarGenero(nombre),
-          categoria: calcularCategoria(nac,deporte),
-          nacimiento: nac, estado:'Nuevo', equipo:'', asiste:null, notas:g(8), fecha });
-        nuevos++;
+      const notas=g(8);
+      let fecha=importedAt;
+      const ts=g(0); if(ts){const p=new Date(ts);if(!isNaN(p))fecha=p.toISOString();}
+
+      const baseRecord = {
+        nombre, email, telefono, tutor, deporte,
+        genero: detectarGenero(nombre),
+        categoria: calcularCategoria(nac,deporte),
+        nacimiento: nac,
+        notas, fecha,
+        estado:'Nuevo', equipo:'', asiste:null, seguir:null
+      };
+
+      const existente = inscritos.find(x => buildInscritoIdentity(x)===buildInscritoIdentity(baseRecord) && !String(x.id||'').startsWith('club_'));
+      const record = existente ? Object.assign({}, existente, baseRecord, {
+        genero: existente.genero || baseRecord.genero,
+        categoria: existente.categoria || baseRecord.categoria,
+        notas: baseRecord.notas || existente.notas,
+        nacimiento: baseRecord.nacimiento || existente.nacimiento,
+        fecha: baseRecord.fecha || existente.fecha
+      }) : baseRecord;
+
+      const result = await upsertSingleInscrito(record, existente && existente.id ? existente.id : null);
+      if(result.error){
+        console.error('Sync row error', nombre, result.error);
+        savePendingSheetInscrito(Object.assign({}, record, { _syncSource:'google_sheets', _syncPending:true }));
+        pendientes++;
+        continue;
       }
+
+      removePendingSheetInscritoByIdentity(record);
+      if(existente || result.action==='updated') actualizados++; else nuevos++;
     }
-    if(toUpsert.length){
-      localStorage.setItem('sv_last_sheet_import', JSON.stringify({ fecha:new Date().toISOString(), total:toUpsert.length, data:toUpsert }));
-      const { error: syncErr } = await sb.from('inscritos').upsert(toUpsert, { onConflict: 'id', ignoreDuplicates: false });
-      if(syncErr) { console.error(syncErr); showToast('⚠️ Error al guardar en Supabase: ' + syncErr.message); }
-      await loadInscritos();
-      mergeSocios();
-      renderDashboard(); renderView();
-      const msg = [];
-      if(nuevos) msg.push(`${nuevos} nuevo${nuevos>1?'s':''}`);
-      if(actualizados) msg.push(`${actualizados} actualizado${actualizados>1?'s':''}`);
-      showToast(`🎉 ${msg.join(', ')} inscrito${nuevos+actualizados>1?'s':''}`);
-    } else {
-      await loadInscritos();
-      mergeSocios();
-      renderDashboard(); renderView();
-      showToast('✅ Todo al día');
-    }
+
+    await loadInscritos();
+    mergeSocios();
+    renderDashboard(); renderView();
+
+    const msg = [];
+    if(nuevos) msg.push(nuevos + ' nuevos');
+    if(actualizados) msg.push(actualizados + ' actualizados');
+    if(pendientes) msg.push(pendientes + ' pendientes de guardar');
+    showToast(msg.length ? ('🎉 ' + msg.join(' · ')) : '✅ Todo al día', pendientes ? 4200 : 2800);
+
     const t=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
     const lbl=document.getElementById('sync-label');
-    if(lbl) lbl.textContent=`Sync: ${t}`;
-  } catch(e) {
-    console.error(e); showToast('⚠️ Error. Usa importar CSV.');
+    if(lbl) lbl.textContent='Última sync ' + t;
+  } catch(err){
+    console.error(err);
+    showToast('❌ Error al sincronizar: ' + (err && err.message ? err.message : err), 4000);
   }
   if(btn){btn.textContent='🔄 Sincronizar';btn.disabled=false;}
 }
+
 
 // ════════════════════════════════════════════════════════
 // CSV IMPORT
@@ -1939,9 +2029,7 @@ async function saveEdit(){
   const btn = document.querySelector('#modal-footer .btn-primary');
   if(btn){ btn.textContent='⏳ Guardando...'; btn.disabled=true; }
 
-  // Jugadores del club (DEPORTISTAS_CLUB): si tienen id club_XXXXX no están en Supabase aún → insertar primero
   if(i.esDelClub || String(editingId).startsWith('club_')) {
-    // Construir payload completo para Supabase (sin el id club_XXXXX ni campos internos)
     const payload = {
       nombre:    i.nombre,
       email:     i.email    || '',
@@ -1960,23 +2048,12 @@ async function saveEdit(){
       equipoClub:i.equipoClub || '',
       fecha:     i.fecha || new Date().toISOString()
     };
-    // Comprobar si ya existe en Supabase por nombre (puede haberse insertado en sync anterior)
-    const { data: existing } = await sb.from('inscritos').select('id').eq('nombre', i.nombre).maybeSingle();
-    let sbError;
-    if(existing?.id) {
-      // Ya existe → UPDATE
-      const { error } = await sb.from('inscritos').update(payload).eq('id', existing.id);
-      sbError = error;
-    } else {
-      // No existe → INSERT
-      const { error } = await sb.from('inscritos').insert(payload);
-      sbError = error;
-    }
-    if(sbError){ showToast('❌ Error al guardar: ' + sbError.message); console.error(sbError); if(btn){ btn.textContent='💾 Guardar'; btn.disabled=false; } return; }
-    // También persistir en localStorage como respaldo
+    const persist = await upsertSingleInscrito(payload, (!isTempInscritoId(editingId) && !String(editingId).startsWith('club_')) ? editingId : null);
+    if(persist.error){ showToast('❌ Error al guardar: ' + persist.error.message); console.error(persist.error); if(btn){ btn.textContent='💾 Guardar'; btn.disabled=false; } return; }
     const clubUpdates = JSON.parse(localStorage.getItem('sv_club_updates') || '{}');
-    clubUpdates[editingId] = { ...((clubUpdates[editingId])||{}), ...updates };
+    clubUpdates[editingId] = Object.assign({}, (clubUpdates[editingId]||{}), updates);
     localStorage.setItem('sv_club_updates', JSON.stringify(clubUpdates));
+    removePendingSheetInscritoByIdentity(payload);
     await loadInscritos(); mergeSocios();
     if(btn){ btn.textContent='💾 Guardar'; btn.disabled=false; }
     closeModal(); renderView(); renderDashboard();
@@ -1984,10 +2061,20 @@ async function saveEdit(){
     return;
   }
 
-  const { error } = await sb.from('inscritos').update(updates).eq('id',editingId);
-  if(error){ showToast('❌ Error al guardar'); console.error(error); if(btn){ btn.textContent='💾 Guardar'; btn.disabled=false; } return; }
+  const merged = Object.assign({}, i, updates, { updated_at:new Date().toISOString() });
+  const persist = await upsertSingleInscrito(merged, !isTempInscritoId(editingId) ? editingId : null);
+  if(persist.error){
+    savePendingSheetInscrito(Object.assign({}, merged, { _syncPending:true }));
+    showToast('⚠️ Guardado pendiente en este navegador. Revisa Supabase.');
+    console.error(persist.error);
+    if(btn){ btn.textContent='💾 Guardar'; btn.disabled=false; }
+    return;
+  }
+
+  removePendingSheetInscritoByIdentity(merged);
   await loadInscritos();
   closeModal(); renderView(); renderDashboard();
+  if(btn){ btn.textContent='💾 Guardar'; btn.disabled=false; }
   showToast('✅ Cambios guardados');
 }
 
