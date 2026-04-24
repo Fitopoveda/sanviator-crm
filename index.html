@@ -817,7 +817,8 @@ async function doLogout() {
 async function initApp(user) {
   currentUser = user;
   // Cargar perfil
-  const { data: perfil } = await sb.from('perfiles').select('*').eq('id', user.id).single();
+  const { data: perfilBase } = await sb.from('perfiles').select('*').eq('id', user.id).single();
+  const perfil = mergePerfilPermisos(perfilBase, user);
   currentPerfil = perfil;
   // Mostrar app
   document.getElementById('login-screen').style.display='none';
@@ -871,6 +872,42 @@ function normalizeAccessText(value){
 
 function normalizeCampusCategoria(value){
   return normalizeAccessText(value).replace(/\s+/g, '');
+}
+
+function getPermOverrides(){
+  try { return JSON.parse(localStorage.getItem('sv_perfil_overrides') || '{}'); }
+  catch(_) { return {}; }
+}
+
+function setPermOverride(keys, payload){
+  const overrides = getPermOverrides();
+  (Array.isArray(keys) ? keys : [keys]).filter(Boolean).forEach(key => {
+    overrides[String(key).toLowerCase()] = { ...(overrides[String(key).toLowerCase()] || {}), ...payload };
+  });
+  localStorage.setItem('sv_perfil_overrides', JSON.stringify(overrides));
+}
+
+function getPermOverrideFor(obj){
+  const overrides = getPermOverrides();
+  const keys = [obj?.id, obj?.email, obj?.email?.toLowerCase()].filter(Boolean).map(v => String(v).toLowerCase());
+  for(const key of keys){
+    if(overrides[key]) return overrides[key];
+  }
+  return null;
+}
+
+function mergePerfilPermisos(basePerfil, userRef){
+  const perfil = basePerfil ? { ...basePerfil } : {};
+  if(userRef?.id && !perfil.id) perfil.id = userRef.id;
+  if(userRef?.email && !perfil.email) perfil.email = userRef.email;
+  const override = getPermOverrideFor({ id: perfil.id || userRef?.id, email: perfil.email || userRef?.email });
+  if(override){
+    if('modulos_permitidos' in override) perfil.modulos_permitidos = override.modulos_permitidos;
+    if('categorias_permitidas' in override) perfil.categorias_permitidas = override.categorias_permitidas;
+    if(override.rol) perfil.rol = override.rol;
+    if(override.nombre && !perfil.nombre) perfil.nombre = override.nombre;
+  }
+  return perfil;
 }
 
 function getAllowedCategorias(){
@@ -1039,9 +1076,10 @@ async function saveComentario(inscritoId, texto) {
 // ════════════════════════════════════════════════════════
 async function loadUsers() {
   const { data } = await sb.from('perfiles').select('*').order('created_at');
+  const rows = (data || []).map(u => mergePerfilPermisos(u, u));
   const grid = document.getElementById('users-grid');
-  if (!data?.length) { grid.innerHTML='<p style="color:var(--gris-medio)">Sin usuarios registrados</p>'; return; }
-  grid.innerHTML = data.map(u => `
+  if (!rows?.length) { grid.innerHTML='<p style="color:var(--gris-medio)">Sin usuarios registrados</p>'; return; }
+  grid.innerHTML = rows.map(u => `
     <div class="user-card">
       <div class="user-card-header">
         <div>
@@ -1062,17 +1100,21 @@ async function loadUsers() {
 }
 
 async function changeRol(userId, newRol) {
-  await sb.from('perfiles').update({ rol: newRol }).eq('id', userId);
-  showToast('✅ Rol actualizado');
+  const { data: perfilRow } = await sb.from('perfiles').select('id,email,nombre').eq('id', userId).single();
+  const { error } = await sb.from('perfiles').update({ rol: newRol }).eq('id', userId);
+  if (error) console.warn('Rol update warning:', error.message);
+  setPermOverride([userId, perfilRow?.email], { rol: newRol, nombre: perfilRow?.nombre || undefined });
+  showToast(error ? '⚠️ Rol guardado en este navegador' : '✅ Rol actualizado');
   loadUsers();
 }
 
 
 async function editUserPermisos(userId, userName) {
   // Cargar datos actuales del usuario
-  const {data: uData} = await sb.from('perfiles').select('categorias_permitidas,modulos_permitidos').eq('id', userId).single();
-  const currentCats = uData?.categorias_permitidas || [];
-  const currentMods = uData?.modulos_permitidos || [];
+  const {data: uData} = await sb.from('perfiles').select('id,email,nombre,rol,categorias_permitidas,modulos_permitidos').eq('id', userId).single();
+  const mergedUser = mergePerfilPermisos(uData || { id: userId, nombre: userName }, uData || { id: userId });
+  const currentCats = mergedUser?.categorias_permitidas || [];
+  const currentMods = mergedUser?.modulos_permitidos || [];
 
   document.getElementById('modal-title').textContent = 'Permisos — ' + userName;
   document.getElementById('modal-body').innerHTML = `
@@ -1110,9 +1152,45 @@ async function savePermisos(userId) {
   const allCats = PRUEBAS_CATEGORIAS_PERMISOS.concat(CAMPUS_CATEGORIAS);
   const cats = allCats.filter(c => document.getElementById('cat-'+c.replace(/\s+/g,'-'))?.checked);
   const mods = MODULOS_DISPONIBLES.filter(m => document.getElementById('mod-'+m.replace(/\s/g,'-'))?.checked);
-  await sb.from('perfiles').update({ categorias_permitidas: cats, modulos_permitidos: mods }).eq('id', userId);
-  closeModal(); loadUsers(); showToast('✅ Permisos guardados');
+  const payload = {
+    categorias_permitidas: cats.length ? cats : null,
+    modulos_permitidos: mods.length ? mods : null
+  };
+
+  const { data: perfilRow } = await sb.from('perfiles').select('id,email,nombre,rol').eq('id', userId).single();
+  setPermOverride([userId, perfilRow?.email], {
+    ...payload,
+    nombre: perfilRow?.nombre || undefined,
+    rol: perfilRow?.rol || undefined,
+    updated_at: new Date().toISOString()
+  });
+
+  let saveError = null;
+  const { error: updateError } = await sb.from('perfiles').update(payload).eq('id', userId);
+  if (updateError) {
+    saveError = updateError;
+    const upsertPayload = {
+      id: userId,
+      email: perfilRow?.email,
+      nombre: perfilRow?.nombre,
+      rol: perfilRow?.rol || 'invitado',
+      ...payload
+    };
+    const { error: upsertError } = await sb.from('perfiles').upsert(upsertPayload, { onConflict: 'id' });
+    if (!upsertError) saveError = null;
+    else console.warn('Permisos upsert warning:', upsertError.message);
+  }
+
+  if (currentPerfil?.id === userId) {
+    currentPerfil = mergePerfilPermisos({ ...currentPerfil, ...payload }, currentUser);
+    applyRoleUI();
+  }
+
+  closeModal();
+  await loadUsers();
+  showToast(saveError ? '⚠️ Permisos guardados en este navegador. Revisa las policies de perfiles.' : '✅ Permisos guardados');
 }
+
 
 async function saveCats(userId) { savePermisos(userId); }
 
@@ -1197,7 +1275,7 @@ async function createUser() {
 
   // Step 2: Try to get userId — may be null if email confirmation is required
   const userId = signUpData?.user?.id;
-  const profileData = { email, nombre, rol, modulos_permitidos: modulos_permitidos.length ? modulos_permitidos : null };
+  const profileData = { email, nombre, rol, modulos_permitidos: modulos_permitidos.length ? modulos_permitidos : null, categorias_permitidas: null };
 
   if (userId) {
     // User created and confirmed immediately — upsert full profile
@@ -1217,6 +1295,7 @@ async function createUser() {
     await sb.from('perfiles').upsert({ ...profileData }, { onConflict: 'email' });
   }
 
+  setPermOverride([userId, email], { nombre, rol, modulos_permitidos: profileData.modulos_permitidos, categorias_permitidas: null });
   if(btn) { btn.textContent = 'Crear usuario'; btn.disabled = false; }
   closeModal();
   await loadUsers();
@@ -2915,6 +2994,7 @@ function getTelefonos(nombre) {
 function openCampusDetail(id) {
   const p = CAMPUS_PARTICIPANTS.find(x => x.id === id);
   if(!p) return;
+  if(!hasCampusCategoryAccess(p)) { showToast('⛔ No tienes acceso a este participante'); return; }
   const color = CAMPUS_EQUIPO_COLORS[p.equipo] || '#888';
   const pagado = p.cuota1 + p.cuota2 + p.cuota3 + p.cuota4;
   const pendiente = p.total - pagado;
