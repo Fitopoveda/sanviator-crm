@@ -846,6 +846,25 @@ async function upsertSingleInscrito(raw, preferredId){
       if(q && q.data && q.data.id) targetId = q.data.id;
     } catch(_){ }
   }
+
+  // 1) Intento principal por RPC para guardar de verdad en Supabase aunque RLS bloquee insert/update directos
+  try {
+    const rpc = await sb.rpc('upsert_inscrito_from_app', {
+      p_preferred_id: targetId ? String(targetId) : null,
+      p_payload: payload
+    });
+    if(!rpc.error){
+      const row = Array.isArray(rpc.data) ? (rpc.data[0] || null) : rpc.data;
+      return {
+        data: row,
+        error: null,
+        action: row?.action || (targetId ? 'updated' : 'inserted'),
+        id: row?.id || targetId || null
+      };
+    }
+  } catch(_rpcErr){ }
+
+  // 2) Fallback legado directo
   if(targetId){
     const res = await sb.from('inscritos').update(Object.assign({}, payload, { updated_at:new Date().toISOString() })).eq('id', targetId).select().maybeSingle();
     if(!res.error) return { data: res.data, error: null, action:'updated', id: targetId };
@@ -2135,8 +2154,8 @@ async function addInscrito(){
     categoria:document.getElementById('a-cat').value||calcularCategoria(nac,deporte),
     nacimiento:nac,estado:'Nuevo',equipo:'',asiste:null,notas:''
   };
-  const {error}=await sb.from('inscritos').insert(obj);
-  if(error){showToast('❌ Error al añadir');return;}
+  const persist = await upsertSingleInscrito(obj, null);
+  if(persist.error){showToast('❌ Error al añadir: ' + persist.error.message); console.error(persist.error); return;}
   await loadInscritos();
   closeModal(); renderView(); renderDashboard();
   showToast('🎉 Inscrito añadido');
