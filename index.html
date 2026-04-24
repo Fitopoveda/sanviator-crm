@@ -1253,11 +1253,34 @@ async function saveComentario(inscritoId, texto) {
     }
   }
 
-  const { error } = await sb.from('comentarios').insert({
-    inscrito_id: realId, texto,
-    autor_email: currentUser?.email, autor_nombre: autor
-  });
-  if (error) { console.error(error); showToast('❌ No se ha podido guardar el comentario'); return { ok:false, inscritoId:realId }; }
+  let saveError = null;
+  try {
+    const rpcRes = await sb.rpc('add_comentario_inscrito', {
+      p_inscrito_id: realId,
+      p_texto: texto,
+      p_autor_email: currentUser?.email || null,
+      p_autor_nombre: autor || null
+    });
+    if (rpcRes.error) saveError = rpcRes.error;
+  } catch (err) {
+    saveError = err;
+  }
+
+  if (saveError) {
+    console.warn('RPC comentario falló, intento directo:', saveError);
+    const { error } = await sb.from('comentarios').insert({
+      inscrito_id: realId,
+      texto,
+      autor_email: currentUser?.email || null,
+      autor_nombre: autor || null
+    });
+    if (error) {
+      console.error(error);
+      showToast('❌ No se ha podido guardar el comentario');
+      return { ok:false, inscritoId:realId };
+    }
+  }
+
   await loadInscritos();
   return { ok:true, inscritoId:realId };
 }
