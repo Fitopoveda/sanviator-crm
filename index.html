@@ -1169,6 +1169,10 @@ async function loadInscritos() {
   const { data, error } = await sb.from('inscritos').select('*, comentarios(*)').order('fecha', { ascending: false });
   if (error) { console.error(error); return; }
   inscritos = data || [];
+  // Reinyectar siempre los deportistas del club y sus overrides locales
+  // después de cualquier recarga desde Supabase para que no desaparezcan
+  // de Lista/Kanban/Equipos al guardar un inscrito normal.
+  mergeSocios();
   syncPruebasCategoryFilterOptions();
 }
 
