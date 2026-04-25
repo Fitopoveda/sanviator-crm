@@ -503,7 +503,7 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
           <button class="campus-tab" onclick="campusTab('veladas')">🌙 Veladas</button>
           <button class="campus-tab" onclick="campusTab('planificacion')">📚 Contenidos</button>
           <button class="campus-tab" onclick="campusTab('codigoEtico')">📜 Código Ético</button>
-          <button class="campus-tab admin-only" onclick="campusTab('monitores')">👨‍🏫 Monitores</button>
+          <button class="campus-tab" onclick="campusTab('monitores')" id="tab-monitores">👨‍🏫 Monitores</button>
           <button class="campus-tab" onclick="campusTab('medico')">🏥 Médico</button>
           <button class="campus-tab entrenador-only" onclick="campusTab('planificadorEntrenos')">🗒️ Planificador</button>
           <button class="campus-tab admin-only" onclick="campusTab('cuentas')">💰 Cuentas</button>
@@ -598,8 +598,8 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
         <!-- MONITORES -->
         <div class="campus-section" id="cs-monitores">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <p style="font-size:13.5px;color:var(--gris-medio)">Gestión de monitores del campus. Solo visible para administradores.</p>
-            <button class="btn btn-primary" style="background:#1a1a1a;" onclick="openAddMonitor()">+ Nuevo monitor</button>
+            <p style="font-size:13.5px;color:var(--gris-medio)">Gestión de monitores del campus.</p>
+            <span id="btn-add-monitor"></span>
           </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;" id="monitores-grid"></div>
         </div>
@@ -1406,6 +1406,13 @@ async function editUserPermisos(userId, userName) {
     <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
     <button class="btn btn-primary" onclick="savePermisos('${userId}')">💾 Guardar</button>`;
   document.getElementById('modal-overlay').classList.add('open');
+
+  // Control pestaña monitores: visible para admin y entrenador
+  const tabMon = document.getElementById('tab-monitores');
+  if (tabMon) {
+    const rolMon = currentPerfil?.rol || 'invitado';
+    tabMon.style.display = (rolMon === 'admin' || rolMon === 'entrenador') ? '' : 'none';
+  }
 }
 
 // Keep old name as alias for backward compat
@@ -2969,7 +2976,8 @@ function saveEquiposActividad(diaNum, idx) {
 }
 
 function campusTab(tab) {
-  if((tab==='monitores' || tab==='cuentas') && currentPerfil?.rol !== 'admin') { showToast('⛔ Solo administración'); return; }
+  if(tab==='cuentas' && currentPerfil?.rol !== 'admin') { showToast('⛔ Solo administradores'); return; }
+  if(tab==='monitores' && currentPerfil?.rol !== 'admin' && currentPerfil?.rol !== 'entrenador') { showToast('⛔ Sin acceso'); return; }
   document.querySelectorAll('.campus-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.campus-section').forEach(s => s.classList.remove('active'));
   document.querySelector(`.campus-tab[onclick*="${tab}"]`).classList.add('active');
@@ -5598,8 +5606,17 @@ function renderMonitores() {
   const monitores = getMonitores();
   const grid = document.getElementById('monitores-grid');
   if (!grid) return;
+  const isAdmin = currentPerfil?.rol === 'admin';
+  // Botón añadir: solo admin
+  const btnSlot = document.getElementById('btn-add-monitor');
+  if (btnSlot) btnSlot.innerHTML = isAdmin ? '<button class="btn btn-primary" style="background:#1a1a1a;" onclick="openAddMonitor()">+ Nuevo monitor</button>' : '';
   if (!monitores.length) {
-    grid.innerHTML = '<p style="color:var(--gris-medio);font-size:13px;">No hay monitores registrados.</p>';
+    grid.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--gris-medio);">
+        <div style="font-size:48px;margin-bottom:12px;">👨‍🏫</div>
+        <p style="font-size:14px;margin-bottom:16px;">No hay monitores registrados aún.</p>
+        ${isAdmin ? '<button onclick="openAddMonitor()" class="btn btn-primary" style="background:var(--negro);">+ Añadir primer monitor</button>' : ''}
+      </div>`;
     return;
   }
   grid.innerHTML = monitores.map((m, i) => `
@@ -5610,10 +5627,10 @@ function renderMonitores() {
           <div style="font-size:12px;color:var(--gris-medio);margin-top:2px;">📱 ${m.telefono || '—'}</div>
           <div style="margin-top:6px;"><span style="background:var(--amarillo);color:#111;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;">${m.equipo || '—'}</span></div>
         </div>
-        <div style="display:flex;gap:6px;">
-          <button onclick="openEditMonitor(${i})" style="background:none;border:1px solid var(--gris-claro);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;">✏️</button>
-          <button onclick="deleteMonitor(${i})" style="background:none;border:1px solid #fca5a5;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:#dc2626;">🗑️</button>
-        </div>
+        ${isAdmin ? `<div style="display:flex;gap:6px;">
+          <button onclick="openEditMonitor(${i})" style="background:none;border:1px solid var(--gris-claro);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;" title="Editar">✏️</button>
+          <button onclick="deleteMonitor(${i})" style="background:none;border:1px solid #fca5a5;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:#dc2626;" title="Eliminar">🗑️</button>
+        </div>` : ''}
       </div>
       <button onclick="verHorarioMonitor(${i})" style="width:100%;background:var(--negro);color:#fff;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px;">📅 Ver horario diario</button>
     </div>
