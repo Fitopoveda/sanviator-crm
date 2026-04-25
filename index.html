@@ -5593,183 +5593,149 @@ const HORARIO_PISCINA = [
 ];
 
 const EQUIPOS_MONITOR = ['Basket 1','Basket 2','Basket 3','Basket 4','Basket 5','Basket 6','Minibasket','Fútbol 1','Fútbol 2','Fútbol 3','Coordinación','RRSS','Apoyo'];
+async function verHorarioMonitor(id) {
+  const { data: m } = await sb.from('monitores').select('*').eq('id', id).single();
+  if (!m) return;
 
-async function renderMonitores() {
-  const grid = document.getElementById('monitores-grid');
-  if (!grid) return;
-  const isAdmin = currentPerfil?.rol === 'admin';
-  const btnSlot = document.getElementById('btn-add-monitor');
-  if (btnSlot) {
-    btnSlot.innerHTML = '';
-    if (isAdmin) {
-      const btn = document.createElement('button');
-      btn.className = 'btn btn-primary';
-      btn.style.cssText = 'background:var(--amarillo);color:#111;font-weight:700;';
-      btn.textContent = '+ Nuevo monitor';
-      btn.onclick = openAddMonitor;
-      btnSlot.appendChild(btn);
-    }
-  }
-  grid.innerHTML = '<p style="color:var(--gris-medio);font-size:13px;padding:20px;">Cargando monitores...</p>';
-  const monitores = await getMonitores();
-  if (!monitores.length) {
-    grid.innerHTML = '';
-    const empty = document.createElement('div');
-    empty.style.cssText = 'grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--gris-medio);';
-    empty.innerHTML = '<div style="font-size:48px;margin-bottom:12px;">👨‍🏫</div><p style="font-size:14px;margin-bottom:16px;">No hay monitores registrados aún.</p>';
-    if (isAdmin) {
-      const b = document.createElement('button');
-      b.className = 'btn btn-primary';
-      b.style.cssText = 'background:var(--amarillo);color:#111;font-weight:700;';
-      b.textContent = '+ Añadir primer monitor';
-      b.onclick = openAddMonitor;
-      empty.appendChild(b);
-    }
-    grid.appendChild(empty);
+  const CAMPUS_DIAS = [
+    { num:1,  label:'Miércoles 1 julio' },
+    { num:2,  label:'Jueves 2 julio' },
+    { num:3,  label:'Viernes 3 julio' },
+    { num:4,  label:'Sábado 4 julio' },
+    { num:5,  label:'Domingo 5 julio' },
+    { num:6,  label:'Lunes 6 julio' },
+    { num:7,  label:'Martes 7 julio' },
+    { num:8,  label:'Miércoles 8 julio' },
+    { num:9,  label:'Jueves 9 julio' },
+    { num:10, label:'Viernes 10 julio' }
+  ];
+
+  const diaOpts = CAMPUS_DIAS.map(d => `<option value="${d.num}">${d.label}</option>`).join('');
+  const waNum = (m.telefono||'').replace(/\D/g,'');
+  const waBtnHtml = waNum ? `<a href="https://wa.me/34${waNum}" target="_blank" class="btn btn-sm btn-wa" style="text-decoration:none;padding:6px 14px;">💬 WhatsApp</a>` : '';
+
+  document.getElementById('modal-title').textContent = '📅 Horario — ' + m.nombre;
+  document.getElementById('modal-body').innerHTML = `
+    <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="background:var(--amarillo);color:#111;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">${m.equipo||'Sin equipo'}</span>
+      ${waBtnHtml}
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <label style="font-size:12px;font-weight:700;color:var(--gris-medio);white-space:nowrap;">📅 DÍA:</label>
+      <select id="horario-dia-select" class="form-input" style="padding:6px 10px;font-size:13px;border-radius:8px;border:1px solid var(--gris-claro);flex:1;">
+        ${diaOpts}
+      </select>
+    </div>
+    <div id="horario-monitor-tabla"></div>
+    <p style="font-size:11px;color:var(--gris-medio);margin-top:12px;">* Tareas del horario general (comidas, traslados, piscina) + veladas asignadas + reunión diaria.</p>
+  `;
+  openModal();
+
+  // Guardar nombre en el select para que onchange lo use
+  const sel = document.getElementById('horario-dia-select');
+  sel.dataset.monitor = m.nombre;
+  sel.addEventListener('change', () => renderHorarioMonitorDia(sel.dataset.monitor));
+
+  // Cargar día 1 por defecto
+  await renderHorarioMonitorDia(m.nombre);
+}
+
+async function renderHorarioMonitorDia(nombreMonitor) {
+  const select = document.getElementById('horario-dia-select');
+  const tabla = document.getElementById('horario-monitor-tabla');
+  if (!tabla || !select) return;
+
+  const diaNum = parseInt(select.value || '1');
+
+  tabla.innerHTML = '<p style="color:var(--gris-medio);font-size:13px;padding:12px 0;">Cargando...</p>';
+
+  // ── Horario general del campus (sv_hor_dias) ──
+  // Solo tipos: comida, traslado, piscina
+  const TIPOS_MONITOR = ['comida', 'traslado', 'piscina'];
+  const horDias = JSON.parse(localStorage.getItem('sv_hor_dias') || '{}');
+
+  // Buscar el día exacto; si no existe, usar el más cercano anterior
+  const diasDisp = Object.keys(horDias).map(Number).sort((a,b) => a-b);
+  let diaKey = diasDisp.find(d => d === diaNum) 
+    || [...diasDisp].reverse().find(d => d <= diaNum) 
+    || diasDisp[0];
+
+  const actsDia = diaKey != null ? (horDias[diaKey] || []) : [];
+  const tareasGenerales = actsDia
+    .filter(a => TIPOS_MONITOR.includes(a.tipo))
+    .map(a => ({
+      hora: a.hora || '—',
+      actividad: a.act || a.actividad || '—',
+      lugar: a.lugar || lugarPorTipo(a.tipo),
+      tipo: a.tipo
+    }));
+
+  // ── Veladas asignadas a este monitor (Supabase) ──
+  const { data: todasVeladas } = await sb.from('veladas').select('*');
+  const veladasMonitor = (todasVeladas || [])
+    .filter(v => (v.monitores || []).includes(nombreMonitor))
+    .map(v => ({
+      hora: v.hora_inicio || '22:00',
+      actividad: '🌙 Velada: ' + (v.nombre || '—'),
+      lugar: (v.lugares || []).join(', ') || '—',
+      tipo: 'velada'
+    }));
+
+  // ── Reunión fija a las 00:00 ──
+  const reunion = { hora: '00:00', actividad: '👥 Reunión de monitores', lugar: 'Sala de reuniones', tipo: 'reunion' };
+
+  // ── Unir y ordenar cronológicamente ──
+  // Tratar 00:00 como 24:00 para que quede al final del día
+  const toMin = h => {
+    const [hh, mm] = h.split(':').map(Number);
+    return hh === 0 ? 24*60 : hh*60 + mm;
+  };
+
+  const filas = [...tareasGenerales, ...veladasMonitor, reunion]
+    .sort((a, b) => toMin(a.hora) - toMin(b.hora));
+
+  if (!filas.length) {
+    tabla.innerHTML = '<p style="color:var(--gris-medio);font-size:13px;padding:12px 0;">No hay actividades para este día.</p>';
     return;
   }
-  grid.innerHTML = '';
-  monitores.forEach(m => {
-    const card = document.createElement('div');
-    card.style.cssText = 'background:#fff;border:1px solid var(--gris-claro);border-radius:12px;padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);';
-    const inicial = (m.nombre||'?')[0].toUpperCase();
-    const perfilInfo = m.perfil ? `<span style="font-size:11px;color:var(--gris-medio);margin-left:8px;">${m.perfil.nombre||''}</span>` : '';
-    const adminBtns = isAdmin ? `
-      <div style="display:flex;gap:5px;">
-        <button data-edit="${m.id}" style="background:none;border:1px solid var(--gris-claro);border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;">✏️</button>
-        <button data-del="${m.id}" style="background:none;border:1px solid #fca5a5;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;color:#dc2626;">🗑️</button>
-      </div>` : '';
-    card.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-        <div style="width:42px;height:42px;border-radius:50%;background:var(--negro);color:var(--amarillo);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;flex-shrink:0;">${inicial}</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;">${m.nombre}</div>
-          <div style="font-size:11px;color:var(--gris-medio);">📱 ${m.telefono||'—'}</div>
-        </div>
-        ${adminBtns}
-      </div>
-      <div style="margin-bottom:10px;">
-        <span style="background:var(--amarillo);color:#111;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">${m.equipo||'Sin equipo'}</span>
-        ${perfilInfo}
-      </div>
-    `;
-    // Botón WhatsApp
-    const waNum = (m.telefono||'').replace(/\D/g,'');
-    if (waNum) {
-      const btnWa = document.createElement('a');
-      btnWa.href = 'https://wa.me/34' + waNum;
-      btnWa.target = '_blank';
-      btnWa.className = 'btn btn-sm btn-wa';
-      btnWa.style.cssText = 'width:100%;justify-content:center;margin-bottom:6px;text-decoration:none;';
-      btnWa.textContent = '💬 WhatsApp';
-      card.appendChild(btnWa);
-    }
-    // Botón horario
-    const btnHor = document.createElement('button');
-    btnHor.style.cssText = 'width:100%;background:var(--negro);color:#fff;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;';
-    btnHor.textContent = '📅 Ver horario diario';
-    btnHor.addEventListener('click', () => verHorarioMonitor(m.id));
-    card.appendChild(btnHor);
-    // Eventos editar/eliminar
-    const editBtn = card.querySelector('[data-edit]');
-    const delBtn = card.querySelector('[data-del]');
-    if (editBtn) editBtn.addEventListener('click', () => openEditMonitor(m.id));
-    if (delBtn) delBtn.addEventListener('click', () => deleteMonitor(m.id));
-    grid.appendChild(card);
-  });
-}
 
-async function openAddMonitor() {
-  const { data: perfiles } = await sb.from('perfiles').select('id,nombre,email,rol').order('nombre');
-  const perfilOpts = (perfiles||[]).map(p => `<option value="${p.id}">${p.nombre} (${p.rol})</option>`).join('');
-  const equipoOpts = EQUIPOS_MONITOR.map(e => `<option value="${e}">${e}</option>`).join('');
-  document.getElementById('modal-title').textContent = '👨‍🏫 Nuevo monitor';
-  document.getElementById('modal-body').innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:14px;">
-      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px;font-size:12px;color:#166534;">
-        💡 Puedes vincular este monitor a un perfil existente o dejarlo sin vincular.
-      </div>
-      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Vincular a perfil existente (opcional)</label>
-        <select id="mon-perfil-id" class="form-input" style="width:100%;margin-top:4px;" onchange="monitorPerfilChange(this)">
-          <option value="">— Sin vincular —</option>${perfilOpts}
-        </select></div>
-      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Nombre completo</label>
-        <input id="mon-nombre" class="form-input" placeholder="Nombre completo" style="width:100%;margin-top:4px;"></div>
-      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Teléfono</label>
-        <input id="mon-tel" class="form-input" placeholder="Ej: 612 345 678" style="width:100%;margin-top:4px;"></div>
-      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Equipo designado</label>
-        <select id="mon-equipo" class="form-input" style="width:100%;margin-top:4px;">
-          <option value="">— Seleccionar —</option>${equipoOpts}
-        </select></div>
-      <button onclick="saveMonitorNew()" class="btn btn-primary" style="background:var(--amarillo);color:#111;font-weight:700;margin-top:4px;">💾 Guardar monitor</button>
-    </div>
+  const colores = {
+    comida:   { bg:'#fef3c7', icon:'🍽️' },
+    traslado: { bg:'#dcfce7', icon:'🚌' },
+    piscina:  { bg:'#dbeafe', icon:'🏊' },
+    velada:   { bg:'#fee2e2', icon:'🌙' },
+    reunion:  { bg:'#f3e8ff', icon:'👥' },
+    default:  { bg:'#f9fafb', icon:'📌' }
+  };
+
+  tabla.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;border-radius:10px;overflow:hidden;">
+      <thead>
+        <tr style="background:var(--negro);color:#fff;">
+          <th style="padding:10px 14px;text-align:left;font-size:12px;letter-spacing:1px;width:80px;">HORA</th>
+          <th style="padding:10px 14px;text-align:left;font-size:12px;letter-spacing:1px;">ACTIVIDAD</th>
+          <th style="padding:10px 14px;text-align:left;font-size:12px;letter-spacing:1px;">LUGAR</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filas.map(f => {
+          const col = colores[f.tipo] || colores.default;
+          return `<tr style="background:${col.bg};border-bottom:1px solid rgba(0,0,0,0.04);">
+            <td style="padding:9px 14px;font-weight:800;font-size:15px;font-family:'Barlow Condensed',sans-serif;">${f.hora}</td>
+            <td style="padding:9px 14px;font-size:13px;">${col.icon} ${f.actividad}</td>
+            <td style="padding:9px 14px;font-size:13px;color:var(--gris-medio);">${f.lugar}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
   `;
-  openModal();
 }
 
-function monitorPerfilChange(sel) {
-  if (!sel.value) return;
-  const nombre = sel.options[sel.selectedIndex].text.split(' (')[0];
-  const inp = document.getElementById('mon-nombre');
-  if (inp && !inp.value) inp.value = nombre;
+function lugarPorTipo(tipo) {
+  const mapa = { comida:'Comedor', piscina:'Piscina', traslado:'Entrada / Salida' };
+  return mapa[tipo] || '—';
 }
 
-async function openEditMonitor(id) {
-  const { data: m } = await sb.from('monitores').select('*, perfil:perfil_id(id,nombre,email,rol)').eq('id', id).single();
-  if (!m) { showToast('❌ Monitor no encontrado'); return; }
-  const equipoOpts = EQUIPOS_MONITOR.map(e => `<option value="${e}" ${m.equipo===e?'selected':''}>${e}</option>`).join('');
-  const perfilBadge = m.perfil ? `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px;font-size:12px;margin-bottom:4px;">🔗 Vinculado a: <strong>${m.perfil.nombre}</strong> — ${m.perfil.rol}</div>` : '';
-  document.getElementById('modal-title').textContent = '✏️ Editar monitor';
-  document.getElementById('modal-body').innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:14px;">
-      ${perfilBadge}
-      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Nombre completo</label>
-        <input id="mon-nombre" class="form-input" value="${m.nombre||''}" style="width:100%;margin-top:4px;"></div>
-      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Teléfono</label>
-        <input id="mon-tel" class="form-input" value="${m.telefono||''}" style="width:100%;margin-top:4px;"></div>
-      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Equipo designado</label>
-        <select id="mon-equipo" class="form-input" style="width:100%;margin-top:4px;">
-          <option value="">— Seleccionar —</option>${equipoOpts}
-        </select></div>
-      <button onclick="saveMonitorEdit('${m.id}')" class="btn btn-primary" style="background:var(--amarillo);color:#111;font-weight:700;margin-top:4px;">💾 Guardar cambios</button>
-    </div>
-  `;
-  openModal();
-}
-
-async function saveMonitorNew() {
-  const nombre = document.getElementById('mon-nombre').value.trim();
-  const telefono = document.getElementById('mon-tel').value.trim();
-  const equipo = document.getElementById('mon-equipo').value;
-  const perfilId = document.getElementById('mon-perfil-id').value || null;
-  if (!nombre) { showToast('⚠️ El nombre es obligatorio'); return; }
-  const { error } = await sb.from('monitores').insert({ nombre, telefono, equipo, perfil_id: perfilId });
-  if (error) { showToast('❌ Error: ' + error.message); return; }
-  closeModal(); renderMonitores(); showToast('✅ Monitor guardado');
-}
-
-async function saveMonitorEdit(id) {
-  const nombre = document.getElementById('mon-nombre').value.trim();
-  const telefono = document.getElementById('mon-tel').value.trim();
-  const equipo = document.getElementById('mon-equipo').value;
-  if (!nombre) { showToast('⚠️ El nombre es obligatorio'); return; }
-  const { error } = await sb.from('monitores').update({ nombre, telefono, equipo }).eq('id', id);
-  if (error) { showToast('❌ Error: ' + error.message); return; }
-  closeModal(); renderMonitores(); showToast('✅ Monitor actualizado');
-}
-
-async function deleteMonitor(id) {
-  if (!confirm('¿Eliminar este monitor?')) return;
-  const { error } = await sb.from('monitores').delete().eq('id', id);
-  if (error) { showToast('❌ Error: ' + error.message); return; }
-  renderMonitores(); showToast('🗑️ Monitor eliminado');
-}
-
-async function getMonitores() {
-  const { data, error } = await sb.from('monitores').select('*, perfil:perfil_id(id, nombre, email, rol)').order('nombre');
-  if (error) { console.error('Error cargando monitores:', error); return []; }
-  return data || [];
-}
 async function verHorarioMonitor(id) {
   const { data: m } = await sb.from('monitores').select('*').eq('id', id).single();
   if (!m) return;
