@@ -5644,15 +5644,28 @@ async function renderMonitores() {
         ${perfilInfo}
       </div>
     `;
+    // Botón WhatsApp
+    const waNum = (m.telefono||'').replace(/\D/g,'');
+    if (waNum) {
+      const btnWa = document.createElement('a');
+      btnWa.href = 'https://wa.me/34' + waNum;
+      btnWa.target = '_blank';
+      btnWa.className = 'btn btn-sm btn-wa';
+      btnWa.style.cssText = 'width:100%;justify-content:center;margin-bottom:6px;text-decoration:none;';
+      btnWa.textContent = '💬 WhatsApp';
+      card.appendChild(btnWa);
+    }
     // Botón horario
     const btnHor = document.createElement('button');
     btnHor.style.cssText = 'width:100%;background:var(--negro);color:#fff;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;';
     btnHor.textContent = '📅 Ver horario diario';
-    btnHor.onclick = () => verHorarioMonitor(m.id);
+    btnHor.addEventListener('click', () => verHorarioMonitor(m.id));
     card.appendChild(btnHor);
     // Eventos editar/eliminar
-    card.querySelector('[data-edit]')?.addEventListener('click', () => openEditMonitor(m.id));
-    card.querySelector('[data-del]')?.addEventListener('click', () => deleteMonitor(m.id));
+    const editBtn = card.querySelector('[data-edit]');
+    const delBtn = card.querySelector('[data-del]');
+    if (editBtn) editBtn.addEventListener('click', () => openEditMonitor(m.id));
+    if (delBtn) delBtn.addEventListener('click', () => deleteMonitor(m.id));
     grid.appendChild(card);
   });
 }
@@ -5768,10 +5781,13 @@ async function verHorarioMonitor(id) {
 
   const diaOpts = CAMPUS_DIAS.map(d => `<option value="${d.num}">${d.label}</option>`).join('');
 
+  const waNumHor = (m.telefono||'').replace(/\D/g,'');
+  const waBtnHtml = waNumHor ? `<a href="https://wa.me/34${waNumHor}" target="_blank" class="btn btn-sm btn-wa" style="text-decoration:none;">💬 WhatsApp</a>` : '';
   document.getElementById('modal-title').textContent = '📅 Horario — ' + m.nombre;
   document.getElementById('modal-body').innerHTML = `
     <div style="margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
       <span style="background:var(--amarillo);color:#111;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">${m.equipo || 'Sin equipo'}</span>
+      ${waBtnHtml}
       <div style="display:flex;align-items:center;gap:8px;">
         <label style="font-size:12px;font-weight:700;color:var(--gris-medio);">DÍA:</label>
         <select id="horario-dia-select" class="form-input" style="padding:6px 10px;font-size:13px;border-radius:8px;border:1px solid var(--gris-claro);min-width:180px;" onchange="renderHorarioMonitorDia('${m.nombre}')">
