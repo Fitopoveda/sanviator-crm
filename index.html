@@ -781,8 +781,10 @@ pre,code{white-space:pre-wrap;}
             <div class="detail-field"><label>Mapeo de campos</label><textarea id="t3x3-int-mapping" placeholder='{"equipo":"Nombre del equipo","jugador1":"Jugador 1","nacimiento1":"Fecha nacimiento 1"}'></textarea></div>
             <div class="t3x3-actions">
               <button class="btn btn-primary" onclick="saveT3X3Integracion()">Guardar integración</button>
-              <button class="btn btn-secondary" onclick="openT3X3ImportModal()">Probar importación CSV</button>
+              <button class="btn btn-primary" onclick="t3x3ImportFromUrl()">Importar desde Google Sheets</button>
+              <button class="btn btn-secondary" onclick="openT3X3ImportModal()">Importar CSV manual</button>
             </div>
+            <p style="font-size:12px;color:var(--gris-medio);line-height:1.45;margin-top:8px;">La URL pública CSV del formulario 3X3 ya queda preconfigurada. El importador reconoce el formato: equipo, categoría y hasta 4 jugadores con DNI, teléfono y club/colegio.</p>
           </div>
           <div class="integration-box">
             <h3>Formato recomendado de formulario</h3>
@@ -2070,6 +2072,7 @@ const T3X3_TABLES = {
   integraciones:'t3x3_integraciones'
 };
 const T3X3_CATS = ['Prebenjamín','Benjamín','Alevín','Infantil','Cadete','Junior','Senior'];
+const T3X3_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRZICLD5zeEOAXooArcbLzgcuk-Lp-ioljoBQhjuRogZf1GRrejB9oOD9DDJi3l-TNPj9lFHAm48Ius/pub?gid=555332420&single=true&output=csv';
 let t3x3Loaded = false;
 let t3x3Remote = false;
 let t3x3RemoteWarned = false;
@@ -2107,7 +2110,12 @@ function t3x3EnsureDefaults(){
     ['Pista 1','Pista 2','Pista 3','Pista 4'].forEach((nombre,i)=>t3x3State.pistas.push({ id:t3x3Id('pis'), torneo_id:t3x3ActiveTorneoId, nombre, orden:i+1, activa:true }));
   }
   if(!t3x3State.integraciones.length){
-    t3x3State.integraciones.push({ id:t3x3Id('int'), torneo_id:t3x3ActiveTorneoId, proveedor:'Manual / CSV', fuente_url:'', mapeo:{}, estado:'Pendiente' });
+    t3x3State.integraciones.push({ id:t3x3Id('int'), torneo_id:t3x3ActiveTorneoId, proveedor:'Google Forms / Sheets', fuente_url:T3X3_SHEETS_CSV_URL, mapeo:{
+      equipo:'Nombre del equipo', categoria:'Categoría', email:'Dirección de correo electrónico', jugador1:'Nombre y apellidos'
+    }, estado:'Configurado' });
+  } else if(t3x3State.integraciones[0] && !t3x3State.integraciones[0].fuente_url){
+    t3x3State.integraciones[0].proveedor = 'Google Forms / Sheets';
+    t3x3State.integraciones[0].fuente_url = T3X3_SHEETS_CSV_URL;
   }
 }
 async function t3x3TryRemoteLoad(){
@@ -2366,9 +2374,9 @@ function renderT3X3Integracion(){
   const provider=document.getElementById('t3x3-int-provider');
   const url=document.getElementById('t3x3-int-url');
   const mapping=document.getElementById('t3x3-int-mapping');
-  if(provider && !provider.dataset.loaded){ provider.value=cfg.proveedor||'Manual / CSV'; provider.dataset.loaded='1'; }
-  if(url && !url.dataset.loaded){ url.value=cfg.fuente_url||''; url.dataset.loaded='1'; }
-  if(mapping && !mapping.dataset.loaded){ mapping.value=JSON.stringify(cfg.mapeo||{}, null, 2); mapping.dataset.loaded='1'; }
+  if(provider && !provider.dataset.loaded){ provider.value=cfg.proveedor||'Google Forms / Sheets'; provider.dataset.loaded='1'; }
+  if(url && !url.dataset.loaded){ url.value=cfg.fuente_url||T3X3_SHEETS_CSV_URL; url.dataset.loaded='1'; }
+  if(mapping && !mapping.dataset.loaded){ mapping.value=JSON.stringify(cfg.mapeo && Object.keys(cfg.mapeo).length ? cfg.mapeo : {equipo:'Nombre del equipo', categoria:'Categoría', email:'Dirección de correo electrónico', jugador1:'Nombre y apellidos'}, null, 2); mapping.dataset.loaded='1'; }
 }
 function t3x3OpenWhatsApp(teamId){
   const e=t3x3State.equipos.find(x=>x.id===teamId); if(!e) return;
@@ -2463,7 +2471,7 @@ async function saveT3X3Equipo(id=''){
 }
 function openT3X3ImportModal(){
   document.getElementById('modal-title').textContent='Importar equipos 3X3';
-  document.getElementById('modal-body').innerHTML=`<p style="font-size:13px;color:var(--gris-medio);line-height:1.5;margin-bottom:12px;">Puedes importar un CSV de Google Sheets u otra plataforma. Se agrupa por nombre de equipo y reconoce columnas habituales como equipo, responsable, email, teléfono, jugador, nacimiento, jugador1, nacimiento1...</p>
+  document.getElementById('modal-body').innerHTML=`<p style="font-size:13px;color:var(--gris-medio);line-height:1.5;margin-bottom:12px;">Puedes importar un CSV descargado desde Google Sheets. El formato del formulario 3X3 se reconoce automáticamente: Nombre del equipo, Categoría y hasta 4 jugadores con nacimiento, DNI, teléfono y club/colegio.</p>
     <div style="border:2px dashed var(--amarillo);border-radius:8px;padding:24px;text-align:center;background:#fffbe6;" ondragover="event.preventDefault()" ondrop="event.preventDefault();t3x3ImportCSV({target:{files:event.dataTransfer.files}})">
       <input type="file" id="t3x3-csv-file" accept=".csv" style="display:none" onchange="t3x3ImportCSV(event)">
       <button class="btn btn-primary" onclick="document.getElementById('t3x3-csv-file').click()">Seleccionar CSV</button>
@@ -2475,46 +2483,196 @@ function t3x3HeaderValue(row, aliases){
   for(const a of aliases){ const k=Object.keys(row).find(h=>t3x3Norm(h)===t3x3Norm(a)); if(k && row[k]) return row[k].trim(); }
   return '';
 }
+function t3x3Clean(v){ return String(v==null?'':v).replace(/[\r\n\t]+/g,' ').replace(/\s+/g,' ').trim(); }
+function t3x3DateISO(v){
+  v=t3x3Clean(v);
+  if(!v) return '';
+  const iso=v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(iso) return `${iso[1]}-${String(iso[2]).padStart(2,'0')}-${String(iso[3]).padStart(2,'0')}`;
+  const es=v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if(es){
+    let y=es[3]; if(y.length===2) y='20'+y;
+    return `${y}-${String(es[2]).padStart(2,'0')}-${String(es[1]).padStart(2,'0')}`;
+  }
+  const d=new Date(v);
+  if(!isNaN(d)) return d.toISOString().slice(0,10);
+  return v;
+}
+function t3x3ParseCSVRows(text){
+  const rows=[]; let row=[], cur='', inQ=false;
+  text=String(text||'').replace(/^\uFEFF/,'');
+  for(let i=0;i<text.length;i++){
+    const ch=text[i], next=text[i+1];
+    if(ch==='"'){
+      if(inQ && next==='"'){ cur+='"'; i++; }
+      else inQ=!inQ;
+      continue;
+    }
+    if(ch===',' && !inQ){ row.push(cur.trim()); cur=''; continue; }
+    if((ch==='\n' || ch==='\r') && !inQ){
+      if(ch==='\r' && next==='\n') i++;
+      row.push(cur.trim()); cur='';
+      if(row.some(v=>String(v).trim()!=='')) rows.push(row);
+      row=[];
+      continue;
+    }
+    cur+=ch;
+  }
+  row.push(cur.trim());
+  if(row.some(v=>String(v).trim()!=='')) rows.push(row);
+  return rows;
+}
+function t3x3IsGoogleForm3x3(headers){
+  const joined=headers.map(h=>t3x3Norm(h)).join(' | ');
+  return joined.includes('nombre del equipo') && joined.includes('justificante de pago') && headers.filter(h=>t3x3Norm(h).includes('nombre y apellidos')).length>=3;
+}
+function t3x3FirstNonEmpty(vals){ return vals.map(t3x3Clean).find(Boolean)||''; }
+async function t3x3ImportGoogleFormRows(headers, dataRows, sourceLabel='Google Sheets'){
+  let teamsCount=0, playersCount=0, updatedCount=0;
+  const now=new Date().toISOString();
+  for(const vals of dataRows){
+    const teamName=t3x3Clean(vals[2]) || 'Equipo sin nombre';
+    if((!teamName || teamName==='Equipo sin nombre') && vals.every(v=>!t3x3Clean(v))) continue;
+    const email=t3x3Clean(vals[1]);
+    const categoria=t3x3Clean(vals[3]);
+    const justificantes=vals.slice(24).map(t3x3Clean).filter(Boolean);
+    const playerBases=[4,9,14,19];
+    const incomingPlayers=[];
+    for(const base of playerBases){
+      const nombre=t3x3Clean(vals[base]);
+      if(!nombre) continue;
+      const club=t3x3Clean(vals[base+4]);
+      incomingPlayers.push({
+        nombre,
+        nacimiento:t3x3DateISO(vals[base+1]),
+        dni:t3x3Clean(vals[base+2]),
+        telefono:t3x3Clean(vals[base+3]),
+        email:'',
+        tutor:'',
+        alergias:'',
+        observaciones:club ? `Club/Colegio: ${club}` : ''
+      });
+    }
+    let e=t3x3Teams().find(x=>t3x3Norm(x.nombre)===t3x3Norm(teamName));
+    if(!e){ e={ id:t3x3Id('eq'), torneo_id:t3x3ActiveTorneoId, nombre:teamName, created_at:now }; t3x3State.equipos.push(e); teamsCount++; }
+    else updatedCount++;
+    const firstPhone=t3x3FirstNonEmpty(incomingPlayers.map(p=>p.telefono));
+    const firstPlayer=t3x3FirstNonEmpty(incomingPlayers.map(p=>p.nombre));
+    const notaParts=[];
+    if(justificantes.length) notaParts.push(`Justificante de pago: ${justificantes.join(' | ')}`);
+    const oldNotas=t3x3Clean(e.notas||'');
+    const newNotas=notaParts.length ? (oldNotas && oldNotas.includes('Justificante de pago:') ? oldNotas : [oldNotas, ...notaParts].filter(Boolean).join('\n')) : oldNotas;
+    Object.assign(e,{
+      torneo_id:t3x3ActiveTorneoId,
+      nombre:teamName,
+      responsable:e.responsable || firstPlayer,
+      email:email || e.email || '',
+      telefono:firstPhone || e.telefono || '',
+      estado:e.estado || 'Pendiente',
+      categoria_override:categoria || e.categoria_override || '',
+      categoria:categoria || e.categoria || '',
+      notas:newNotas,
+      origen:sourceLabel,
+      updated_at:now
+    });
+    for(let i=0;i<incomingPlayers.length;i++){
+      const p=incomingPlayers[i];
+      let existing=t3x3Players(e.id).find(j=>t3x3Norm(j.nombre)===t3x3Norm(p.nombre));
+      const payload={
+        ...(existing||{}),
+        id:existing?.id || t3x3Id('jug'),
+        equipo_id:e.id,
+        ...p,
+        dorsal:i+1,
+        created_at:existing?.created_at || now,
+        updated_at:now
+      };
+      payload.edad=t3x3Age(payload.nacimiento);
+      payload.categoria_detectada=t3x3CategoriaPorEdad(payload.edad);
+      if(existing) Object.assign(existing,payload); else { t3x3State.jugadores.push(payload); playersCount++; }
+      await t3x3Upsert('jugadores', payload);
+    }
+    e.categoria = e.categoria_override || t3x3CategoriaEquipo(e.id, '');
+    await t3x3Upsert('equipos', e);
+  }
+  return { teamsCount, playersCount, updatedCount };
+}
+async function t3x3ImportGenericCSVRows(headers, dataRows, sourceLabel='CSV'){
+  const grouped={};
+  dataRows.forEach(vals=>{
+    const row={};
+    headers.forEach((h,i)=>{
+      let key=h||`col_${i}`;
+      if(Object.prototype.hasOwnProperty.call(row,key)) key=`${key} ${i+1}`;
+      row[key]=vals[i]||'';
+    });
+    const equipo=t3x3HeaderValue(row,['equipo','nombre equipo','nombre del equipo','team','team name']) || 'Equipo sin nombre';
+    grouped[equipo]=grouped[equipo]||{ row, players:[] };
+    const player=t3x3HeaderValue(row,['jugador','jugador nombre','nombre jugador','player','nombre']);
+    if(player) grouped[equipo].players.push({ nombre:player, nacimiento:t3x3DateISO(t3x3HeaderValue(row,['nacimiento','fecha nacimiento','fecha de nacimiento','birthdate'])), email:t3x3HeaderValue(row,['email jugador','email player']), telefono:t3x3HeaderValue(row,['telefono jugador','teléfono jugador','phone player']), dni:t3x3HeaderValue(row,['dni jugador','dni']), tutor:t3x3HeaderValue(row,['tutor','madre padre tutor']), alergias:t3x3HeaderValue(row,['alergias','alergia']), observaciones:t3x3HeaderValue(row,['observaciones','notas']) });
+    for(let i=1;i<=6;i++){
+      const pj=t3x3HeaderValue(row,[`jugador${i}`,`jugador ${i}`,`nombre jugador ${i}`,`player${i}`]);
+      if(pj) grouped[equipo].players.push({ nombre:pj, nacimiento:t3x3DateISO(t3x3HeaderValue(row,[`nacimiento${i}`,`nacimiento ${i}`,`fecha nacimiento ${i}`])), email:t3x3HeaderValue(row,[`email${i}`,`email jugador ${i}`]), telefono:t3x3HeaderValue(row,[`telefono${i}`,`teléfono ${i}`]), dni:t3x3HeaderValue(row,[`dni${i}`,`dni jugador ${i}`]), tutor:t3x3HeaderValue(row,[`tutor${i}`,`tutor ${i}`]), alergias:t3x3HeaderValue(row,[`alergias${i}`,`alergias ${i}`]), observaciones:t3x3HeaderValue(row,[`observaciones${i}`,`notas ${i}`]) });
+    }
+  });
+  let teamsCount=0, playersCount=0, updatedCount=0;
+  for(const [nombre, data] of Object.entries(grouped)){
+    const row=data.row, now=new Date().toISOString();
+    let e=t3x3Teams().find(x=>t3x3Norm(x.nombre)===t3x3Norm(nombre));
+    if(!e){ e={ id:t3x3Id('eq'), torneo_id:t3x3ActiveTorneoId, nombre, created_at:now }; t3x3State.equipos.push(e); teamsCount++; } else updatedCount++;
+    Object.assign(e,{ responsable:t3x3HeaderValue(row,['responsable','capitan','capitán','contacto'])||e.responsable||'', email:t3x3HeaderValue(row,['email','correo','dirección de correo electrónico','email responsable'])||e.email||'', telefono:t3x3HeaderValue(row,['telefono','teléfono','movil','móvil'])||e.telefono||'', estado:e.estado||'Pendiente', origen:sourceLabel, updated_at:now });
+    for(const p of data.players.filter(p=>p.nombre)){
+      let existing=t3x3Players(e.id).find(j=>t3x3Norm(j.nombre)===t3x3Norm(p.nombre));
+      const payload={ ...(existing||{}), id:existing?.id || t3x3Id('jug'), equipo_id:e.id, ...p, created_at:existing?.created_at||now, updated_at:now };
+      payload.edad=t3x3Age(payload.nacimiento); payload.categoria_detectada=t3x3CategoriaPorEdad(payload.edad);
+      if(existing) Object.assign(existing,payload); else { t3x3State.jugadores.push(payload); playersCount++; }
+      await t3x3Upsert('jugadores', payload);
+    }
+    e.categoria=t3x3HeaderValue(row,['categoria','categoría']) || t3x3CategoriaEquipo(e.id, e.categoria_override);
+    await t3x3Upsert('equipos', e);
+  }
+  return { teamsCount, playersCount, updatedCount };
+}
+async function t3x3ImportCSVText(text, sourceLabel='CSV'){
+  const rows=t3x3ParseCSVRows(text);
+  if(rows.length<2){ showToast('⚠️ CSV vacío'); return {teamsCount:0, playersCount:0, updatedCount:0}; }
+  const headers=rows[0];
+  const dataRows=rows.slice(1).filter(r=>r.some(v=>t3x3Clean(v)));
+  const result = t3x3IsGoogleForm3x3(headers)
+    ? await t3x3ImportGoogleFormRows(headers, dataRows, sourceLabel)
+    : await t3x3ImportGenericCSVRows(headers, dataRows, sourceLabel);
+  t3x3SaveLocal();
+  closeModal();
+  renderT3X3();
+  showToast(`✅ ${result.teamsCount} equipos nuevos, ${result.updatedCount} actualizados y ${result.playersCount} jugadores nuevos`);
+  return result;
+}
+async function t3x3ImportFromUrl(){
+  const input=document.getElementById('t3x3-int-url');
+  const url=(input?.value || t3x3State.integraciones[0]?.fuente_url || T3X3_SHEETS_CSV_URL).trim();
+  if(!url){ showToast('⚠️ Falta la URL CSV'); return; }
+  const btns=[...document.querySelectorAll('button')].filter(b=>b.getAttribute('onclick')==='t3x3ImportFromUrl()');
+  btns.forEach(b=>{ b.disabled=true; b.dataset.oldText=b.textContent; b.textContent='Importando...'; });
+  try{
+    const res=await fetch(url + (url.includes('?')?'&':'?') + 't=' + Date.now());
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const text=await res.text();
+    await t3x3ImportCSVText(text, 'Google Sheets');
+    const cfg=t3x3State.integraciones[0] || { id:t3x3Id('int'), torneo_id:t3x3ActiveTorneoId };
+    Object.assign(cfg,{ proveedor:'Google Forms / Sheets', fuente_url:url, estado:'Última importación OK', updated_at:new Date().toISOString() });
+    if(!t3x3State.integraciones.some(i=>i.id===cfg.id)) t3x3State.integraciones.push(cfg);
+    await t3x3Upsert('integraciones', cfg);
+  }catch(err){
+    console.error('t3x3ImportFromUrl', err);
+    showToast('⚠️ No se pudo importar la URL CSV: '+(err.message||err), 7000);
+  }finally{
+    btns.forEach(b=>{ b.disabled=false; b.textContent=b.dataset.oldText||'Importar desde Google Sheets'; });
+  }
+}
 async function t3x3ImportCSV(event){
   const file=event.target.files?.[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=async ev=>{
-    const text=ev.target.result;
-    const lines=text.split(/\r?\n/).filter(l=>l.trim());
-    if(lines.length<2){ showToast('⚠️ CSV vacío'); return; }
-    const headers=parseCSVLine(lines[0]);
-    const grouped={};
-    lines.slice(1).forEach(line=>{
-      const vals=parseCSVLine(line), row={};
-      headers.forEach((h,i)=>row[h]=vals[i]||'');
-      const equipo=t3x3HeaderValue(row,['equipo','nombre equipo','team','team name']) || 'Equipo sin nombre';
-      grouped[equipo]=grouped[equipo]||{ row, players:[] };
-      const player=t3x3HeaderValue(row,['jugador','jugador nombre','nombre jugador','player','nombre']);
-      if(player) grouped[equipo].players.push({ nombre:player, nacimiento:t3x3HeaderValue(row,['nacimiento','fecha nacimiento','fecha de nacimiento','birthdate']), email:t3x3HeaderValue(row,['email jugador','email player']), telefono:t3x3HeaderValue(row,['telefono jugador','teléfono jugador','phone player']), dni:t3x3HeaderValue(row,['dni jugador','dni']), tutor:t3x3HeaderValue(row,['tutor','madre padre tutor']), alergias:t3x3HeaderValue(row,['alergias','alergia']), observaciones:t3x3HeaderValue(row,['observaciones','notas']) });
-      for(let i=1;i<=6;i++){
-        const pj=t3x3HeaderValue(row,[`jugador${i}`,`jugador ${i}`,`nombre jugador ${i}`,`player${i}`]);
-        if(pj) grouped[equipo].players.push({ nombre:pj, nacimiento:t3x3HeaderValue(row,[`nacimiento${i}`,`nacimiento ${i}`,`fecha nacimiento ${i}`]), email:t3x3HeaderValue(row,[`email${i}`,`email jugador ${i}`]), telefono:t3x3HeaderValue(row,[`telefono${i}`,`teléfono ${i}`]), dni:t3x3HeaderValue(row,[`dni${i}`,`dni jugador ${i}`]), tutor:t3x3HeaderValue(row,[`tutor${i}`,`tutor ${i}`]), alergias:t3x3HeaderValue(row,[`alergias${i}`,`alergias ${i}`]), observaciones:t3x3HeaderValue(row,[`observaciones${i}`,`notas ${i}`]) });
-      }
-    });
-    let count=0;
-    for(const [nombre, data] of Object.entries(grouped)){
-      const row=data.row, now=new Date().toISOString();
-      let e=t3x3Teams().find(x=>t3x3Norm(x.nombre)===t3x3Norm(nombre));
-      if(!e){ e={ id:t3x3Id('eq'), torneo_id:t3x3ActiveTorneoId, nombre, created_at:now }; t3x3State.equipos.push(e); }
-      Object.assign(e,{ responsable:t3x3HeaderValue(row,['responsable','capitan','capitán','contacto'])||e.responsable||'', email:t3x3HeaderValue(row,['email','correo','email responsable'])||e.email||'', telefono:t3x3HeaderValue(row,['telefono','teléfono','movil','móvil'])||e.telefono||'', estado:e.estado||'Pendiente', origen:'CSV', updated_at:now });
-      for(const p of data.players.filter(p=>p.nombre)){
-        const payload={ id:t3x3Id('jug'), equipo_id:e.id, ...p, created_at:now, updated_at:now };
-        payload.edad=t3x3Age(payload.nacimiento); payload.categoria_detectada=t3x3CategoriaPorEdad(payload.edad);
-        t3x3State.jugadores.push(payload); await t3x3Upsert('jugadores', payload);
-      }
-      e.categoria=t3x3HeaderValue(row,['categoria','categoría']) || t3x3CategoriaEquipo(e.id, e.categoria_override);
-      await t3x3Upsert('equipos', e);
-      count++;
-    }
-    closeModal();
-    renderT3X3();
-    showToast(`✅ ${count} equipos importados`);
-  };
+  reader.onload=async ev=>{ await t3x3ImportCSVText(ev.target.result, 'CSV'); };
   reader.readAsText(file);
 }
 function t3x3DescribeFormat(n){
@@ -2723,7 +2881,7 @@ async function saveT3X3Integracion(){
   let mapping={};
   try { mapping=JSON.parse(document.getElementById('t3x3-int-mapping')?.value||'{}'); } catch(_){ showToast('⚠️ El mapeo debe ser JSON válido'); return; }
   const cfg=t3x3State.integraciones[0] || { id:t3x3Id('int'), torneo_id:t3x3ActiveTorneoId };
-  Object.assign(cfg,{ proveedor:document.getElementById('t3x3-int-provider')?.value||'Manual / CSV', fuente_url:document.getElementById('t3x3-int-url')?.value.trim()||'', mapeo:mapping, estado:'Configurado', updated_at:new Date().toISOString() });
+  Object.assign(cfg,{ proveedor:document.getElementById('t3x3-int-provider')?.value||'Google Forms / Sheets', fuente_url:document.getElementById('t3x3-int-url')?.value.trim()||T3X3_SHEETS_CSV_URL, mapeo:mapping, estado:'Configurado', updated_at:new Date().toISOString() });
   if(!t3x3State.integraciones.some(i=>i.id===cfg.id)) t3x3State.integraciones.push(cfg);
   await t3x3Upsert('integraciones', cfg);
   showToast('✅ Integración guardada');
