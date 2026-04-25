@@ -577,11 +577,30 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
 
         <!-- VELADAS -->
         <div class="campus-section" id="cs-veladas">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <p style="font-size:13.5px;color:var(--gris-medio)">Programa de actividades nocturnas del campus.</p>
-            <button class="btn btn-primary" style="background:#c0392b;" onclick="openAddVelada()">+ Nueva velada</button>
+          <div style="margin-bottom:20px;">
+            <p style="font-size:13px;color:var(--gris-medio);margin-bottom:16px;">Gestión del tiempo libre de los jugadores. Hay dos franjas diarias de actividades:</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+              <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:14px;">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;margin-bottom:4px;">🌅 Siesta / Tarde</div>
+                <div style="font-size:13px;font-weight:700;color:#92400e;">15:30 – 16:30</div>
+                <div style="font-size:11px;color:var(--gris-medio);margin-top:4px;">Actividad post-almuerzo</div>
+              </div>
+              <div style="background:#fce7f3;border:1px solid #f9a8d4;border-radius:10px;padding:14px;">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;margin-bottom:4px;">🌙 Noche</div>
+                <div style="font-size:13px;font-weight:700;color:#9d174d;">21:45 – 23:00</div>
+                <div style="font-size:11px;color:var(--gris-medio);margin-top:4px;">Actividad post-cena</div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <div style="display:flex;gap:8px;">
+                <button onclick="filtrarVeladas('todas')" id="vfil-todas" class="btn btn-sm" style="background:var(--negro);color:#fff;">Todas</button>
+                <button onclick="filtrarVeladas('tarde')" id="vfil-tarde" class="btn btn-sm" style="background:#fef3c7;color:#92400e;">🌅 Tarde</button>
+                <button onclick="filtrarVeladas('noche')" id="vfil-noche" class="btn btn-sm" style="background:#fce7f3;color:#9d174d;">🌙 Noche</button>
+              </div>
+              <button class="btn btn-primary" style="background:#c0392b;" onclick="openAddVelada()">+ Nueva velada</button>
+            </div>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;" id="veladas-grid"></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;" id="veladas-grid"></div>
         </div>
 
         <!-- PLANIFICACIÓN DEPORTIVA -->
@@ -5652,6 +5671,205 @@ async function renderMonitores() {
     grid.appendChild(card);
   });
 }
+
+
+// ═══════════════════════════════════════════════════
+// VELADAS — Supabase + monitores reales
+// ═══════════════════════════════════════════════════
+
+const LUGARES_VELADA = ['Auditorio','F7','F5','Pabellón','Pista tenis','Sala recreativa','Aire libre','Piscina','Padel','Basket Exterior','Sala 1','Sala 2','Sala 3','Punto de reuniones'];
+const FRANJAS_VELADA = [
+  { id:'tarde', label:'🌅 Tarde (siesta)',  inicio:'15:30', fin:'16:30', color:'#fef3c7', textColor:'#92400e' },
+  { id:'noche', label:'🌙 Noche (post-cena)', inicio:'21:45', fin:'23:00', color:'#fce7f3', textColor:'#9d174d' }
+];
+
+window._veladasFiltro = 'todas';
+
+async function getVeladas() {
+  const { data, error } = await sb.from('veladas').select('*').order('created_at', {ascending: false});
+  if (error) { console.error('Error veladas:', error); return []; }
+  return data || [];
+}
+
+function filtrarVeladas(filtro) {
+  window._veladasFiltro = filtro;
+  ['todas','tarde','noche'].forEach(f => {
+    const btn = document.getElementById('vfil-' + f);
+    if (!btn) return;
+    btn.style.background = f === filtro ? 'var(--negro)' : (f === 'tarde' ? '#fef3c7' : f === 'noche' ? '#fce7f3' : '#f3f4f6');
+    btn.style.color = f === filtro ? '#fff' : (f === 'tarde' ? '#92400e' : f === 'noche' ? '#9d174d' : '#111');
+  });
+  renderVeladas();
+}
+
+async function renderVeladas() {
+  const grid = document.getElementById('veladas-grid');
+  if (!grid) return;
+  const isAdmin = currentPerfil?.rol === 'admin';
+  grid.innerHTML = '<p style="color:var(--gris-medio);font-size:13px;padding:16px;">Cargando veladas...</p>';
+  const veladas = await getVeladas();
+  const filtro = window._veladasFiltro || 'todas';
+  const filtradas = filtro === 'todas' ? veladas : veladas.filter(v => v.franja === filtro);
+
+  if (!filtradas.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gris-medio);">
+      <div style="font-size:48px;margin-bottom:12px;">🌙</div>
+      <p style="font-size:14px;">No hay veladas registradas${filtro !== 'todas' ? ' en esta franja' : ''}.</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = '';
+  filtradas.forEach(v => {
+    const franja = FRANJAS_VELADA.find(f => f.id === v.franja) || FRANJAS_VELADA[1];
+    const monitoresHtml = (v.monitores || []).length
+      ? (v.monitores || []).map(n => `<span style="background:#f3f4f6;font-size:11px;padding:2px 8px;border-radius:20px;margin:2px;">${n}</span>`).join('')
+      : '<span style="color:var(--gris-medio);font-size:11px;">Sin monitores asignados</span>';
+    const lugaresHtml = (v.lugares || []).length
+      ? (v.lugares || []).map(l => `<span style="background:#e0f2fe;color:#0369a1;font-size:11px;padding:2px 8px;border-radius:20px;margin:2px;">📍 ${l}</span>`).join('')
+      : '<span style="color:var(--gris-medio);font-size:11px;">Sin lugar</span>';
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border:1px solid var(--gris-claro);border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);';
+    card.innerHTML = `
+      <div style="background:${franja.color};padding:12px 16px;border-bottom:1px solid rgba(0,0,0,0.06);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:800;">${v.nombre}</div>
+            <div style="font-size:12px;font-weight:700;color:${franja.textColor};">${franja.label} · ${franja.inicio}–${franja.fin}</div>
+          </div>
+          ${isAdmin ? `<div style="display:flex;gap:6px;">
+            <button data-edit="${v.id}" style="background:rgba(0,0,0,0.08);border:none;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;">✏️</button>
+            <button data-del="${v.id}" style="background:rgba(220,38,38,0.1);border:none;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;color:#dc2626;">🗑️</button>
+          </div>` : ''}
+        </div>
+      </div>
+      <div style="padding:14px 16px;">
+        <div style="margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:4px;">📍 LUGARES</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;">${lugaresHtml}</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:4px;">👥 MONITORES</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;">${monitoresHtml}</div>
+        </div>
+        ${v.descripcion ? `<div style="margin-top:10px;font-size:12px;color:var(--gris-medio);font-style:italic;">${v.descripcion}</div>` : ''}
+      </div>
+    `;
+    card.querySelector('[data-edit]')?.addEventListener('click', () => openEditVelada(v.id));
+    card.querySelector('[data-del]')?.addEventListener('click', () => deleteVelada(v.id));
+    grid.appendChild(card);
+  });
+}
+
+async function openAddVelada() {
+  const { data: monitores } = await sb.from('monitores').select('id,nombre,equipo').order('nombre');
+  const mOpts = (monitores||[]).map(m => `
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:4px 0;">
+      <input type="checkbox" value="${m.nombre}" style="width:14px;height:14px;accent-color:var(--amarillo);">
+      <span>${m.nombre}</span>
+      <span style="font-size:11px;color:var(--gris-medio);background:#f3f4f6;padding:1px 6px;border-radius:10px;">${m.equipo||'—'}</span>
+    </label>`).join('');
+
+  const lOpts = LUGARES_VELADA.map(l => `
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:3px 0;">
+      <input type="checkbox" value="${l}" style="width:14px;height:14px;accent-color:var(--amarillo);"> ${l}
+    </label>`).join('');
+
+  const fOpts = FRANJAS_VELADA.map(f => `<option value="${f.id}">${f.label} (${f.inicio}–${f.fin})</option>`).join('');
+
+  document.getElementById('modal-title').textContent = '🌙 Nueva velada';
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Nombre de la velada *</label>
+        <input id="vel-nombre" class="form-input" placeholder="Ej: Olimpiadas nocturnas" style="width:100%;margin-top:4px;"></div>
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Franja horaria *</label>
+        <select id="vel-franja" class="form-input" style="width:100%;margin-top:4px;">${fOpts}</select></div>
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Descripción (opcional)</label>
+        <textarea id="vel-desc" class="form-input" placeholder="Breve descripción de la actividad..." style="width:100%;margin-top:4px;height:60px;resize:vertical;"></textarea></div>
+      <div>
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:8px;display:block;">📍 Lugar(es)</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;background:#f9fafb;border-radius:8px;padding:10px;max-height:180px;overflow-y:auto;" id="vel-lugares-check">${lOpts}</div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:8px;display:block;">👥 Monitores asignados</label>
+        <div style="display:flex;flex-direction:column;background:#f9fafb;border-radius:8px;padding:10px;max-height:200px;overflow-y:auto;" id="vel-monitores-check">
+          ${mOpts.length ? mOpts : '<p style="font-size:12px;color:var(--gris-medio);">No hay monitores registrados.</p>'}
+        </div>
+      </div>
+      <button onclick="saveVelada(null)" class="btn btn-primary" style="background:#c0392b;margin-top:4px;">💾 Guardar velada</button>
+    </div>`;
+  openModal();
+}
+
+async function openEditVelada(id) {
+  const { data: v } = await sb.from('veladas').select('*').eq('id', id).single();
+  if (!v) { showToast('❌ Velada no encontrada'); return; }
+  const { data: monitores } = await sb.from('monitores').select('id,nombre,equipo').order('nombre');
+
+  const mOpts = (monitores||[]).map(m => `
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:4px 0;">
+      <input type="checkbox" value="${m.nombre}" ${(v.monitores||[]).includes(m.nombre)?'checked':''} style="width:14px;height:14px;accent-color:var(--amarillo);">
+      <span>${m.nombre}</span>
+      <span style="font-size:11px;color:var(--gris-medio);background:#f3f4f6;padding:1px 6px;border-radius:10px;">${m.equipo||'—'}</span>
+    </label>`).join('');
+
+  const lOpts = LUGARES_VELADA.map(l => `
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:3px 0;">
+      <input type="checkbox" value="${l}" ${(v.lugares||[]).includes(l)?'checked':''} style="width:14px;height:14px;accent-color:var(--amarillo);"> ${l}
+    </label>`).join('');
+
+  const fOpts = FRANJAS_VELADA.map(f => `<option value="${f.id}" ${v.franja===f.id?'selected':''}>${f.label} (${f.inicio}–${f.fin})</option>`).join('');
+
+  document.getElementById('modal-title').textContent = '✏️ Editar velada';
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Nombre *</label>
+        <input id="vel-nombre" class="form-input" value="${v.nombre||''}" style="width:100%;margin-top:4px;"></div>
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Franja horaria *</label>
+        <select id="vel-franja" class="form-input" style="width:100%;margin-top:4px;">${fOpts}</select></div>
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Descripción</label>
+        <textarea id="vel-desc" class="form-input" style="width:100%;margin-top:4px;height:60px;resize:vertical;">${v.descripcion||''}</textarea></div>
+      <div>
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:8px;display:block;">📍 Lugar(es)</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;background:#f9fafb;border-radius:8px;padding:10px;max-height:180px;overflow-y:auto;">${lOpts}</div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:8px;display:block;">👥 Monitores asignados</label>
+        <div style="display:flex;flex-direction:column;background:#f9fafb;border-radius:8px;padding:10px;max-height:200px;overflow-y:auto;">
+          ${mOpts.length ? mOpts : '<p style="font-size:12px;color:var(--gris-medio);">No hay monitores.</p>'}
+        </div>
+      </div>
+      <button onclick="saveVelada('${v.id}')" class="btn btn-primary" style="background:#c0392b;margin-top:4px;">💾 Guardar cambios</button>
+    </div>`;
+  openModal();
+}
+
+async function saveVelada(id) {
+  const nombre = document.getElementById('vel-nombre')?.value.trim();
+  const franja = document.getElementById('vel-franja')?.value;
+  const descripcion = document.getElementById('vel-desc')?.value.trim();
+  if (!nombre) { showToast('⚠️ El nombre es obligatorio'); return; }
+  const lugares = Array.from(document.querySelectorAll('#vel-lugares-check input:checked, [id^="vel-lugares"] input:checked')).map(i => i.value);
+  const monitores = Array.from(document.querySelectorAll('#vel-monitores-check input:checked, [id^="vel-monitores"] input:checked')).map(i => i.value);
+  const payload = { nombre, franja, descripcion, lugares, monitores };
+  let error;
+  if (!id || id === 'null') {
+    ({ error } = await sb.from('veladas').insert(payload));
+  } else {
+    ({ error } = await sb.from('veladas').update(payload).eq('id', id));
+  }
+  if (error) { showToast('❌ Error: ' + error.message); return; }
+  closeModal(); renderVeladas(); showToast('✅ Velada guardada');
+}
+
+async function deleteVelada(id) {
+  if (!confirm('¿Eliminar esta velada?')) return;
+  const { error } = await sb.from('veladas').delete().eq('id', id);
+  if (error) { showToast('❌ Error: ' + error.message); return; }
+  renderVeladas(); showToast('🗑️ Velada eliminada');
+}
+
 
 async function openAddMonitor() {
   const { data: perfiles } = await sb.from('perfiles').select('id,nombre,email,rol').order('nombre');
