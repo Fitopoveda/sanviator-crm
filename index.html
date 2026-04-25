@@ -5583,6 +5583,15 @@ function abrirEntrenoDesdeHorario(equipo, diaNum) {
 // MONITORES — fichas, horarios
 // ═══════════════════════════════════════════
 
+const HORARIO_COMIDAS = [
+  {hora:'08:30', actividad:'Desayuno', lugar:'Comedor', tipo:'comida'},
+  {hora:'14:00', actividad:'Almuerzo', lugar:'Comedor', tipo:'comida'},
+  {hora:'21:00', actividad:'Cena', lugar:'Comedor', tipo:'comida'}
+];
+const HORARIO_PISCINA = [
+  {hora:'17:00', actividad:'Piscina', lugar:'Piscina', tipo:'piscina'}
+];
+
 const EQUIPOS_MONITOR = ['Basket 1','Basket 2','Basket 3','Basket 4','Basket 5','Basket 6','Minibasket','Fútbol 1','Fútbol 2','Fútbol 3','Coordinación','RRSS','Apoyo'];
 
 async function renderMonitores() {
