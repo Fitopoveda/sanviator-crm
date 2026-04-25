@@ -5607,7 +5607,7 @@ async function renderMonitores() {
   if (!grid) return;
   const isAdmin = currentPerfil?.rol === 'admin';
   const btnSlot = document.getElementById('btn-add-monitor');
-  if (btnSlot) btnSlot.innerHTML = isAdmin ? '<button class="btn btn-primary" style="background:#1a1a1a;" onclick="openAddMonitor()">+ Nuevo monitor</button>' : '';
+  if (btnSlot) btnSlot.innerHTML = isAdmin ? '<button class="btn btn-primary" style="background:var(--amarillo);color:#111;font-weight:700;" onclick="openAddMonitor()">+ Nuevo monitor</button>' : '';
   grid.innerHTML = '<p style="color:var(--gris-medio);font-size:13px;padding:20px;">Cargando monitores...</p>';
   const monitores = await getMonitores();
   if (!monitores.length) {
@@ -5615,7 +5615,7 @@ async function renderMonitores() {
       <div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--gris-medio);">
         <div style="font-size:48px;margin-bottom:12px;">👨‍🏫</div>
         <p style="font-size:14px;margin-bottom:16px;">No hay monitores registrados aún.</p>
-        ${isAdmin ? '<button onclick="openAddMonitor()" class="btn btn-primary" style="background:var(--negro);">+ Añadir primer monitor</button>' : ''}
+        ${isAdmin ? '<button onclick="openAddMonitor()" class="btn btn-primary" style="background:var(--amarillo);color:#111;font-weight:700;">+ Añadir primer monitor</button>' : ''}
       </div>`;
     return;
   }
@@ -5686,7 +5686,7 @@ async function openAddMonitor() {
       document.getElementById('mon-perfil-nuevo-fields').style.display = '';
     }
   });
-  document.getElementById('modal-overlay').classList.add('active');
+  openModal();
 }
 
 async function openEditMonitor(id) {
@@ -5711,7 +5711,7 @@ async function openEditMonitor(id) {
       <button onclick="saveMonitorEdit('${m.id}')" class="btn btn-primary" style="margin-top:6px;">💾 Guardar cambios</button>
     </div>
   `;
-  document.getElementById('modal-overlay').classList.add('active');
+  openModal();
 }
 
 async function saveMonitorNew() {
@@ -5806,7 +5806,7 @@ async function verHorarioMonitor(id) {
     </table>
     <p style="font-size:11px;color:var(--gris-medio);margin-top:12px;">* Horario general + veladas asignadas a este monitor.</p>
   `;
-  document.getElementById('modal-overlay').classList.add('active');
+  openModal();
 }
 
 // ═══════════════════════════════════════════
@@ -5849,14 +5849,14 @@ async function renderVeladas() {
 function openAddVelada() {
   document.getElementById('modal-title').textContent = 'Nueva velada';
   document.getElementById('modal-body').innerHTML = veladaForm({});
-  document.getElementById('modal-overlay').classList.add('active');
+  openModal();
 }
 
 function openEditVelada(i) {
   const v = getVeladas()[i];
   document.getElementById('modal-title').textContent = 'Editar velada';
   document.getElementById('modal-body').innerHTML = veladaForm(v, i);
-  document.getElementById('modal-overlay').classList.add('active');
+  openModal();
 }
 
 function veladaForm(v = {}, idx = null) {
