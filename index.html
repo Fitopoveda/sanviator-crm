@@ -5585,59 +5585,76 @@ function abrirEntrenoDesdeHorario(equipo, diaNum) {
 
 const EQUIPOS_MONITOR = ['Basket 1','Basket 2','Basket 3','Basket 4','Basket 5','Basket 6','Minibasket','Fútbol 1','Fútbol 2','Fútbol 3','Coordinación','RRSS','Apoyo'];
 
-const HORARIO_COMIDAS = [
-  {hora:'08:30', actividad:'Desayuno', lugar:'Comedor'},
-  {hora:'14:00', actividad:'Almuerzo', lugar:'Comedor'},
-  {hora:'21:00', actividad:'Cena', lugar:'Comedor'}
-];
-
-const HORARIO_PISCINA = [
-  {hora:'17:00', actividad:'Piscina', lugar:'Piscina'}
-];
-
-// ── Monitores: Supabase-backed ──
-const EQUIPOS_MONITOR = ['Basket 1','Basket 2','Basket 3','Basket 4','Basket 5','Basket 6','Minibasket','Fútbol 1','Fútbol 2','Fútbol 3','Coordinación','RRSS','Apoyo'];
-
 async function renderMonitores() {
   const grid = document.getElementById('monitores-grid');
   if (!grid) return;
   const isAdmin = currentPerfil?.rol === 'admin';
   const btnSlot = document.getElementById('btn-add-monitor');
-  if (btnSlot) btnSlot.innerHTML = isAdmin
-    ? '<button class="btn btn-primary" style="background:var(--amarillo);color:#111;font-weight:700;" onclick="openAddMonitor()">+ Nuevo monitor</button>'
-    : '';
+  if (btnSlot) {
+    btnSlot.innerHTML = '';
+    if (isAdmin) {
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-primary';
+      btn.style.cssText = 'background:var(--amarillo);color:#111;font-weight:700;';
+      btn.textContent = '+ Nuevo monitor';
+      btn.onclick = openAddMonitor;
+      btnSlot.appendChild(btn);
+    }
+  }
   grid.innerHTML = '<p style="color:var(--gris-medio);font-size:13px;padding:20px;">Cargando monitores...</p>';
   const monitores = await getMonitores();
   if (!monitores.length) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--gris-medio);">
-      <div style="font-size:48px;margin-bottom:12px;">👨‍🏫</div>
-      <p style="font-size:14px;margin-bottom:16px;">No hay monitores registrados aún.</p>
-      ${isAdmin ? '<button onclick="openAddMonitor()" class="btn btn-primary" style="background:var(--amarillo);color:#111;font-weight:700;">+ Añadir primer monitor</button>' : ''}
-    </div>`;
+    grid.innerHTML = '';
+    const empty = document.createElement('div');
+    empty.style.cssText = 'grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--gris-medio);';
+    empty.innerHTML = '<div style="font-size:48px;margin-bottom:12px;">👨‍🏫</div><p style="font-size:14px;margin-bottom:16px;">No hay monitores registrados aún.</p>';
+    if (isAdmin) {
+      const b = document.createElement('button');
+      b.className = 'btn btn-primary';
+      b.style.cssText = 'background:var(--amarillo);color:#111;font-weight:700;';
+      b.textContent = '+ Añadir primer monitor';
+      b.onclick = openAddMonitor;
+      empty.appendChild(b);
+    }
+    grid.appendChild(empty);
     return;
   }
-  grid.innerHTML = monitores.map(m => `
-    <div style="background:#fff;border:1px solid var(--gris-claro);border-radius:12px;padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+  grid.innerHTML = '';
+  monitores.forEach(m => {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border:1px solid var(--gris-claro);border-radius:12px;padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);';
+    const inicial = (m.nombre||'?')[0].toUpperCase();
+    const perfilInfo = m.perfil ? `<span style="font-size:11px;color:var(--gris-medio);margin-left:8px;">${m.perfil.nombre||''}</span>` : '';
+    const adminBtns = isAdmin ? `
+      <div style="display:flex;gap:5px;">
+        <button data-edit="${m.id}" style="background:none;border:1px solid var(--gris-claro);border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;">✏️</button>
+        <button data-del="${m.id}" style="background:none;border:1px solid #fca5a5;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;color:#dc2626;">🗑️</button>
+      </div>` : '';
+    card.innerHTML = `
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-        <div style="width:42px;height:42px;border-radius:50%;background:var(--negro);color:var(--amarillo);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;flex-shrink:0;">
-          ${(m.nombre||'?')[0].toUpperCase()}
-        </div>
+        <div style="width:42px;height:42px;border-radius:50%;background:var(--negro);color:var(--amarillo);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;flex-shrink:0;">${inicial}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.nombre}</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;">${m.nombre}</div>
           <div style="font-size:11px;color:var(--gris-medio);">📱 ${m.telefono||'—'}</div>
         </div>
-        ${isAdmin ? `<div style="display:flex;gap:5px;">
-          <button onclick="openEditMonitor('${m.id}')" style="background:none;border:1px solid var(--gris-claro);border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;">✏️</button>
-          <button onclick="deleteMonitor('${m.id}')" style="background:none;border:1px solid #fca5a5;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;color:#dc2626;">🗑️</button>
-        </div>` : ''}
+        ${adminBtns}
       </div>
       <div style="margin-bottom:10px;">
         <span style="background:var(--amarillo);color:#111;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">${m.equipo||'Sin equipo'}</span>
-        ${m.perfil ? `<span style="font-size:11px;color:var(--gris-medio);margin-left:8px;">${m.perfil.nombre||''}</span>` : ''}
+        ${perfilInfo}
       </div>
-      <button onclick="verHorarioMonitor('${m.id}')" style="width:100%;background:var(--negro);color:#fff;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;">📅 Ver horario diario</button>
-    </div>
-  `).join('');
+    `;
+    // Botón horario
+    const btnHor = document.createElement('button');
+    btnHor.style.cssText = 'width:100%;background:var(--negro);color:#fff;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;';
+    btnHor.textContent = '📅 Ver horario diario';
+    btnHor.onclick = () => verHorarioMonitor(m.id);
+    card.appendChild(btnHor);
+    // Eventos editar/eliminar
+    card.querySelector('[data-edit]')?.addEventListener('click', () => openEditMonitor(m.id));
+    card.querySelector('[data-del]')?.addEventListener('click', () => deleteMonitor(m.id));
+    grid.appendChild(card);
+  });
 }
 
 async function openAddMonitor() {
@@ -5670,8 +5687,7 @@ async function openAddMonitor() {
 
 function monitorPerfilChange(sel) {
   if (!sel.value) return;
-  const txt = sel.options[sel.selectedIndex].text;
-  const nombre = txt.split(' (')[0];
+  const nombre = sel.options[sel.selectedIndex].text.split(' (')[0];
   const inp = document.getElementById('mon-nombre');
   if (inp && !inp.value) inp.value = nombre;
 }
@@ -5680,11 +5696,11 @@ async function openEditMonitor(id) {
   const { data: m } = await sb.from('monitores').select('*, perfil:perfil_id(id,nombre,email,rol)').eq('id', id).single();
   if (!m) { showToast('❌ Monitor no encontrado'); return; }
   const equipoOpts = EQUIPOS_MONITOR.map(e => `<option value="${e}" ${m.equipo===e?'selected':''}>${e}</option>`).join('');
+  const perfilBadge = m.perfil ? `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px;font-size:12px;margin-bottom:4px;">🔗 Vinculado a: <strong>${m.perfil.nombre}</strong> — ${m.perfil.rol}</div>` : '';
   document.getElementById('modal-title').textContent = '✏️ Editar monitor';
   document.getElementById('modal-body').innerHTML = `
     <div style="display:flex;flex-direction:column;gap:14px;">
-      ${m.perfil ? `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px;font-size:12px;">
-        🔗 Vinculado a: <strong>${m.perfil.nombre}</strong> — ${m.perfil.rol}</div>` : ''}
+      ${perfilBadge}
       <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Nombre completo</label>
         <input id="mon-nombre" class="form-input" value="${m.nombre||''}" style="width:100%;margin-top:4px;"></div>
       <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Teléfono</label>
