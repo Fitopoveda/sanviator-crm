@@ -5654,7 +5654,7 @@ async function renderMonitores() {
     const waNum = (m.telefono||'').replace(/\D/g,'');
     if (waNum) {
       const btnWa = document.createElement('a');
-      btnWa.href = 'https://wa.me/34' + waNum;
+      btnWa.href = monitorWaHref(m.telefono);
       btnWa.target = '_blank';
       btnWa.className = 'btn btn-sm btn-wa';
       btnWa.style.cssText = 'width:100%;justify-content:center;margin-bottom:6px;text-decoration:none;display:flex;';
@@ -5954,40 +5954,56 @@ async function deleteMonitor(id) {
 const EQUIPOS_MONITOR = ['Basket 1','Basket 2','Basket 3','Basket 4','Basket 5','Basket 6','Minibasket','Fútbol 1','Fútbol 2','Fútbol 3','Coordinación','RRSS','Apoyo'];
 
 // ─── Horario diario del monitor ───────────────────────────────
-async function verHorarioMonitor(id) {
+const CAMPUS_DIAS_MONITOR = [
+  {num:1,label:'Miércoles 1 julio'},{num:2,label:'Jueves 2 julio'},
+  {num:3,label:'Viernes 3 julio'},{num:4,label:'Sábado 4 julio'},
+  {num:5,label:'Domingo 5 julio'},{num:6,label:'Lunes 6 julio'},
+  {num:7,label:'Martes 7 julio'},{num:8,label:'Miércoles 8 julio'},
+  {num:9,label:'Jueves 9 julio'},{num:10,label:'Viernes 10 julio'}
+];
+
+function monitorWaHref(telefono) {
+  let tel = String(telefono || '').replace(/\D/g, '');
+  if (!tel) return '';
+  if (tel.startsWith('00')) tel = tel.slice(2);
+  if (!tel.startsWith('34')) tel = '34' + tel;
+  return 'https://wa.me/' + tel;
+}
+
+async function getMonitorHorarioPersonal(monitorId, diaNum) {
+  const { data, error } = await sb.from('monitor_horarios')
+    .select('*')
+    .eq('monitor_id', monitorId)
+    .eq('dia', diaNum)
+    .order('hora_inicio', { ascending: true });
+  if (error) { console.warn('No se pudo cargar monitor_horarios:', error.message); return []; }
+  return data || [];
+}
+
+async function verHorarioMonitor(id, diaSeleccionado=1) {
   const { data: m } = await sb.from('monitores').select('*').eq('id', id).single();
   if (!m) return;
-
-  const CAMPUS_DIAS = [
-    {num:1,label:'Miércoles 1 julio'},{num:2,label:'Jueves 2 julio'},
-    {num:3,label:'Viernes 3 julio'},{num:4,label:'Sábado 4 julio'},
-    {num:5,label:'Domingo 5 julio'},{num:6,label:'Lunes 6 julio'},
-    {num:7,label:'Martes 7 julio'},{num:8,label:'Miércoles 8 julio'},
-    {num:9,label:'Jueves 9 julio'},{num:10,label:'Viernes 10 julio'}
-  ];
-  const diaOpts = CAMPUS_DIAS.map(d => `<option value="${d.num}">${d.label}</option>`).join('');
-  const waNum = (m.telefono||'').replace(/\D/g,'');
-  const waBtnHtml = waNum
-    ? `<a href="https://wa.me/34${waNum}" target="_blank" class="btn btn-sm btn-wa" style="text-decoration:none;padding:6px 14px;">💬 WhatsApp</a>`
-    : '';
-
+  const diaOpts = CAMPUS_DIAS_MONITOR.map(d => `<option value="${d.num}" ${Number(diaSeleccionado)===d.num?'selected':''}>${d.label}</option>`).join('');
+  const waHref = monitorWaHref(m.telefono);
+  const waBtnHtml = waHref ? `<a href="${waHref}" target="_blank" class="btn btn-sm btn-wa" style="text-decoration:none;padding:6px 14px;">💬 WhatsApp</a>` : `<span style="font-size:11px;color:var(--gris-medio);">Añade teléfono para activar WhatsApp</span>`;
+  const canEditHorario = currentPerfil?.rol === 'admin' || currentPerfil?.rol === 'entrenador';
   document.getElementById('modal-title').textContent = '📅 Horario — ' + m.nombre;
   document.getElementById('modal-body').innerHTML = `
     <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <span style="background:var(--amarillo);color:#111;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">${m.equipo||'Sin equipo'}</span>
       ${waBtnHtml}
     </div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
       <label style="font-size:12px;font-weight:700;color:var(--gris-medio);white-space:nowrap;">📅 DÍA:</label>
-      <select id="horario-dia-select" class="form-input" style="padding:6px 10px;font-size:13px;border-radius:8px;border:1px solid var(--gris-claro);flex:1;">
-        ${diaOpts}
-      </select>
+      <select id="horario-dia-select" class="form-input" style="padding:6px 10px;font-size:13px;border-radius:8px;border:1px solid var(--gris-claro);flex:1;min-width:210px;">${diaOpts}</select>
+      ${canEditHorario ? `<button class="btn btn-primary btn-sm" style="background:var(--amarillo);color:#111;" onclick="openMonitorHorarioForm('${m.id}')">➕ Añadir bloque</button>` : ''}
+    </div>
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:9px 11px;font-size:12px;color:#9a3412;margin-bottom:12px;">
+      Este horario mezcla el horario general del campus, bloques personalizados del monitor, veladas asignadas y reunión diaria.
     </div>
     <div id="horario-monitor-tabla"></div>
-    <p style="font-size:11px;color:var(--gris-medio);margin-top:12px;">* Horario del equipo + veladas asignadas + reunión de monitores.</p>
-  `;
+    <p style="font-size:11px;color:var(--gris-medio);margin-top:12px;">* Las veladas aparecen automáticamente cuando el monitor está asignado en la sección Veladas.</p>`;
   openModal();
-
   const sel = document.getElementById('horario-dia-select');
   sel.dataset.monitorId = m.id;
   sel.dataset.monitorNombre = m.nombre;
@@ -6000,93 +6016,97 @@ async function renderHorarioMonitorDia(sel) {
   if (!sel) sel = document.getElementById('horario-dia-select');
   const tabla = document.getElementById('horario-monitor-tabla');
   if (!tabla || !sel) return;
-
-  const diaNum     = parseInt(sel.value || '1');
-  const nombreMon  = sel.dataset.monitorNombre || '';
-  const equipoMon  = sel.dataset.monitorEquipo || '';
-
+  const diaNum = parseInt(sel.value || '1');
+  const monitorId = sel.dataset.monitorId || '';
+  const nombreMon = sel.dataset.monitorNombre || '';
+  const equipoMon = sel.dataset.monitorEquipo || '';
+  const canEditHorario = currentPerfil?.rol === 'admin' || currentPerfil?.rol === 'entrenador';
   tabla.innerHTML = '<p style="color:var(--gris-medio);font-size:13px;padding:12px 0;">Cargando...</p>';
 
-  // ── 1. Horario general del día (todos los tipos) ──────────────
   const horDias = JSON.parse(localStorage.getItem('sv_hor_dias') || '{}');
   const diasDisp = Object.keys(horDias).map(Number).sort((a,b)=>a-b);
-  const diaKey   = diasDisp.find(d=>d===diaNum) || [...diasDisp].reverse().find(d=>d<=diaNum) || diasDisp[0];
-  const actsDia  = diaKey != null ? (horDias[diaKey] || []) : [];
-
-  // Tipos que aplican a monitores
+  const diaKey = diasDisp.find(d=>d===diaNum) || [...diasDisp].reverse().find(d=>d<=diaNum) || diasDisp[0];
+  const actsDia = diaKey != null ? (horDias[diaKey] || []) : [];
   const TIPOS_INCLUIR = ['comida','traslado','piscina','entreno','ocio'];
+  const tareasGenerales = actsDia.filter(a => TIPOS_INCLUIR.includes(a.tipo)).map(a => ({ hora:a.hora || '—', actividad:a.act || '—', lugar:a.lugar || lugarPorTipo(a.tipo, equipoMon), tipo:a.tipo, origen:'general' }));
 
-  const tareasGenerales = actsDia
-    .filter(a => TIPOS_INCLUIR.includes(a.tipo))
-    .map(a => ({
-      hora:      a.hora || '—',
-      actividad: a.act  || '—',
-      lugar:     a.lugar || lugarPorTipo(a.tipo, equipoMon),
-      tipo:      a.tipo
-    }));
+  const personalizadosRaw = monitorId ? await getMonitorHorarioPersonal(monitorId, diaNum) : [];
+  const personalizados = personalizadosRaw.map(h => ({ id:h.id, hora:h.hora_inicio || '—', hora_fin:h.hora_fin || '', actividad:h.actividad || '—', lugar:h.lugar || '—', tipo:h.tipo || 'personal', notas:h.notas || '', origen:'personal' }));
 
-  // ── 2. Veladas donde está asignado este monitor ───────────────
   const { data: todasVeladas } = await sb.from('veladas').select('*');
-  const veladasMonitor = (todasVeladas || [])
-    .filter(v => (v.monitores || []).includes(nombreMon))
-    .map(v => ({
-      hora:      v.hora_inicio || '22:00',
-      actividad: '🌙 Velada: ' + (v.nombre || '—'),
-      lugar:     (v.lugares || []).join(', ') || '—',
-      tipo:      'velada'
-    }));
-
-  // ── 3. Reunión de monitores (siempre al final del día) ────────
-  const reunion = {
-    hora:      '00:00',
-    actividad: '👥 Reunión de monitores',
-    lugar:     'Sala de reuniones',
-    tipo:      'reunion'
-  };
-
-  // ── 4. Ordenar cronológicamente (00:00 = final del día = 24h) ─
-  const toMin = h => { const [hh,mm] = h.split(':').map(Number); return hh === 0 ? 1440 : hh*60+mm; };
-
-  const filas = [...tareasGenerales, ...veladasMonitor, reunion]
-    .sort((a,b) => toMin(a.hora) - toMin(b.hora));
-
-  if (!filas.length) {
-    tabla.innerHTML = '<p style="color:var(--gris-medio);font-size:13px;padding:12px 0;">No hay actividades para este día.</p>';
-    return;
-  }
-
-  const colores = {
-    comida:   {bg:'#fef3c7', icon:'🍽️'},
-    traslado: {bg:'#dcfce7', icon:'🚌'},
-    piscina:  {bg:'#dbeafe', icon:'🏊'},
-    entreno:  {bg:'#e0f2fe', icon:'🏀'},
-    ocio:     {bg:'#f0fdf4', icon:'🎮'},
-    velada:   {bg:'#fee2e2', icon:'🌙'},
-    reunion:  {bg:'#f3e8ff', icon:'👥'},
-    default:  {bg:'#f9fafb', icon:'📌'}
-  };
-
+  const veladasMonitor = (todasVeladas || []).filter(v => {
+    const lista = v.monitores || [];
+    return lista.some(x => {
+      if (typeof x === 'string') return x === nombreMon || x === monitorId;
+      return String(x?.id || '') === String(monitorId) || String(x?.nombre || '') === String(nombreMon);
+    });
+  }).map(v => {
+    const franja = FRANJAS_VELADA.find(f => f.id === v.franja) || FRANJAS_VELADA[1];
+    return { hora:v.hora_inicio || franja.inicio || '22:00', hora_fin:v.hora_fin || franja.fin || '', actividad:'🌙 Velada: ' + (v.nombre || '—'), lugar:(v.lugares || []).join(', ') || '—', tipo:'velada', origen:'velada' };
+  });
+  const reunion = { hora:'00:00', actividad:'👥 Reunión de monitores', lugar:'Sala de reuniones', tipo:'reunion', origen:'general' };
+  const toMin = h => { if(!h || h === '—') return 9999; const [hh,mm] = String(h).split(':').map(Number); if(Number.isNaN(hh)) return 9999; return hh === 0 ? 1440 : hh*60+(mm||0); };
+  const filas = [...tareasGenerales, ...personalizados, ...veladasMonitor, reunion].sort((a,b) => toMin(a.hora) - toMin(b.hora));
+  if (!filas.length) { tabla.innerHTML = '<p style="color:var(--gris-medio);font-size:13px;padding:12px 0;">No hay actividades para este día.</p>'; return; }
+  const colores = { comida:{bg:'#fef3c7',icon:'🍽️'}, traslado:{bg:'#dcfce7',icon:'🚌'}, piscina:{bg:'#dbeafe',icon:'🏊'}, entreno:{bg:'#e0f2fe',icon:'🏀'}, ocio:{bg:'#f0fdf4',icon:'🎮'}, personal:{bg:'#ecfdf5',icon:'✏️'}, refuerzo:{bg:'#ecfdf5',icon:'🧩'}, descanso:{bg:'#f1f5f9',icon:'☕'}, reunion_manual:{bg:'#f3e8ff',icon:'👥'}, velada:{bg:'#fee2e2',icon:'🌙'}, reunion:{bg:'#f3e8ff',icon:'👥'}, default:{bg:'#f9fafb',icon:'📌'} };
   tabla.innerHTML = `
     <table style="width:100%;border-collapse:collapse;border-radius:10px;overflow:hidden;font-family:'Barlow',sans-serif;">
-      <thead>
-        <tr style="background:var(--negro);color:#fff;">
-          <th style="padding:10px 14px;text-align:left;font-size:12px;letter-spacing:1px;width:72px;">HORA</th>
-          <th style="padding:10px 14px;text-align:left;font-size:12px;letter-spacing:1px;">ACTIVIDAD</th>
-          <th style="padding:10px 14px;text-align:left;font-size:12px;letter-spacing:1px;">LUGAR</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${filas.map(f => {
-          const col = colores[f.tipo] || colores.default;
-          return `<tr style="background:${col.bg};border-bottom:1px solid rgba(0,0,0,0.04);">
-            <td style="padding:9px 14px;font-weight:800;font-size:15px;font-family:'Barlow Condensed',sans-serif;">${f.hora}</td>
-            <td style="padding:9px 14px;font-size:13px;">${col.icon} ${f.actividad}</td>
-            <td style="padding:9px 14px;font-size:13px;color:var(--gris-medio);">${f.lugar}</td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-  `;
+      <thead><tr style="background:var(--negro);color:#fff;"><th style="padding:10px 14px;text-align:left;font-size:12px;letter-spacing:1px;width:92px;">HORA</th><th style="padding:10px 14px;text-align:left;font-size:12px;letter-spacing:1px;">ACTIVIDAD</th><th style="padding:10px 14px;text-align:left;font-size:12px;letter-spacing:1px;">LUGAR</th>${canEditHorario ? '<th style="padding:10px 14px;text-align:right;font-size:12px;letter-spacing:1px;width:110px;">ACCIONES</th>' : ''}</tr></thead>
+      <tbody>${filas.map(f => { const col = colores[f.tipo] || colores.default; const rangoHora = f.hora_fin ? `${f.hora}–${f.hora_fin}` : f.hora; const notas = f.notas ? `<div style="font-size:11px;color:var(--gris-medio);margin-top:2px;">${escHtml(f.notas)}</div>` : ''; const acciones = (canEditHorario && f.origen === 'personal') ? `<td style="padding:9px 14px;text-align:right;white-space:nowrap;"><button onclick="openMonitorHorarioForm('${monitorId}', '${f.id}')" style="background:#fff;border:1px solid var(--gris-claro);border-radius:6px;padding:3px 7px;cursor:pointer;">✏️</button> <button onclick="deleteMonitorHorario('${monitorId}', '${f.id}')" style="background:#fff;border:1px solid #fecaca;color:#dc2626;border-radius:6px;padding:3px 7px;cursor:pointer;">🗑️</button></td>` : (canEditHorario ? '<td style="padding:9px 14px;text-align:right;color:var(--gris-medio);font-size:11px;">auto</td>' : ''); return `<tr style="background:${col.bg};border-bottom:1px solid rgba(0,0,0,0.04);"><td style="padding:9px 14px;font-weight:800;font-size:15px;font-family:'Barlow Condensed',sans-serif;">${rangoHora}</td><td style="padding:9px 14px;font-size:13px;">${col.icon} ${escHtml(f.actividad)}${notas}</td><td style="padding:9px 14px;font-size:13px;color:var(--gris-medio);">${escHtml(f.lugar)}</td>${acciones}</tr>`; }).join('')}</tbody>
+    </table>`;
+}
+
+async function openMonitorHorarioForm(monitorId, horarioId=null) {
+  if (!(currentPerfil?.rol === 'admin' || currentPerfil?.rol === 'entrenador')) { showToast('⛔ Sin permisos'); return; }
+  const sel = document.getElementById('horario-dia-select');
+  const diaActual = parseInt(sel?.value || '1');
+  let h = null;
+  if (horarioId) {
+    const { data, error } = await sb.from('monitor_horarios').select('*').eq('id', horarioId).single();
+    if (error) { showToast('❌ No se pudo cargar el bloque'); return; }
+    h = data;
+  }
+  const diaOpts = CAMPUS_DIAS_MONITOR.map(d => `<option value="${d.num}" ${Number(h?.dia || diaActual)===d.num?'selected':''}>${d.label}</option>`).join('');
+  const tipoOpts = [['personal','Actividad propia'],['refuerzo','Refuerzo / apoyo'],['descanso','Descanso'],['reunion_manual','Reunión'],['ocio','Ocio'],['entreno','Entreno']].map(([v,l]) => `<option value="${v}" ${h?.tipo===v?'selected':''}>${l}</option>`).join('');
+  document.getElementById('modal-title').textContent = horarioId ? 'Editar bloque del monitor' : 'Nuevo bloque del monitor';
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:13px;">
+      <div style="background:#f8fafc;border:1px solid var(--gris-claro);border-radius:8px;padding:10px;font-size:12px;color:var(--gris-medio);">Este bloque aparecerá solo en el horario de este monitor, para el día seleccionado.</div>
+      <div class="detail-row"><div class="detail-field"><label>Día</label><select id="mh-dia">${diaOpts}</select></div><div class="detail-field"><label>Tipo</label><select id="mh-tipo">${tipoOpts}</select></div></div>
+      <div class="detail-row"><div class="detail-field"><label>Hora inicio *</label><input id="mh-inicio" type="time" value="${escHtml(h?.hora_inicio || '')}"></div><div class="detail-field"><label>Hora fin</label><input id="mh-fin" type="time" value="${escHtml(h?.hora_fin || '')}"></div></div>
+      <div class="detail-field"><label>Actividad *</label><input id="mh-actividad" type="text" placeholder="Ej. Apoyo Basket 3 / Descanso / Reunión" value="${escHtml(h?.actividad || '')}"></div>
+      <div class="detail-field"><label>Lugar</label><input id="mh-lugar" type="text" placeholder="Ej. Pabellón / Comedor / Sala reuniones" value="${escHtml(h?.lugar || '')}"></div>
+      <div class="detail-field"><label>Notas</label><textarea id="mh-notas" placeholder="Notas internas opcionales">${escHtml(h?.notas || '')}</textarea></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn btn-secondary" onclick="verHorarioMonitor('${monitorId}', ${diaActual})">Cancelar</button><button class="btn btn-primary" style="background:var(--amarillo);color:#111;" onclick="saveMonitorHorario('${monitorId}', ${horarioId ? `'${horarioId}'` : 'null'})">💾 Guardar bloque</button></div>
+    </div>`;
+}
+
+async function saveMonitorHorario(monitorId, horarioId=null) {
+  const dia = parseInt(document.getElementById('mh-dia')?.value || '1');
+  const hora_inicio = document.getElementById('mh-inicio')?.value || '';
+  const hora_fin = document.getElementById('mh-fin')?.value || '';
+  const actividad = document.getElementById('mh-actividad')?.value.trim() || '';
+  const lugar = document.getElementById('mh-lugar')?.value.trim() || '';
+  const tipo = document.getElementById('mh-tipo')?.value || 'personal';
+  const notas = document.getElementById('mh-notas')?.value.trim() || '';
+  if (!hora_inicio || !actividad) { showToast('⚠️ Hora de inicio y actividad son obligatorias'); return; }
+  const payload = { monitor_id: monitorId, dia, hora_inicio, hora_fin: hora_fin || null, actividad, lugar, tipo, notas };
+  let error;
+  if (horarioId) ({ error } = await sb.from('monitor_horarios').update(payload).eq('id', horarioId));
+  else ({ error } = await sb.from('monitor_horarios').insert(payload));
+  if (error) { showToast('❌ ' + error.message); return; }
+  showToast('✅ Horario guardado');
+  await verHorarioMonitor(monitorId, dia);
+}
+
+async function deleteMonitorHorario(monitorId, horarioId) {
+  const sel = document.getElementById('horario-dia-select');
+  const dia = parseInt(sel?.value || '1');
+  if (!confirm('¿Eliminar este bloque personalizado?')) return;
+  const { error } = await sb.from('monitor_horarios').delete().eq('id', horarioId);
+  if (error) { showToast('❌ ' + error.message); return; }
+  showToast('🗑️ Bloque eliminado');
+  await verHorarioMonitor(monitorId, dia);
 }
 
 function lugarPorTipo(tipo, equipo) {
