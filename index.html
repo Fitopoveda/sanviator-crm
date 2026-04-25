@@ -3921,11 +3921,8 @@ async function loadCampusGastos(force=false){
   }
 }
 async function saveCampusGastoToDB(payload){
-  // La tabla esperada es public.campus_gastos. Si falta alguna columna o una
-  // policy RLS bloquea el insert/update, lanzamos el error real para mostrarlo
-  // en pantalla y no dejar al usuario sin pista.
   const dbPayload = {
-    id: String(payload.id),
+    id: payload.id,
     modulo: 'Campus Salamanca',
     concepto: payload.concepto || '',
     importe: Number(payload.importe) || 0,
@@ -3937,17 +3934,13 @@ async function saveCampusGastoToDB(payload){
     metodo_pago: payload.metodo_pago || '',
     metodo_pago_otro: payload.metodo_pago_otro || '',
     factura_imagen_data: payload.factura_imagen_data || '',
-    factura_imagen_nombre: payload.factura_imagen_nombre || '',
-    updated_at: new Date().toISOString()
+    factura_imagen_nombre: payload.factura_imagen_nombre || ''
   };
   const { data, error } = await sb.from(CAMPUS_GASTOS_TABLE)
     .upsert(dbPayload, { onConflict:'id' })
     .select()
     .single();
-  if(error){
-    console.error('Supabase campus_gastos error:', error);
-    throw error;
-  }
+  if(error) throw error;
   return data || dbPayload;
 }
 function toggleCampusMetodoPagoOtro(){
@@ -4082,7 +4075,7 @@ async function saveCampusGasto(){
   if(metodoPago === 'Otro' && !metodoPagoOtro){ showToast('⚠️ Especifica el otro método de pago'); return; }
   const gastos = getCampusGastos().slice();
   const payload = {
-    id: campusGastoEditingId || ((window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('gasto_' + Date.now())),
+    id: campusGastoEditingId || (crypto.randomUUID ? crypto.randomUUID() : ('gasto_' + Date.now())),
     modulo: 'Campus Salamanca',
     concepto, importe, proveedor, factura, fecha, cuenta, comentario,
     metodo_pago: metodoPago,
@@ -4105,8 +4098,7 @@ async function saveCampusGasto(){
     const idx = gastos.findIndex(g => String(g.id) === String(payload.id));
     if(idx >= 0) gastos[idx] = payload; else gastos.unshift(payload);
     saveCampusGastosLocal(gastos);
-    const msg = err?.message || err?.details || err?.hint || 'error desconocido';
-    showToast('⚠️ No se pudo guardar en Supabase: ' + msg);
+    showToast('⚠️ No se pudo guardar en la base de datos. Se ha guardado solo en este navegador.');
     closeModal();
     await renderCuentasCampus(false);
   }
@@ -7015,6 +7007,229 @@ function lugarPorTipo(tipo, equipo) {
   return '—';
 }
 
+</script>
+<script>
+// FIX CUENTAS CAMPUS v3: evita base64/localStorage quota y guarda facturas en Supabase Storage.
+var campusGastoImageFile = null;
+var campusGastoImageObjectUrl = '';
+
+function sanitizeCampusGastoForLocalV3(g){
+  const x = Object.assign({}, g || {});
+  if(x.factura_imagen_data && String(x.factura_imagen_data).startsWith('data:')) x.factura_imagen_data = '';
+  if(x.factura_imagen_url && String(x.factura_imagen_url).startsWith('data:')) x.factura_imagen_url = '';
+  return x;
+}
+function sanitizeCampusGastosForLocalV3(arr){
+  return (Array.isArray(arr) ? arr : []).map(sanitizeCampusGastoForLocalV3);
+}
+function isUsableCampusImageUrlV3(v){
+  const x = String(v || '');
+  return x.startsWith('http://') || x.startsWith('https://') || x.startsWith('blob:') || x.startsWith('data:image/');
+}
+
+saveCampusGastosLocal = function(arr){
+  const safe = sanitizeCampusGastosForLocalV3(arr);
+  campusGastosCache = safe;
+  try {
+    localStorage.setItem(CAMPUS_GASTOS_KEY, JSON.stringify(safe));
+  } catch(err) {
+    console.warn('No se pudo guardar backup local de gastos. Se limpia localStorage para evitar bloqueo.', err);
+    try { localStorage.removeItem(CAMPUS_GASTOS_KEY); } catch(_) {}
+  }
+};
+
+getCampusGastos = function(){
+  if(Array.isArray(campusGastosCache)) return campusGastosCache;
+  try {
+    const arr = JSON.parse(localStorage.getItem(CAMPUS_GASTOS_KEY) || '[]');
+    const safe = sanitizeCampusGastosForLocalV3(Array.isArray(arr) ? arr : []);
+    campusGastosCache = safe;
+    return safe;
+  } catch(_) {
+    campusGastosCache = [];
+    try { localStorage.removeItem(CAMPUS_GASTOS_KEY); } catch(__) {}
+    return [];
+  }
+};
+
+loadCampusGastos = async function(force=false){
+  if(!force && Array.isArray(campusGastosCache)) return campusGastosCache;
+  try {
+    const { data, error } = await sb.from(CAMPUS_GASTOS_TABLE)
+      .select('*')
+      .eq('modulo','Campus Salamanca')
+      .order('fecha', { ascending:false })
+      .order('updated_at', { ascending:false });
+    if(error) throw error;
+    const safe = sanitizeCampusGastosForLocalV3(Array.isArray(data) ? data : []);
+    saveCampusGastosLocal(safe);
+    return safe;
+  } catch(err){
+    console.error('loadCampusGastos error:', err);
+    showToast('⚠️ No se pudieron cargar gastos desde Supabase. Ejecuta el SQL fix v3.');
+    return getCampusGastos();
+  }
+};
+
+async function uploadCampusFacturaIfNeededV3(gastoId){
+  if(!campusGastoImageFile) return campusGastoImageData || '';
+  const ext = (campusGastoImageFile.name || 'factura.jpg').split('.').pop().toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
+  const path = `campus-salamanca/${gastoId}/${Date.now()}.${ext}`;
+  const { error: uploadError } = await sb.storage
+    .from('campus-facturas')
+    .upload(path, campusGastoImageFile, { upsert:true, contentType: campusGastoImageFile.type || 'image/jpeg' });
+  if(uploadError) throw uploadError;
+  const { data } = sb.storage.from('campus-facturas').getPublicUrl(path);
+  return data?.publicUrl || '';
+}
+
+saveCampusGastoToDB = async function(payload){
+  const dbPayload = {
+    id: payload.id,
+    modulo: 'Campus Salamanca',
+    concepto: payload.concepto || '',
+    importe: Number(payload.importe) || 0,
+    proveedor: payload.proveedor || '',
+    factura: payload.factura || '',
+    fecha: payload.fecha || new Date().toISOString().slice(0,10),
+    cuenta: payload.cuenta || 'Otros',
+    comentario: payload.comentario || '',
+    metodo_pago: payload.metodo_pago || '',
+    metodo_pago_otro: payload.metodo_pago_otro || '',
+    factura_imagen_data: payload.factura_imagen_data || '',
+    factura_imagen_nombre: payload.factura_imagen_nombre || '',
+    updated_at: new Date().toISOString()
+  };
+  const { data, error } = await sb.from(CAMPUS_GASTOS_TABLE)
+    .upsert(dbPayload, { onConflict:'id' })
+    .select()
+    .single();
+  if(error) throw error;
+  return data || dbPayload;
+};
+
+renderCampusFacturaPreview = function(){
+  const box = document.getElementById('cg-factura-preview');
+  if(!box) return;
+  const src = campusGastoImageObjectUrl || campusGastoImageData || '';
+  if(isUsableCampusImageUrlV3(src)){
+    box.innerHTML = `
+      <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+        <a href="${src}" target="_blank" rel="noopener noreferrer" style="display:block;">
+          <img src="${src}" alt="Factura" style="width:110px;height:110px;object-fit:cover;border:1px solid var(--gris-claro);border-radius:8px;background:#fff;">
+        </a>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="font-size:12px;color:var(--gris-medio);max-width:240px;word-break:break-word;">${escHtml(campusGastoImageNombre || 'Imagen de factura')}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a class="btn btn-secondary btn-sm" href="${src}" target="_blank" rel="noopener noreferrer">Ver imagen</a>
+            <button type="button" class="btn btn-danger btn-sm" onclick="clearCampusFacturaImage()">Quitar imagen</button>
+          </div>
+        </div>
+      </div>`;
+  } else {
+    box.innerHTML = '<div style="font-size:12px;color:var(--gris-medio);">No hay imagen adjunta.</div>';
+  }
+};
+
+clearCampusFacturaImage = function(){
+  campusGastoImageData = '';
+  campusGastoImageNombre = '';
+  campusGastoImageFile = null;
+  if(campusGastoImageObjectUrl){ try { URL.revokeObjectURL(campusGastoImageObjectUrl); } catch(_){} }
+  campusGastoImageObjectUrl = '';
+  const input = document.getElementById('cg-factura-imagen');
+  if(input) input.value = '';
+  renderCampusFacturaPreview();
+};
+
+handleCampusFacturaImageChange = function(ev){
+  const file = ev && ev.target && ev.target.files ? ev.target.files[0] : null;
+  if(!file) return;
+  if(!String(file.type || '').startsWith('image/')){
+    showToast('⚠️ Selecciona una imagen válida');
+    ev.target.value = '';
+    return;
+  }
+  if(file.size > 8 * 1024 * 1024){
+    showToast('⚠️ Imagen demasiado grande. Máximo 8 MB.');
+    ev.target.value = '';
+    return;
+  }
+  campusGastoImageFile = file;
+  campusGastoImageNombre = file.name || 'factura';
+  campusGastoImageData = '';
+  if(campusGastoImageObjectUrl){ try { URL.revokeObjectURL(campusGastoImageObjectUrl); } catch(_){} }
+  campusGastoImageObjectUrl = URL.createObjectURL(file);
+  renderCampusFacturaPreview();
+};
+
+const openCampusGastoOriginalV3 = openCampusGasto;
+openCampusGasto = function(gastoId=null){
+  campusGastoImageFile = null;
+  if(campusGastoImageObjectUrl){ try { URL.revokeObjectURL(campusGastoImageObjectUrl); } catch(_){} }
+  campusGastoImageObjectUrl = '';
+  openCampusGastoOriginalV3(gastoId);
+  if(campusGastoImageData && !isUsableCampusImageUrlV3(campusGastoImageData)) {
+    campusGastoImageData = '';
+    renderCampusFacturaPreview();
+  }
+};
+
+saveCampusGasto = async function(){
+  const btn = Array.from(document.querySelectorAll('#modal-footer .btn-primary')).find(b => (b.textContent||'').includes('Guardar gasto'));
+  if(btn){ btn.disabled = true; btn.textContent = 'Guardando...'; }
+  try {
+    const concepto = document.getElementById('cg-concepto').value.trim();
+    const importeRaw = String(document.getElementById('cg-importe').value || '0').replace(',', '.');
+    const importe = Number(importeRaw || 0);
+    const proveedor = document.getElementById('cg-proveedor').value.trim();
+    const factura = document.getElementById('cg-factura').value.trim();
+    const fecha = document.getElementById('cg-fecha').value || new Date().toISOString().slice(0,10);
+    const cuenta = document.getElementById('cg-cuenta').value;
+    const comentario = document.getElementById('cg-comentario').value.trim();
+    const metodoPago = (document.getElementById('cg-metodo-pago')?.value || '').trim();
+    const metodoPagoOtro = metodoPago === 'Otro' ? (document.getElementById('cg-metodo-pago-otro')?.value || '').trim() : '';
+    if(!concepto){ showToast('⚠️ Escribe el concepto'); return; }
+    if(!(importe > 0)){ showToast('⚠️ Indica un importe válido'); return; }
+    if(metodoPago === 'Otro' && !metodoPagoOtro){ showToast('⚠️ Especifica el otro método de pago'); return; }
+    const gastos = getCampusGastos().slice();
+    const gastoId = campusGastoEditingId || (crypto.randomUUID ? crypto.randomUUID() : ('gasto_' + Date.now()));
+    let facturaUrl = campusGastoImageData || '';
+    try {
+      facturaUrl = await uploadCampusFacturaIfNeededV3(gastoId);
+    } catch(uploadErr) {
+      console.error('Error subiendo factura:', uploadErr);
+      showToast('⚠️ No se pudo subir la imagen. Se guardará el gasto sin imagen.');
+      facturaUrl = '';
+    }
+    const payload = {
+      id: gastoId,
+      modulo: 'Campus Salamanca',
+      concepto, importe, proveedor, factura, fecha, cuenta, comentario,
+      metodo_pago: metodoPago,
+      metodo_pago_otro: metodoPagoOtro,
+      factura_imagen_data: facturaUrl || '',
+      factura_imagen_nombre: facturaUrl ? (campusGastoImageNombre || '') : '',
+      updated_at: new Date().toISOString()
+    };
+    const saved = await saveCampusGastoToDB(payload);
+    const idx = gastos.findIndex(g => String(g.id) === String(payload.id));
+    const merged = sanitizeCampusGastoForLocalV3(Object.assign({}, payload, saved || {}));
+    if(idx >= 0) gastos[idx] = merged; else gastos.unshift(merged);
+    saveCampusGastosLocal(gastos);
+    showToast('✅ Gasto guardado en Supabase');
+    closeModal();
+    await renderCuentasCampus(true);
+  } catch(err){
+    console.error('Supabase campus_gastos error:', err);
+    showToast('❌ Error al guardar: ' + (err?.message || JSON.stringify(err) || 'revisa consola'));
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = '💾 Guardar gasto'; }
+  }
+};
+
+try { localStorage.removeItem(CAMPUS_GASTOS_KEY); } catch(_) {}
+campusGastosCache = null;
 </script>
 </body>
 </html>
