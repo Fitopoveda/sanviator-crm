@@ -578,10 +578,10 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
         <!-- VELADAS -->
         <div class="campus-section" id="cs-veladas">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <p style="font-size:13.5px;color:var(--gris-medio)">Programa de actividades nocturnas. El coordinador de tiempo libre puede editar y añadir veladas.</p>
+            <p style="font-size:13.5px;color:var(--gris-medio)">Programa de actividades nocturnas del campus.</p>
             <button class="btn btn-primary" style="background:#c0392b;" onclick="openAddVelada()">+ Nueva velada</button>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;" id="veladas-grid"></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;" id="veladas-grid"></div>
         </div>
 
         <!-- PLANIFICACIÓN DEPORTIVA -->
@@ -597,7 +597,11 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
 
         <!-- MONITORES -->
         <div class="campus-section" id="cs-monitores">
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;" id="monitores-grid"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <p style="font-size:13.5px;color:var(--gris-medio)">Gestión de monitores del campus. Solo visible para administradores.</p>
+            <button class="btn btn-primary" style="background:#1a1a1a;" onclick="openAddMonitor()">+ Nuevo monitor</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;" id="monitores-grid"></div>
         </div>
 
         <!-- MÉDICO -->
@@ -5566,6 +5570,277 @@ function abrirEntrenoDesdeHorario(equipo, diaNum) {
     document.getElementById('login-error').style.display = 'block';
   }
 })();
+
+// ═══════════════════════════════════════════
+// MONITORES — fichas, horarios
+// ═══════════════════════════════════════════
+
+const EQUIPOS_MONITOR = ['Basket 1','Basket 2','Basket 3','Basket 4','Basket 5','Basket 6','Minibasket','Fútbol 1','Fútbol 2','Fútbol 3','Coordinación','RRSS','Apoyo'];
+
+const HORARIO_COMIDAS = [
+  {hora:'08:30', actividad:'Desayuno', lugar:'Comedor'},
+  {hora:'14:00', actividad:'Almuerzo', lugar:'Comedor'},
+  {hora:'21:00', actividad:'Cena', lugar:'Comedor'}
+];
+
+const HORARIO_PISCINA = [
+  {hora:'17:00', actividad:'Piscina', lugar:'Piscina'}
+];
+
+function getMonitores() {
+  return JSON.parse(localStorage.getItem('campus_monitores') || '[]');
+}
+function saveMonitores(data) {
+  localStorage.setItem('campus_monitores', JSON.stringify(data));
+}
+
+function renderMonitores() {
+  const monitores = getMonitores();
+  const grid = document.getElementById('monitores-grid');
+  if (!grid) return;
+  if (!monitores.length) {
+    grid.innerHTML = '<p style="color:var(--gris-medio);font-size:13px;">No hay monitores registrados.</p>';
+    return;
+  }
+  grid.innerHTML = monitores.map((m, i) => `
+    <div style="background:#fff;border:1px solid var(--gris-claro);border-radius:12px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;">${m.nombre}</div>
+          <div style="font-size:12px;color:var(--gris-medio);margin-top:2px;">📱 ${m.telefono || '—'}</div>
+          <div style="margin-top:6px;"><span style="background:var(--amarillo);color:#111;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;">${m.equipo || '—'}</span></div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="openEditMonitor(${i})" style="background:none;border:1px solid var(--gris-claro);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;">✏️</button>
+          <button onclick="deleteMonitor(${i})" style="background:none;border:1px solid #fca5a5;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:#dc2626;">🗑️</button>
+        </div>
+      </div>
+      <button onclick="verHorarioMonitor(${i})" style="width:100%;background:var(--negro);color:#fff;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px;">📅 Ver horario diario</button>
+    </div>
+  `).join('');
+}
+
+function openAddMonitor() {
+  document.getElementById('modal-title').textContent = 'Nuevo monitor';
+  document.getElementById('modal-body').innerHTML = monitorForm({});
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+function openEditMonitor(i) {
+  const m = getMonitores()[i];
+  document.getElementById('modal-title').textContent = 'Editar monitor';
+  document.getElementById('modal-body').innerHTML = monitorForm(m, i);
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+function monitorForm(m = {}, idx = null) {
+  const equipoOpts = EQUIPOS_MONITOR.map(e => `<option value="${e}" ${m.equipo===e?'selected':''}>${e}</option>`).join('');
+  const idxAttr = idx !== null ? `data-idx="${idx}"` : '';
+  return `
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Nombre completo</label>
+        <input id="mon-nombre" class="form-input" value="${m.nombre||''}" placeholder="Nombre completo" style="width:100%;margin-top:4px;"></div>
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Teléfono</label>
+        <input id="mon-tel" class="form-input" value="${m.telefono||''}" placeholder="Ej: 612 345 678" style="width:100%;margin-top:4px;"></div>
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Equipo designado</label>
+        <select id="mon-equipo" class="form-input" style="width:100%;margin-top:4px;"><option value="">— Seleccionar —</option>${equipoOpts}</select></div>
+      <button onclick="saveMonitor(${idx !== null ? idx : 'null'})" class="btn btn-primary" style="margin-top:6px;">💾 Guardar monitor</button>
+    </div>
+  `;
+}
+
+function saveMonitor(idx) {
+  const nombre = document.getElementById('mon-nombre').value.trim();
+  const telefono = document.getElementById('mon-tel').value.trim();
+  const equipo = document.getElementById('mon-equipo').value;
+  if (!nombre) { showToast('⚠️ El nombre es obligatorio'); return; }
+  const monitores = getMonitores();
+  const monitor = { nombre, telefono, equipo, horarios: [] };
+  if (idx === null || idx === 'null') monitores.push(monitor);
+  else monitores[idx] = { ...monitores[idx], ...monitor };
+  saveMonitores(monitores);
+  closeModal();
+  renderMonitores();
+  showToast('✅ Monitor guardado');
+}
+
+function deleteMonitor(i) {
+  if (!confirm('¿Eliminar este monitor?')) return;
+  const monitores = getMonitores();
+  monitores.splice(i, 1);
+  saveMonitores(monitores);
+  renderMonitores();
+  showToast('🗑️ Monitor eliminado');
+}
+
+function verHorarioMonitor(i) {
+  const m = getMonitores()[i];
+  const veladas = JSON.parse(localStorage.getItem('campus_veladas') || '[]');
+  const veladasMonitor = veladas.filter(v => (v.monitores || []).includes(m.nombre));
+
+  // Construir filas del horario
+  let filas = [];
+
+  // Comidas fijas
+  HORARIO_COMIDAS.forEach(h => filas.push({ hora: h.hora, actividad: h.actividad, lugar: h.lugar, tipo: 'comida' }));
+
+  // Piscina fija
+  HORARIO_PISCINA.forEach(h => filas.push({ hora: h.hora, actividad: h.actividad, lugar: h.lugar, tipo: 'piscina' }));
+
+  // Reunión de monitores
+  filas.push({ hora: '00:00', actividad: 'Reunión de monitores', lugar: 'Sala de reuniones', tipo: 'reunion' });
+
+  // Veladas del monitor
+  veladasMonitor.forEach(v => filas.push({ hora: v.horaInicio || '—', actividad: 'Velada: ' + v.nombre, lugar: (v.lugares || []).join(', ') || '—', tipo: 'velada' }));
+
+  // Ordenar por hora
+  filas.sort((a, b) => a.hora.localeCompare(b.hora));
+
+  const colores = { comida:'#fef3c7', piscina:'#dbeafe', reunion:'#f3e8ff', velada:'#fee2e2', default:'#f9fafb' };
+
+  const rows = filas.map(f => `
+    <tr style="background:${colores[f.tipo]||colores.default};">
+      <td style="padding:8px 12px;font-weight:700;font-size:13px;">${f.hora}</td>
+      <td style="padding:8px 12px;font-size:13px;">${f.actividad}</td>
+      <td style="padding:8px 12px;font-size:13px;color:var(--gris-medio);">${f.lugar}</td>
+    </tr>
+  `).join('');
+
+  document.getElementById('modal-title').textContent = '📅 Horario — ' + m.nombre;
+  document.getElementById('modal-body').innerHTML = `
+    <div style="margin-bottom:8px;"><span style="background:var(--amarillo);color:#111;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;">${m.equipo||'Sin equipo'}</span></div>
+    <table style="width:100%;border-collapse:collapse;border-radius:10px;overflow:hidden;font-family:'Barlow',sans-serif;">
+      <thead><tr style="background:var(--negro);color:#fff;">
+        <th style="padding:8px 12px;text-align:left;font-size:12px;">Hora</th>
+        <th style="padding:8px 12px;text-align:left;font-size:12px;">Actividad</th>
+        <th style="padding:8px 12px;text-align:left;font-size:12px;">Lugar</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p style="font-size:11px;color:var(--gris-medio);margin-top:12px;">* Horario general + veladas asignadas a este monitor.</p>
+  `;
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+// ═══════════════════════════════════════════
+// VELADAS — lugares y monitores asignados
+// ═══════════════════════════════════════════
+
+const LUGARES_VELADA = ['Auditorio','F7','F5','Pabellón','Pista tenis','Sala recreativa','Aire libre','Piscina','Padel','Basket Exterior','Sala 1','Sala 2','Sala 3','Punto de reuniones'];
+
+function getVeladas() {
+  return JSON.parse(localStorage.getItem('campus_veladas') || '[]');
+}
+function saveVeladas(data) {
+  localStorage.setItem('campus_veladas', JSON.stringify(data));
+}
+
+function renderVeladas() {
+  const veladas = getVeladas();
+  const grid = document.getElementById('veladas-grid');
+  if (!grid) return;
+  if (!veladas.length) {
+    grid.innerHTML = '<p style="color:var(--gris-medio);font-size:13px;">No hay veladas registradas.</p>';
+    return;
+  }
+  grid.innerHTML = veladas.map((v, i) => `
+    <div style="background:#fff;border:1px solid var(--gris-claro);border-radius:12px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;">${v.nombre}</div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="openEditVelada(${i})" style="background:none;border:1px solid var(--gris-claro);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;">✏️</button>
+          <button onclick="deleteVelada(${i})" style="background:none;border:1px solid #fca5a5;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:#dc2626;">🗑️</button>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--gris-medio);margin-bottom:6px;">🕐 ${v.horaInicio||'—'} – ${v.horaFin||'—'}</div>
+      <div style="margin-bottom:6px;">${(v.lugares||[]).map(l=>`<span style="background:#f3f4f6;font-size:11px;padding:2px 8px;border-radius:20px;margin-right:4px;">${l}</span>`).join('')||'<span style="color:var(--gris-medio);font-size:12px;">Sin lugar</span>'}</div>
+      <div style="font-size:12px;color:var(--gris-medio);">👥 ${(v.monitores||[]).length ? v.monitores.join(', ') : 'Sin monitores asignados'}</div>
+    </div>
+  `).join('');
+}
+
+function openAddVelada() {
+  document.getElementById('modal-title').textContent = 'Nueva velada';
+  document.getElementById('modal-body').innerHTML = veladaForm({});
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+function openEditVelada(i) {
+  const v = getVeladas()[i];
+  document.getElementById('modal-title').textContent = 'Editar velada';
+  document.getElementById('modal-body').innerHTML = veladaForm(v, i);
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+function veladaForm(v = {}, idx = null) {
+  const lugaresOpts = LUGARES_VELADA.map(l => `
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+      <input type="checkbox" value="${l}" ${(v.lugares||[]).includes(l)?'checked':''} style="width:14px;height:14px;accent-color:var(--amarillo);">
+      ${l}
+    </label>
+  `).join('');
+
+  const monitoresDisp = getMonitores();
+  const monitoresOpts = monitoresDisp.length ? monitoresDisp.map(m => `
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+      <input type="checkbox" value="${m.nombre}" ${(v.monitores||[]).includes(m.nombre)?'checked':''} style="width:14px;height:14px;accent-color:var(--amarillo);">
+      ${m.nombre} <span style="color:var(--gris-medio);font-size:11px;">(${m.equipo||'—'})</span>
+    </label>
+  `).join('') : '<p style="font-size:12px;color:var(--gris-medio);">No hay monitores registrados aún.</p>';
+
+  return `
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Nombre de la velada</label>
+        <input id="vel-nombre" class="form-input" value="${v.nombre||''}" placeholder="Ej: Olimpiadas nocturnas" style="width:100%;margin-top:4px;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Hora inicio</label>
+          <input id="vel-inicio" type="time" class="form-input" value="${v.horaInicio||''}" style="width:100%;margin-top:4px;"></div>
+        <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Hora fin</label>
+          <input id="vel-fin" type="time" class="form-input" value="${v.horaFin||''}" style="width:100%;margin-top:4px;"></div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:8px;display:block;">📍 Lugar(es) de realización</label>
+        <div id="vel-lugares-list" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#f9fafb;border-radius:8px;padding:12px;">
+          ${lugaresOpts}
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:8px;display:block;">👥 Monitores asignados</label>
+        <div id="vel-monitores-list" style="display:flex;flex-direction:column;gap:6px;background:#f9fafb;border-radius:8px;padding:12px;max-height:200px;overflow-y:auto;">
+          ${monitoresOpts}
+        </div>
+      </div>
+      <button onclick="saveVelada(${idx !== null ? idx : 'null'})" class="btn btn-primary" style="background:#c0392b;margin-top:4px;">💾 Guardar velada</button>
+    </div>
+  `;
+}
+
+function saveVelada(idx) {
+  const nombre = document.getElementById('vel-nombre').value.trim();
+  if (!nombre) { showToast('⚠️ El nombre es obligatorio'); return; }
+  const horaInicio = document.getElementById('vel-inicio').value;
+  const horaFin = document.getElementById('vel-fin').value;
+  const lugares = Array.from(document.querySelectorAll('#vel-lugares-list input:checked')).map(i => i.value);
+  const monitores = Array.from(document.querySelectorAll('#vel-monitores-list input:checked')).map(i => i.value);
+  const veladas = getVeladas();
+  const velada = { nombre, horaInicio, horaFin, lugares, monitores };
+  if (idx === null || idx === 'null') veladas.push(velada);
+  else veladas[idx] = velada;
+  saveVeladas(veladas);
+  closeModal();
+  renderVeladas();
+  showToast('✅ Velada guardada');
+}
+
+function deleteVelada(i) {
+  if (!confirm('¿Eliminar esta velada?')) return;
+  const veladas = getVeladas();
+  veladas.splice(i, 1);
+  saveVeladas(veladas);
+  renderVeladas();
+  showToast('🗑️ Velada eliminada');
+}
+
 </script>
 </body>
 </html>
