@@ -939,12 +939,13 @@ let currentPerfil = null;
 let inscritos = [];
 let sortField = 'fecha', sortDir = -1, editingId = null, currentView = 'table';
 const PENDING_SHEETS_KEY = 'sv_pending_inscritos_sheets';
-const CAMPUS_GASTOS_KEY = 'sv_campus_gastos';
-const CAMPUS_GASTOS_TABLE = 'campus_gastos';
+const CAMPUS_GASTOS_KEY = 'sv_campus_cuentas_gastos_v4';
+const CAMPUS_GASTOS_TABLE = 'campus_cuentas_gastos';
 let campusGastoEditingId = null;
 let campusGastosCache = null;
 let campusGastoImageData = '';
 let campusGastoImageNombre = '';
+try { localStorage.removeItem('sv_campus_gastos'); localStorage.setItem('sv_campus_gastos_bloated_backup_removed_v4','1'); } catch(_) {}
 
 
 function normalizeText(v){ return String(v||'').normalize('NFD').replace(/[̀-ͯ]/g,'').trim().toLowerCase(); }
@@ -7066,7 +7067,7 @@ loadCampusGastos = async function(force=false){
     return safe;
   } catch(err){
     console.error('loadCampusGastos error:', err);
-    showToast('⚠️ No se pudieron cargar gastos desde Supabase. Ejecuta el SQL fix v3.');
+    showToast('⚠️ No se pudieron cargar gastos desde Supabase. Ejecuta el SQL fix v4.');
     return getCampusGastos();
   }
 };
@@ -7221,7 +7222,7 @@ saveCampusGasto = async function(){
     closeModal();
     await renderCuentasCampus(true);
   } catch(err){
-    console.error('Supabase campus_gastos error:', err);
+    console.error('Supabase campus_cuentas_gastos error:', err);
     showToast('❌ Error al guardar: ' + (err?.message || JSON.stringify(err) || 'revisa consola'));
   } finally {
     if(btn){ btn.disabled = false; btn.textContent = '💾 Guardar gasto'; }
