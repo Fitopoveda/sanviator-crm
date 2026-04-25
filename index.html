@@ -5578,20 +5578,6 @@ const HORARIO_PISCINA = [
   {hora:'17:00', actividad:'Piscina', lugar:'Piscina', tipo:'piscina'}
 ];
 
-
-// ═══════════════════════════════════════════════════
-// MONITORES — Supabase
-// ═══════════════════════════════════════════════════
-
-const HORARIO_COMIDAS = [
-  {hora:'08:30', actividad:'Desayuno', lugar:'Comedor', tipo:'comida'},
-  {hora:'14:00', actividad:'Almuerzo', lugar:'Comedor', tipo:'comida'},
-  {hora:'21:00', actividad:'Cena', lugar:'Comedor', tipo:'comida'}
-];
-const HORARIO_PISCINA = [
-  {hora:'17:00', actividad:'Piscina', lugar:'Piscina', tipo:'piscina'}
-];
-
 async function getMonitores() {
   const { data, error } = await sb.from('monitores')
     .select('*, perfil:perfil_id(id,nombre,email,rol)')
