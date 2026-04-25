@@ -253,6 +253,40 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
 .ej-row-num{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;min-width:22px;color:var(--gris-medio);}
 .ej-row-name{flex:1;font-size:13px;font-weight:700;}
 .ej-row-dur{font-size:12px;color:var(--gris-medio);white-space:nowrap;}
+
+/* 3X3 SAN VIATOR */
+.t3x3-tabs{display:flex;gap:4px;background:var(--blanco);border:1px solid var(--gris-claro);border-radius:8px;padding:4px;margin-bottom:16px;flex-wrap:wrap;}
+.t3x3-tab{border:none;background:transparent;border-radius:5px;padding:8px 12px;font-family:'Barlow',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;color:var(--gris-medio);transition:all 0.15s;}
+.t3x3-tab.active{background:var(--negro);color:var(--amarillo);}
+.t3x3-section{display:none;}
+.t3x3-section.active{display:block;}
+.t3x3-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+.t3x3-card{background:var(--blanco);border:1px solid var(--gris-claro);border-radius:8px;padding:14px;border-left:4px solid var(--amarillo);}
+.t3x3-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.t3x3-card-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;text-transform:uppercase;letter-spacing:1px;line-height:1.1;}
+.t3x3-card-meta{font-size:12px;color:var(--gris-medio);line-height:1.5;}
+.t3x3-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;}
+.t3x3-pill{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:800;background:var(--gris-bg);color:var(--gris-medio);}
+.t3x3-pill.ok{background:#e8f5e9;color:#166534;}
+.t3x3-pill.warn{background:#fffbe6;color:#7a6200;}
+.t3x3-pill.bad{background:#fce4ec;color:#c62828;}
+.t3x3-pill.info{background:#e3f2fd;color:#1565c0;}
+.t3x3-category{background:var(--blanco);border:1px solid var(--gris-claro);border-radius:10px;overflow:hidden;margin-bottom:16px;}
+.t3x3-category-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-bottom:3px solid var(--amarillo);background:#fffbe6;}
+.t3x3-category-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;text-transform:uppercase;letter-spacing:1px;}
+.t3x3-category-body{padding:14px;}
+.t3x3-table{width:100%;border-collapse:collapse;background:var(--blanco);border:1px solid var(--gris-claro);border-radius:8px;overflow:hidden;}
+.t3x3-table th{background:var(--negro);color:rgba(255,255,255,0.72);font-size:10px;text-transform:uppercase;letter-spacing:1.2px;padding:9px 10px;text-align:left;}
+.t3x3-table td{border-bottom:1px solid var(--gris-claro);padding:8px 10px;font-size:12.5px;vertical-align:middle;}
+.t3x3-table tr:last-child td{border-bottom:none;}
+.t3x3-match{background:var(--blanco);border:1px solid var(--gris-claro);border-radius:8px;padding:12px;display:grid;grid-template-columns:1fr auto 1fr auto;gap:10px;align-items:center;}
+.t3x3-match-team{font-weight:800;font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.t3x3-score{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:var(--negro);min-width:54px;text-align:center;}
+.t3x3-player-row{display:grid;grid-template-columns:1.2fr 0.8fr 0.9fr 0.9fr 0.8fr auto;gap:6px;align-items:end;margin-bottom:8px;padding:8px;border:1px solid var(--gris-claro);border-radius:8px;background:var(--gris-bg);}
+.t3x3-player-row .detail-field{margin-bottom:0;}
+.t3x3-monitor-band{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:14px;}
+.t3x3-acta-score{display:grid;grid-template-columns:1fr 120px 1fr;gap:10px;align-items:center;margin:14px 0;}
+.t3x3-acta-score input{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:900;text-align:center;padding:8px;border:2px solid var(--gris-claro);border-radius:8px;}
 @media(max-width:900px){
   .sidebar{width:56px;}
   .sidebar-logo .club-name,.sidebar-logo .club-sub,.nav-section-label,.nav-item span,.sidebar-user .user-name,.sidebar-user .user-rol{display:none;}
@@ -260,6 +294,9 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
   .main{margin-left:56px;}
   .stats-grid{grid-template-columns:repeat(2,1fr);}
   .chart-row,.pruebas-grid{grid-template-columns:1fr;}
+  .t3x3-match{grid-template-columns:1fr;gap:6px;}
+  .t3x3-score{text-align:left;}
+  .t3x3-player-row{grid-template-columns:1fr;}
 }
 </style>
 </head>
@@ -308,6 +345,9 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
       <div class="nav-item" onclick="showPanel('campus')"><span>🏕️</span><span>Campus Salamanca</span></div>
       <div class="nav-item entrenador-only sidebar-hidden" onclick="showPlanificadorCampus()"><span>📋</span><span>Planificador Campus</span></div>
 
+      <div class="nav-section-label">Eventos</div>
+      <div class="nav-item" onclick="showPanel('tresx3')"><span>🏀</span><span>3X3 San Viator</span></div>
+
       <div class="nav-section-label entrenador-only sidebar-hidden">Entrenamientos</div>
       <div class="nav-item entrenador-only sidebar-hidden" onclick="showPanel('entrenamientos')"><span>📋</span><span>Planificador</span></div>
 
@@ -334,7 +374,7 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
       <div class="topbar-actions">
         <span class="sync-info" id="sync-label"></span>
         <button class="btn btn-secondary btn-sm admin-only" id="sync-btn" onclick="syncFromSheets()">🔄 Sincronizar</button>
-        <button class="btn btn-primary can-edit" onclick="openAddModal()">+ Añadir inscrito</button>
+        <button class="btn btn-primary can-edit" id="topbar-add-btn" onclick="openAddModal()">+ Añadir inscrito</button>
       </div>
     </div>
 
@@ -421,6 +461,104 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;}
         </div>
         <div id="view-equipos" style="display:none">
           <div class="equipos-wrapper" id="equipos-board"></div>
+        </div>
+      </div>
+
+      <!-- 3X3 SAN VIATOR -->
+      <div class="panel" id="panel-tresx3">
+        <div class="t3x3-tabs">
+          <button class="t3x3-tab active" id="t3x3-tab-resumen" onclick="t3x3Tab('resumen')">Resumen</button>
+          <button class="t3x3-tab" id="t3x3-tab-equipos" onclick="t3x3Tab('equipos')">Equipos</button>
+          <button class="t3x3-tab" id="t3x3-tab-competicion" onclick="t3x3Tab('competicion')">Competición</button>
+          <button class="t3x3-tab" id="t3x3-tab-calendario" onclick="t3x3Tab('calendario')">Calendario</button>
+          <button class="t3x3-tab" id="t3x3-tab-pistas" onclick="t3x3Tab('pistas')">Pistas y monitores</button>
+          <button class="t3x3-tab" id="t3x3-tab-integracion" onclick="t3x3Tab('integracion')">Integración</button>
+        </div>
+
+        <div class="t3x3-section active" id="t3x3-section-resumen">
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-label">Equipos</div><div class="stat-number" id="t3x3-st-equipos">0</div><div class="stat-icon">🏀</div></div>
+            <div class="stat-card"><div class="stat-label">Jugadores</div><div class="stat-number" id="t3x3-st-jugadores">0</div></div>
+            <div class="stat-card"><div class="stat-label">Categorías</div><div class="stat-number" id="t3x3-st-cats">0</div></div>
+            <div class="stat-card"><div class="stat-label">Partidos</div><div class="stat-number" id="t3x3-st-partidos">0</div></div>
+            <div class="stat-card"><div class="stat-label">Finalizados</div><div class="stat-number" id="t3x3-st-finalizados">0</div></div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-box"><h4>Equipos por categoría</h4><div id="t3x3-chart-cats"></div></div>
+            <div class="chart-box"><h4>Próximos partidos</h4><div id="t3x3-next-matches"></div></div>
+          </div>
+        </div>
+
+        <div class="t3x3-section" id="t3x3-section-equipos">
+          <div class="toolbar">
+            <input class="filter-input" id="t3x3-team-q" placeholder="Buscar equipo, responsable o jugador..." oninput="renderT3X3()">
+            <select class="filter-select" id="t3x3-team-cat" onchange="renderT3X3()"><option value="">Todas las categorías</option></select>
+            <select class="filter-select" id="t3x3-team-status" onchange="renderT3X3()">
+              <option value="">Todos los estados</option><option>Pendiente</option><option>Validado</option><option>Incompleto</option><option>Baja</option>
+            </select>
+            <button class="btn btn-primary can-edit" onclick="openT3X3EquipoModal()">+ Equipo</button>
+            <button class="btn btn-secondary can-edit" onclick="openT3X3ImportModal()">Importar CSV</button>
+          </div>
+          <div id="t3x3-equipos-board"></div>
+        </div>
+
+        <div class="t3x3-section" id="t3x3-section-competicion">
+          <div class="toolbar">
+            <select class="filter-select" id="t3x3-comp-cat" onchange="renderT3X3Competicion()"><option value="">Todas las categorías</option></select>
+            <input class="filter-input" style="max-width:160px;" type="date" id="t3x3-comp-fecha">
+            <input class="filter-input" style="max-width:110px;" type="time" id="t3x3-comp-hora" value="09:00">
+            <input class="filter-input" style="max-width:120px;" type="number" id="t3x3-comp-duracion" value="12" min="6" max="40">
+            <button class="btn btn-primary can-edit" onclick="t3x3GenerateSelected()">Generar partidos</button>
+          </div>
+          <div id="t3x3-competicion-board"></div>
+        </div>
+
+        <div class="t3x3-section" id="t3x3-section-calendario">
+          <div class="toolbar">
+            <select class="filter-select" id="t3x3-cal-cat" onchange="renderT3X3Calendario()"><option value="">Todas las categorías</option></select>
+            <select class="filter-select" id="t3x3-cal-pista" onchange="renderT3X3Calendario()"><option value="">Todas las pistas</option></select>
+            <select class="filter-select" id="t3x3-cal-estado" onchange="renderT3X3Calendario()">
+              <option value="">Todos</option><option>Pendiente</option><option>En juego</option><option>Finalizado</option>
+            </select>
+          </div>
+          <div id="t3x3-calendario-board"></div>
+        </div>
+
+        <div class="t3x3-section" id="t3x3-section-pistas">
+          <div class="t3x3-monitor-band">
+            <div class="t3x3-card">
+              <div class="t3x3-card-title">Mi pista</div>
+              <div class="t3x3-card-meta" id="t3x3-mi-pista">Cargando asignación...</div>
+            </div>
+            <div class="t3x3-card">
+              <div class="t3x3-card-title">Acciones</div>
+              <div class="t3x3-actions">
+                <button class="btn btn-primary can-edit" onclick="openT3X3PistaModal()">+ Pista</button>
+                <button class="btn btn-secondary can-edit" onclick="openT3X3MonitorModal()">+ Monitor</button>
+              </div>
+            </div>
+          </div>
+          <div id="t3x3-pistas-board"></div>
+        </div>
+
+        <div class="t3x3-section" id="t3x3-section-integracion">
+          <div class="integration-box">
+            <h3>Fuente de inscripciones abierta</h3>
+            <p>El módulo no queda atado a Google Forms. Puedes dejarlo en manual, enlazar más adelante un CSV publicado de Google Sheets o cambiar a otra plataforma manteniendo el mismo mapeo.</p>
+            <div class="detail-row">
+              <div class="detail-field"><label>Proveedor</label><select id="t3x3-int-provider"><option>Manual / CSV</option><option>Google Forms / Sheets</option><option>Otra plataforma</option></select></div>
+              <div class="detail-field"><label>URL origen</label><input id="t3x3-int-url" placeholder="Pega aquí el enlace CSV/API cuando exista"></div>
+            </div>
+            <div class="detail-field"><label>Mapeo de campos</label><textarea id="t3x3-int-mapping" placeholder='{"equipo":"Nombre del equipo","jugador1":"Jugador 1","nacimiento1":"Fecha nacimiento 1"}'></textarea></div>
+            <div class="t3x3-actions">
+              <button class="btn btn-primary" onclick="saveT3X3Integracion()">Guardar integración</button>
+              <button class="btn btn-secondary" onclick="openT3X3ImportModal()">Probar importación CSV</button>
+            </div>
+          </div>
+          <div class="integration-box">
+            <h3>Formato recomendado de formulario</h3>
+            <p>Cuando crees el formulario, pide nombre del equipo, responsable, email, teléfono y hasta 5 jugadores con nombre, fecha de nacimiento, email/teléfono, DNI, tutor, alergias y observaciones. La categoría se recalcula automáticamente por edad.</p>
+          </div>
         </div>
       </div>
 
@@ -1174,6 +1312,7 @@ function applyRoleUI() {
     {sel: '.nav-item[onclick*="pruebas"]', mod:'Pruebas Temporada'},
     {sel: '.nav-item[onclick*="integracion"]', mod:'Pruebas Temporada'},
     {sel: '.nav-item[onclick*="campus"]', mod:'Campus Salamanca'},
+    {sel: '.nav-item[onclick*="tresx3"]', mod:'3X3 San Viator'},
     {sel: '.nav-item[onclick*="mensajes"]', mod:'Mensajes'},
     {sel: '.nav-item[onclick*="usuarios"]', mod:'Administración'},
     {sel: '.nav-item[onclick*="modulos"]', mod:'Administración'}
@@ -1201,6 +1340,7 @@ function applyRoleUI() {
 
   const pruebasAllowed = hasModuloAccess('Pruebas Temporada');
   const campusAllowed = hasModuloAccess('Campus Salamanca');
+  const eventosAllowed = hasModuloAccess('3X3 San Viator');
   const msgAllowed = hasModuloAccess('Mensajes');
   const adminAllowed = isAdmin || hasModuloAccess('Administración');
 
@@ -1208,6 +1348,7 @@ function applyRoleUI() {
     const lbl = el.textContent.trim();
     if(lbl === 'Pruebas') el.style.display = pruebasAllowed ? '' : 'none';
     if(lbl === 'Campus') el.style.display = campusAllowed ? '' : 'none';
+    if(lbl === 'Eventos') el.style.display = eventosAllowed ? '' : 'none';
     if(lbl === 'Comunicación') el.style.display = msgAllowed ? '' : 'none';
     if(lbl === 'Administración') el.style.display = adminAllowed ? '' : 'none';
   });
@@ -1722,15 +1863,688 @@ function importCSV(event) {
 }
 
 // ════════════════════════════════════════════════════════
+// 3X3 SAN VIATOR
+// ════════════════════════════════════════════════════════
+const T3X3_LOCAL_KEY = 'sv_t3x3_state_v1';
+const T3X3_TABLES = {
+  torneos:'t3x3_torneos',
+  equipos:'t3x3_equipos',
+  jugadores:'t3x3_jugadores',
+  pistas:'t3x3_pistas',
+  monitores:'t3x3_monitores',
+  partidos:'t3x3_partidos',
+  actas:'t3x3_actas',
+  integraciones:'t3x3_integraciones'
+};
+const T3X3_CATS = ['Prebenjamín','Benjamín','Alevín','Infantil','Cadete','Junior','Senior'];
+let t3x3Loaded = false;
+let t3x3Remote = false;
+let t3x3RemoteWarned = false;
+let t3x3CurrentTab = 'resumen';
+let t3x3ActiveTorneoId = null;
+let t3x3ModalPlayers = [];
+let t3x3State = { torneos:[], equipos:[], jugadores:[], pistas:[], monitores:[], partidos:[], actas:[], integraciones:[] };
+
+function t3x3Id(prefix){ return prefix + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8); }
+function t3x3Esc(v){ return String(v==null?'':v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+function t3x3Norm(v){ return normalizeText(v).replace(/[^a-z0-9]+/g,' ').trim(); }
+function t3x3Today(){ return new Date().toISOString().slice(0,10); }
+function t3x3ActiveTorneo(){ return t3x3State.torneos.find(t=>t.id===t3x3ActiveTorneoId) || t3x3State.torneos[0]; }
+function t3x3Teams(){ const tid=t3x3ActiveTorneo()?.id; return t3x3State.equipos.filter(e=>!tid || e.torneo_id===tid); }
+function t3x3Players(teamId){ return t3x3State.jugadores.filter(j=>j.equipo_id===teamId); }
+function t3x3Matches(cat){ const tid=t3x3ActiveTorneo()?.id; return t3x3State.partidos.filter(p=>(!tid || p.torneo_id===tid) && (!cat || p.categoria===cat)); }
+function t3x3Pistas(){ const tid=t3x3ActiveTorneo()?.id; return t3x3State.pistas.filter(p=>!tid || p.torneo_id===tid); }
+function t3x3Monitores(){ const tid=t3x3ActiveTorneo()?.id; return t3x3State.monitores.filter(m=>!tid || m.torneo_id===tid); }
+
+function t3x3LoadLocal(){
+  try {
+    const raw = JSON.parse(localStorage.getItem(T3X3_LOCAL_KEY) || '{}');
+    t3x3State = { torneos:[], equipos:[], jugadores:[], pistas:[], monitores:[], partidos:[], actas:[], integraciones:[], ...raw };
+  } catch(_) {
+    t3x3State = { torneos:[], equipos:[], jugadores:[], pistas:[], monitores:[], partidos:[], actas:[], integraciones:[] };
+  }
+}
+function t3x3SaveLocal(){ localStorage.setItem(T3X3_LOCAL_KEY, JSON.stringify(t3x3State)); }
+function t3x3EnsureDefaults(){
+  if(!t3x3State.torneos.length){
+    t3x3State.torneos.push({ id:t3x3Id('tor'), nombre:'3X3 San Viator', fecha:t3x3Today(), estado:'Preparación', created_at:new Date().toISOString() });
+  }
+  t3x3ActiveTorneoId = t3x3State.torneos[0].id;
+  if(!t3x3Pistas().length){
+    ['Pista 1','Pista 2','Pista 3','Pista 4'].forEach((nombre,i)=>t3x3State.pistas.push({ id:t3x3Id('pis'), torneo_id:t3x3ActiveTorneoId, nombre, orden:i+1, activa:true }));
+  }
+  if(!t3x3State.integraciones.length){
+    t3x3State.integraciones.push({ id:t3x3Id('int'), torneo_id:t3x3ActiveTorneoId, proveedor:'Manual / CSV', fuente_url:'', mapeo:{}, estado:'Pendiente' });
+  }
+}
+async function t3x3TryRemoteLoad(){
+  const loaded = {};
+  for(const key of Object.keys(T3X3_TABLES)){
+    const { data, error } = await sb.from(T3X3_TABLES[key]).select('*');
+    if(error) return false;
+    loaded[key] = data || [];
+  }
+  t3x3State = { ...t3x3State, ...loaded };
+  t3x3Remote = true;
+  return true;
+}
+async function loadT3X3(force=false){
+  if(t3x3Loaded && !force){ renderT3X3(); return; }
+  t3x3LoadLocal();
+  try {
+    const ok = await t3x3TryRemoteLoad();
+    if(!ok && !t3x3RemoteWarned){
+      t3x3RemoteWarned = true;
+      console.warn('3X3: tablas Supabase no disponibles. Usando localStorage.');
+    }
+  } catch(e) {
+    if(!t3x3RemoteWarned){ t3x3RemoteWarned = true; console.warn('3X3 local mode', e); }
+  }
+  t3x3EnsureDefaults();
+  if(t3x3Remote){
+    for(const t of t3x3State.torneos) await sb.from(T3X3_TABLES.torneos).upsert(t);
+    for(const p of t3x3State.pistas) await sb.from(T3X3_TABLES.pistas).upsert(p);
+    for(const i of t3x3State.integraciones) await sb.from(T3X3_TABLES.integraciones).upsert(i);
+  }
+  t3x3SaveLocal();
+  t3x3Loaded = true;
+  renderT3X3();
+}
+async function t3x3Upsert(key, item){
+  t3x3SaveLocal();
+  if(!t3x3Remote) return;
+  const { error } = await sb.from(T3X3_TABLES[key]).upsert(item);
+  if(error){ console.warn('3X3 upsert fallback', key, error); t3x3Remote = false; }
+}
+async function t3x3Delete(key, id){
+  t3x3SaveLocal();
+  if(!t3x3Remote) return;
+  const { error } = await sb.from(T3X3_TABLES[key]).delete().eq('id', id);
+  if(error){ console.warn('3X3 delete fallback', key, error); t3x3Remote = false; }
+}
+
+function t3x3Age(nacimiento){
+  if(!nacimiento) return null;
+  const d = new Date(nacimiento);
+  if(isNaN(d)) return null;
+  const year = Number(t3x3ActiveTorneo()?.fecha?.slice(0,4)) || new Date().getFullYear();
+  return year - d.getFullYear();
+}
+function t3x3CategoriaPorEdad(edad){
+  if(edad == null || isNaN(edad)) return '';
+  if(edad <= 8) return 'Prebenjamín';
+  if(edad <= 10) return 'Benjamín';
+  if(edad <= 12) return 'Alevín';
+  if(edad <= 14) return 'Infantil';
+  if(edad <= 16) return 'Cadete';
+  if(edad <= 18) return 'Junior';
+  return 'Senior';
+}
+function t3x3CategoriaEquipo(teamId, override){
+  if(override) return override;
+  const cats = t3x3Players(teamId).map(j=>t3x3CategoriaPorEdad(t3x3Age(j.nacimiento))).filter(Boolean);
+  if(!cats.length) return 'Sin categoría';
+  return cats.sort((a,b)=>T3X3_CATS.indexOf(b)-T3X3_CATS.indexOf(a))[0] || cats[0];
+}
+function t3x3CategoriesInUse(){
+  const cats = [...new Set(t3x3Teams().map(e=>e.categoria || t3x3CategoriaEquipo(e.id, e.categoria_override)).filter(Boolean))];
+  return cats.sort((a,b)=>(T3X3_CATS.indexOf(a)<0?99:T3X3_CATS.indexOf(a))-(T3X3_CATS.indexOf(b)<0?99:T3X3_CATS.indexOf(b)));
+}
+function t3x3RefreshSelects(){
+  const cats = t3x3CategoriesInUse();
+  ['t3x3-team-cat','t3x3-comp-cat','t3x3-cal-cat'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    const cur=el.value;
+    el.innerHTML = '<option value="">Todas las categorías</option>' + cats.map(c=>`<option>${t3x3Esc(c)}</option>`).join('');
+    if(cur && cats.includes(cur)) el.value = cur;
+  });
+  const pistas = t3x3Pistas();
+  const ps=document.getElementById('t3x3-cal-pista');
+  if(ps){
+    const cur=ps.value;
+    ps.innerHTML = '<option value="">Todas las pistas</option>' + pistas.map(p=>`<option value="${p.id}">${t3x3Esc(p.nombre)}</option>`).join('');
+    if(cur && pistas.some(p=>p.id===cur)) ps.value=cur;
+  }
+  const fecha=document.getElementById('t3x3-comp-fecha');
+  if(fecha && !fecha.value) fecha.value = t3x3ActiveTorneo()?.fecha || t3x3Today();
+}
+function t3x3Tab(tab){
+  t3x3CurrentTab = tab;
+  document.querySelectorAll('.t3x3-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.t3x3-section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('t3x3-tab-'+tab)?.classList.add('active');
+  document.getElementById('t3x3-section-'+tab)?.classList.add('active');
+  renderT3X3();
+}
+function renderT3X3(){
+  if(!document.getElementById('panel-tresx3')?.classList.contains('active')) return;
+  t3x3RefreshSelects();
+  renderT3X3Resumen();
+  if(t3x3CurrentTab==='equipos') renderT3X3Equipos();
+  if(t3x3CurrentTab==='competicion') renderT3X3Competicion();
+  if(t3x3CurrentTab==='calendario') renderT3X3Calendario();
+  if(t3x3CurrentTab==='pistas') renderT3X3Pistas();
+  if(t3x3CurrentTab==='integracion') renderT3X3Integracion();
+}
+function renderT3X3Resumen(){
+  const equipos=t3x3Teams(), jugadores=t3x3State.jugadores.filter(j=>equipos.some(e=>e.id===j.equipo_id)), partidos=t3x3Matches();
+  const cats=t3x3CategoriesInUse();
+  const set=(id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
+  set('t3x3-st-equipos', equipos.length);
+  set('t3x3-st-jugadores', jugadores.length);
+  set('t3x3-st-cats', cats.length);
+  set('t3x3-st-partidos', partidos.length);
+  set('t3x3-st-finalizados', partidos.filter(p=>p.estado==='Finalizado').length);
+  const chart=document.getElementById('t3x3-chart-cats');
+  if(chart){
+    const max=Math.max(1,...cats.map(c=>equipos.filter(e=>(e.categoria||t3x3CategoriaEquipo(e.id,e.categoria_override))===c).length));
+    chart.innerHTML = cats.length ? cats.map(c=>{
+      const n=equipos.filter(e=>(e.categoria||t3x3CategoriaEquipo(e.id,e.categoria_override))===c).length;
+      return `<div class="bar-row"><div class="bar-label">${t3x3Esc(c)}</div><div class="bar-track"><div class="bar-fill" style="width:${(n/max)*100}%"></div></div><div class="bar-val">${n}</div></div>`;
+    }).join('') : '<p style="font-size:13px;color:var(--gris-medio);">Sin equipos todavía.</p>';
+  }
+  const next=document.getElementById('t3x3-next-matches');
+  if(next){
+    const upcoming=partidos.filter(p=>p.estado!=='Finalizado').sort(t3x3SortMatches).slice(0,6);
+    next.innerHTML = upcoming.length ? upcoming.map(t3x3MatchMini).join('') : '<p style="font-size:13px;color:var(--gris-medio);">Sin próximos partidos generados.</p>';
+  }
+}
+function renderT3X3Equipos(){
+  const board=document.getElementById('t3x3-equipos-board'); if(!board) return;
+  const q=t3x3Norm(document.getElementById('t3x3-team-q')?.value||'');
+  const cat=document.getElementById('t3x3-team-cat')?.value||'';
+  const st=document.getElementById('t3x3-team-status')?.value||'';
+  let teams=t3x3Teams().map(e=>({...e, categoria:e.categoria||t3x3CategoriaEquipo(e.id,e.categoria_override)}));
+  if(cat) teams=teams.filter(e=>e.categoria===cat);
+  if(st) teams=teams.filter(e=>(e.estado||'Pendiente')===st);
+  if(q) teams=teams.filter(e=>{
+    const players=t3x3Players(e.id).map(p=>p.nombre).join(' ');
+    return t3x3Norm([e.nombre,e.responsable,e.email,e.telefono,players].join(' ')).includes(q);
+  });
+  const cats=[...new Set(teams.map(e=>e.categoria||'Sin categoría'))];
+  if(!teams.length){ board.innerHTML='<div class="empty-state"><div class="icon">🏀</div><p>No hay equipos con esos filtros.</p></div>'; return; }
+  board.innerHTML=cats.map(c=>{
+    const group=teams.filter(e=>(e.categoria||'Sin categoría')===c);
+    return `<div class="t3x3-category"><div class="t3x3-category-head"><div class="t3x3-category-title">${t3x3Esc(c)}</div><span class="t3x3-pill info">${group.length} equipo${group.length!==1?'s':''}</span></div><div class="t3x3-category-body"><div class="t3x3-grid">${group.map(t3x3TeamCard).join('')}</div></div></div>`;
+  }).join('');
+}
+function t3x3TeamCard(e){
+  const players=t3x3Players(e.id);
+  const estado=e.estado||'Pendiente';
+  const cls=estado==='Validado'?'ok':estado==='Baja'?'bad':estado==='Incompleto'?'warn':'info';
+  return `<div class="t3x3-card">
+    <div class="t3x3-card-header">
+      <div><div class="t3x3-card-title">${t3x3Esc(e.nombre||'Equipo')}</div><div class="t3x3-card-meta">${t3x3Esc(e.responsable||'Sin responsable')} · ${players.length} jugador${players.length!==1?'es':''}</div></div>
+      <span class="t3x3-pill ${cls}">${t3x3Esc(estado)}</span>
+    </div>
+    <div class="t3x3-card-meta">Categoría: <strong>${t3x3Esc(e.categoria||t3x3CategoriaEquipo(e.id,e.categoria_override))}</strong><br>Email: ${t3x3Esc(e.email||'—')}<br>Tel: ${t3x3Esc(e.telefono||'—')}</div>
+    <div class="t3x3-actions">
+      <button class="btn btn-sm btn-primary can-edit" onclick="openT3X3EquipoModal('${e.id}')">Editar</button>
+      <button class="btn btn-sm btn-wa" onclick="t3x3OpenWhatsApp('${e.id}')">WhatsApp</button>
+      <button class="btn btn-sm btn-secondary" onclick="t3x3OpenMail('${e.id}')">Email</button>
+    </div>
+  </div>`;
+}
+function t3x3SortMatches(a,b){
+  return String((a.fecha||'')+(a.hora||'')+(a.orden||0)).localeCompare(String((b.fecha||'')+(b.hora||'')+(b.orden||0)));
+}
+function t3x3TeamName(id, fallback){
+  return t3x3State.equipos.find(e=>e.id===id)?.nombre || fallback || 'Por definir';
+}
+function t3x3MatchMini(p){
+  const pista=t3x3State.pistas.find(x=>x.id===p.pista_id)?.nombre||'Sin pista';
+  return `<div style="display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--gris-claro);padding:8px 0;">
+    <div><strong style="font-size:13px;">${t3x3Esc(t3x3TeamName(p.equipo_a_id,p.placeholder_a))} vs ${t3x3Esc(t3x3TeamName(p.equipo_b_id,p.placeholder_b))}</strong><div style="font-size:11px;color:var(--gris-medio);">${t3x3Esc(p.categoria)} · ${t3x3Esc(p.fase)} ${p.grupo?('· Grupo '+t3x3Esc(p.grupo)):''}</div></div>
+    <div style="font-size:11px;color:var(--gris-medio);text-align:right;">${t3x3Esc(p.fecha||'—')} ${t3x3Esc(p.hora||'')}<br>${t3x3Esc(pista)}</div>
+  </div>`;
+}
+function renderT3X3Competicion(){
+  const board=document.getElementById('t3x3-competicion-board'); if(!board) return;
+  const selected=document.getElementById('t3x3-comp-cat')?.value||'';
+  const cats=selected?[selected]:t3x3CategoriesInUse();
+  if(!cats.length){ board.innerHTML='<div class="empty-state"><div class="icon">🏆</div><p>Añade equipos para preparar la competición.</p></div>'; return; }
+  board.innerHTML=cats.map(cat=>{
+    const teams=t3x3Teams().filter(e=>(e.categoria||t3x3CategoriaEquipo(e.id,e.categoria_override))===cat && (e.estado||'Pendiente')!=='Baja');
+    const matches=t3x3Matches(cat);
+    const format=t3x3DescribeFormat(teams.length);
+    const classifs=t3x3Clasificaciones(cat);
+    const tables=Object.keys(classifs).map(g=>t3x3ClassifTable(g,classifs[g])).join('');
+    const playoffs=matches.filter(p=>p.fase==='Eliminatoria').sort(t3x3SortMatches);
+    return `<div class="t3x3-category">
+      <div class="t3x3-category-head"><div><div class="t3x3-category-title">${t3x3Esc(cat)}</div><div style="font-size:12px;color:var(--gris-medio);">${t3x3Esc(format)}</div></div><span class="t3x3-pill info">${teams.length} equipos · ${matches.length} partidos</span></div>
+      <div class="t3x3-category-body">
+        ${teams.length<3?'<p style="font-size:13px;color:var(--rojo);margin-bottom:10px;">Se necesitan al menos 3 equipos para garantizar 3 partidos.</p>':''}
+        ${tables||'<p style="font-size:13px;color:var(--gris-medio);">Sin calendario generado.</p>'}
+        ${playoffs.length?`<h4 style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);margin:16px 0 8px;">Eliminatoria</h4><div style="display:flex;flex-direction:column;gap:8px;">${playoffs.map(t3x3MatchCard).join('')}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function t3x3ClassifTable(group, rows){
+  return `<div style="margin-bottom:12px;"><h4 style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);margin:8px 0;">Grupo ${t3x3Esc(group)}</h4>
+    <table class="t3x3-table"><thead><tr><th>Equipo</th><th>PJ</th><th>V</th><th>D</th><th>PF</th><th>PC</th><th>+/-</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr><td><strong>${t3x3Esc(r.nombre)}</strong></td><td>${r.pj}</td><td>${r.v}</td><td>${r.d}</td><td>${r.pf}</td><td>${r.pc}</td><td>${r.diff}</td></tr>`).join('')}
+    </tbody></table></div>`;
+}
+function renderT3X3Calendario(){
+  const board=document.getElementById('t3x3-calendario-board'); if(!board) return;
+  const cat=document.getElementById('t3x3-cal-cat')?.value||'';
+  const pista=document.getElementById('t3x3-cal-pista')?.value||'';
+  const estado=document.getElementById('t3x3-cal-estado')?.value||'';
+  let matches=t3x3Matches(cat);
+  if(pista) matches=matches.filter(p=>p.pista_id===pista);
+  if(estado) matches=matches.filter(p=>(p.estado||'Pendiente')===estado);
+  matches=matches.sort(t3x3SortMatches);
+  if(!matches.length){ board.innerHTML='<div class="empty-state"><div class="icon">📅</div><p>No hay partidos con esos filtros.</p></div>'; return; }
+  board.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px;">${matches.map(t3x3MatchCard).join('')}</div>`;
+}
+function t3x3MatchCard(p){
+  const pista=t3x3State.pistas.find(x=>x.id===p.pista_id)?.nombre||'Sin pista';
+  const score=p.estado==='Finalizado'?`${p.puntos_a ?? 0} - ${p.puntos_b ?? 0}`:'vs';
+  const canActa = p.equipo_a_id && p.equipo_b_id;
+  return `<div class="t3x3-match">
+    <div><div class="t3x3-match-team">${t3x3Esc(t3x3TeamName(p.equipo_a_id,p.placeholder_a))}</div><div class="t3x3-card-meta">${t3x3Esc(p.categoria)} · ${t3x3Esc(p.fase)}${p.grupo?' · Grupo '+t3x3Esc(p.grupo):''}</div></div>
+    <div class="t3x3-score">${t3x3Esc(score)}</div>
+    <div><div class="t3x3-match-team">${t3x3Esc(t3x3TeamName(p.equipo_b_id,p.placeholder_b))}</div><div class="t3x3-card-meta">${t3x3Esc(p.fecha||'—')} ${t3x3Esc(p.hora||'')} · ${t3x3Esc(pista)}</div></div>
+    <div class="t3x3-actions" style="margin:0;justify-content:flex-end;">
+      <span class="t3x3-pill ${p.estado==='Finalizado'?'ok':p.estado==='En juego'?'warn':'info'}">${t3x3Esc(p.estado||'Pendiente')}</span>
+      <button class="btn btn-sm btn-primary" ${canActa?'':'disabled'} onclick="openT3X3Acta('${p.id}')">Acta</button>
+    </div>
+  </div>`;
+}
+function renderT3X3Pistas(){
+  const board=document.getElementById('t3x3-pistas-board'); if(!board) return;
+  const email=(currentUser?.email||'').toLowerCase();
+  const mon=t3x3Monitores().find(m=>(m.email||'').toLowerCase()===email);
+  const myPista=mon?t3x3State.pistas.find(p=>p.id===mon.pista_id):null;
+  const mi=document.getElementById('t3x3-mi-pista');
+  if(mi) mi.innerHTML = mon ? `<strong>${t3x3Esc(mon.nombre)}</strong><br>${t3x3Esc(myPista?.nombre||'Sin pista asignada')}<br><span style="font-size:11px;">${t3x3Matches().filter(p=>p.pista_id===mon.pista_id&&p.estado!=='Finalizado').length} partidos pendientes</span>` : 'Tu usuario no está asignado como monitor de pista.';
+  const pistas=t3x3Pistas();
+  board.innerHTML=`<div class="t3x3-grid">${pistas.map(p=>{
+    const mons=t3x3Monitores().filter(m=>m.pista_id===p.id);
+    const matches=t3x3Matches().filter(m=>m.pista_id===p.id).sort(t3x3SortMatches).slice(0,5);
+    return `<div class="t3x3-card"><div class="t3x3-card-header"><div><div class="t3x3-card-title">${t3x3Esc(p.nombre)}</div><div class="t3x3-card-meta">${mons.map(m=>t3x3Esc(m.nombre)).join(', ')||'Sin monitor'}</div></div><span class="t3x3-pill ${p.activa?'ok':'bad'}">${p.activa?'Activa':'Inactiva'}</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px;">${matches.map(t3x3MatchMini).join('')||'<p style="font-size:12px;color:var(--gris-medio);">Sin partidos asignados.</p>'}</div>
+      <div class="t3x3-actions"><button class="btn btn-sm btn-secondary can-edit" onclick="openT3X3PistaModal('${p.id}')">Editar pista</button></div></div>`;
+  }).join('')}</div>`;
+}
+function renderT3X3Integracion(){
+  const cfg=t3x3State.integraciones[0] || {};
+  const provider=document.getElementById('t3x3-int-provider');
+  const url=document.getElementById('t3x3-int-url');
+  const mapping=document.getElementById('t3x3-int-mapping');
+  if(provider && !provider.dataset.loaded){ provider.value=cfg.proveedor||'Manual / CSV'; provider.dataset.loaded='1'; }
+  if(url && !url.dataset.loaded){ url.value=cfg.fuente_url||''; url.dataset.loaded='1'; }
+  if(mapping && !mapping.dataset.loaded){ mapping.value=JSON.stringify(cfg.mapeo||{}, null, 2); mapping.dataset.loaded='1'; }
+}
+function t3x3OpenWhatsApp(teamId){
+  const e=t3x3State.equipos.find(x=>x.id===teamId); if(!e) return;
+  const tel=normalizePhone(e.telefono);
+  if(!tel){ showToast('⚠️ Este equipo no tiene teléfono'); return; }
+  const msg=encodeURIComponent(`Hola ${e.responsable||e.nombre}, somos el Club Deportivo San Viator. Te escribimos por la inscripción del equipo ${e.nombre} en el 3X3 San Viator.`);
+  window.open(`https://wa.me/34${tel}?text=${msg}`,'_blank');
+}
+function t3x3OpenMail(teamId){
+  const e=t3x3State.equipos.find(x=>x.id===teamId); if(!e||!e.email){ showToast('⚠️ Este equipo no tiene email'); return; }
+  const subject=encodeURIComponent('3X3 San Viator · Inscripción');
+  const body=encodeURIComponent(`Hola ${e.responsable||e.nombre},\n\nTe escribimos por la inscripción del equipo ${e.nombre} en el 3X3 San Viator.\n\nUn saludo.`);
+  window.location.href=`mailto:${e.email}?subject=${subject}&body=${body}`;
+}
+function openT3X3EquipoModal(id=null){
+  const e=id?t3x3State.equipos.find(x=>x.id===id):null;
+  t3x3ModalPlayers = e ? t3x3Players(e.id).map(p=>({...p})) : [
+    {id:t3x3Id('jug'), nombre:'', nacimiento:'', email:'', telefono:'', dni:'', tutor:'', alergias:'', observaciones:''},
+    {id:t3x3Id('jug'), nombre:'', nacimiento:'', email:'', telefono:'', dni:'', tutor:'', alergias:'', observaciones:''},
+    {id:t3x3Id('jug'), nombre:'', nacimiento:'', email:'', telefono:'', dni:'', tutor:'', alergias:'', observaciones:''},
+    {id:t3x3Id('jug'), nombre:'', nacimiento:'', email:'', telefono:'', dni:'', tutor:'', alergias:'', observaciones:''}
+  ];
+  document.getElementById('modal-title').textContent = id ? 'Editar equipo 3X3' : 'Nuevo equipo 3X3';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="detail-row">
+      <div class="detail-field"><label>Equipo *</label><input id="t3-e-nombre" value="${t3x3Esc(e?.nombre||'')}" placeholder="Nombre del equipo"></div>
+      <div class="detail-field"><label>Estado</label><select id="t3-e-estado">${['Pendiente','Validado','Incompleto','Baja'].map(s=>`<option ${((e?.estado||'Pendiente')===s)?'selected':''}>${s}</option>`).join('')}</select></div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-field"><label>Responsable</label><input id="t3-e-responsable" value="${t3x3Esc(e?.responsable||'')}"></div>
+      <div class="detail-field"><label>Categoría manual</label><select id="t3-e-cat"><option value="">Automática por edad</option>${T3X3_CATS.map(c=>`<option ${((e?.categoria_override||e?.categoria||'')===c)?'selected':''}>${c}</option>`).join('')}</select></div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-field"><label>Email</label><input id="t3-e-email" type="email" value="${t3x3Esc(e?.email||'')}"></div>
+      <div class="detail-field"><label>Teléfono</label><input id="t3-e-telefono" value="${t3x3Esc(e?.telefono||'')}"></div>
+    </div>
+    <div class="detail-field"><label>Notas</label><textarea id="t3-e-notas">${t3x3Esc(e?.notas||'')}</textarea></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 8px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">Jugadores</div>
+      <button type="button" class="btn btn-sm btn-secondary" onclick="t3x3AddPlayerRow()">+ Jugador</button>
+    </div>
+    <div id="t3x3-player-rows"></div>`;
+  document.getElementById('modal-footer').innerHTML = `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveT3X3Equipo('${id||''}')">Guardar equipo</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  renderT3X3PlayerRows();
+}
+function renderT3X3PlayerRows(){
+  const box=document.getElementById('t3x3-player-rows'); if(!box) return;
+  box.innerHTML=t3x3ModalPlayers.map((p,i)=>`<div class="t3x3-player-row">
+    <div class="detail-field"><label>Nombre</label><input id="t3-p-nombre-${i}" value="${t3x3Esc(p.nombre||'')}" placeholder="Nombre y apellidos"></div>
+    <div class="detail-field"><label>Nacimiento</label><input id="t3-p-nac-${i}" type="date" value="${t3x3Esc(p.nacimiento||'')}"></div>
+    <div class="detail-field"><label>Email</label><input id="t3-p-email-${i}" type="email" value="${t3x3Esc(p.email||'')}"></div>
+    <div class="detail-field"><label>Teléfono</label><input id="t3-p-tel-${i}" value="${t3x3Esc(p.telefono||'')}"></div>
+    <div class="detail-field"><label>DNI</label><input id="t3-p-dni-${i}" value="${t3x3Esc(p.dni||'')}"></div>
+    <button type="button" class="btn btn-sm btn-danger" onclick="t3x3RemovePlayerRow(${i})">Quitar</button>
+    <div class="detail-field"><label>Tutor</label><input id="t3-p-tutor-${i}" value="${t3x3Esc(p.tutor||'')}"></div>
+    <div class="detail-field"><label>Alergias</label><input id="t3-p-alergias-${i}" value="${t3x3Esc(p.alergias||'')}"></div>
+    <div class="detail-field" style="grid-column:span 3;"><label>Observaciones</label><input id="t3-p-obs-${i}" value="${t3x3Esc(p.observaciones||'')}"></div>
+  </div>`).join('');
+}
+function t3x3AddPlayerRow(){ t3x3ModalPlayers.push({id:t3x3Id('jug'), nombre:'', nacimiento:'', email:'', telefono:'', dni:'', tutor:'', alergias:'', observaciones:''}); renderT3X3PlayerRows(); }
+function t3x3RemovePlayerRow(i){ t3x3ModalPlayers.splice(i,1); renderT3X3PlayerRows(); }
+async function saveT3X3Equipo(id=''){
+  const nombre=document.getElementById('t3-e-nombre')?.value.trim();
+  if(!nombre){ showToast('⚠️ El nombre del equipo es obligatorio'); return; }
+  const now=new Date().toISOString();
+  const teamId=id||t3x3Id('eq');
+  const existing=t3x3State.equipos.find(e=>e.id===teamId);
+  const override=document.getElementById('t3-e-cat')?.value||'';
+  const equipo={ ...(existing||{}), id:teamId, torneo_id:t3x3ActiveTorneoId, nombre, responsable:document.getElementById('t3-e-responsable')?.value.trim()||'', email:document.getElementById('t3-e-email')?.value.trim()||'', telefono:document.getElementById('t3-e-telefono')?.value.trim()||'', estado:document.getElementById('t3-e-estado')?.value||'Pendiente', categoria_override:override, categoria:override, notas:document.getElementById('t3-e-notas')?.value.trim()||'', origen:existing?.origen||'Manual', updated_at:now, created_at:existing?.created_at||now };
+  if(existing) Object.assign(existing,equipo); else t3x3State.equipos.push(equipo);
+  const oldPlayers=t3x3Players(teamId);
+  for(const p of oldPlayers){
+    if(!t3x3ModalPlayers.some(mp=>mp.id===p.id)){ t3x3State.jugadores=t3x3State.jugadores.filter(x=>x.id!==p.id); await t3x3Delete('jugadores', p.id); }
+  }
+  for(let i=0;i<t3x3ModalPlayers.length;i++){
+    const p=t3x3ModalPlayers[i];
+    const nombreP=document.getElementById('t3-p-nombre-'+i)?.value.trim()||'';
+    if(!nombreP) continue;
+    const payload={ id:p.id||t3x3Id('jug'), equipo_id:teamId, nombre:nombreP, nacimiento:document.getElementById('t3-p-nac-'+i)?.value||'', email:document.getElementById('t3-p-email-'+i)?.value.trim()||'', telefono:document.getElementById('t3-p-tel-'+i)?.value.trim()||'', dni:document.getElementById('t3-p-dni-'+i)?.value.trim()||'', tutor:document.getElementById('t3-p-tutor-'+i)?.value.trim()||'', alergias:document.getElementById('t3-p-alergias-'+i)?.value.trim()||'', observaciones:document.getElementById('t3-p-obs-'+i)?.value.trim()||'', dorsal:i+1, updated_at:now, created_at:p.created_at||now };
+    payload.edad = t3x3Age(payload.nacimiento);
+    payload.categoria_detectada = t3x3CategoriaPorEdad(payload.edad);
+    const ex=t3x3State.jugadores.find(x=>x.id===payload.id);
+    if(ex) Object.assign(ex,payload); else t3x3State.jugadores.push(payload);
+    await t3x3Upsert('jugadores', payload);
+  }
+  equipo.categoria = override || t3x3CategoriaEquipo(teamId, '');
+  await t3x3Upsert('equipos', equipo);
+  closeModal();
+  showToast('✅ Equipo guardado');
+  renderT3X3();
+}
+function openT3X3ImportModal(){
+  document.getElementById('modal-title').textContent='Importar equipos 3X3';
+  document.getElementById('modal-body').innerHTML=`<p style="font-size:13px;color:var(--gris-medio);line-height:1.5;margin-bottom:12px;">Puedes importar un CSV de Google Sheets u otra plataforma. Se agrupa por nombre de equipo y reconoce columnas habituales como equipo, responsable, email, teléfono, jugador, nacimiento, jugador1, nacimiento1...</p>
+    <div style="border:2px dashed var(--amarillo);border-radius:8px;padding:24px;text-align:center;background:#fffbe6;" ondragover="event.preventDefault()" ondrop="event.preventDefault();t3x3ImportCSV({target:{files:event.dataTransfer.files}})">
+      <input type="file" id="t3x3-csv-file" accept=".csv" style="display:none" onchange="t3x3ImportCSV(event)">
+      <button class="btn btn-primary" onclick="document.getElementById('t3x3-csv-file').click()">Seleccionar CSV</button>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function t3x3HeaderValue(row, aliases){
+  for(const a of aliases){ const k=Object.keys(row).find(h=>t3x3Norm(h)===t3x3Norm(a)); if(k && row[k]) return row[k].trim(); }
+  return '';
+}
+async function t3x3ImportCSV(event){
+  const file=event.target.files?.[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    const text=ev.target.result;
+    const lines=text.split(/\r?\n/).filter(l=>l.trim());
+    if(lines.length<2){ showToast('⚠️ CSV vacío'); return; }
+    const headers=parseCSVLine(lines[0]);
+    const grouped={};
+    lines.slice(1).forEach(line=>{
+      const vals=parseCSVLine(line), row={};
+      headers.forEach((h,i)=>row[h]=vals[i]||'');
+      const equipo=t3x3HeaderValue(row,['equipo','nombre equipo','team','team name']) || 'Equipo sin nombre';
+      grouped[equipo]=grouped[equipo]||{ row, players:[] };
+      const player=t3x3HeaderValue(row,['jugador','jugador nombre','nombre jugador','player','nombre']);
+      if(player) grouped[equipo].players.push({ nombre:player, nacimiento:t3x3HeaderValue(row,['nacimiento','fecha nacimiento','fecha de nacimiento','birthdate']), email:t3x3HeaderValue(row,['email jugador','email player']), telefono:t3x3HeaderValue(row,['telefono jugador','teléfono jugador','phone player']), dni:t3x3HeaderValue(row,['dni jugador','dni']), tutor:t3x3HeaderValue(row,['tutor','madre padre tutor']), alergias:t3x3HeaderValue(row,['alergias','alergia']), observaciones:t3x3HeaderValue(row,['observaciones','notas']) });
+      for(let i=1;i<=6;i++){
+        const pj=t3x3HeaderValue(row,[`jugador${i}`,`jugador ${i}`,`nombre jugador ${i}`,`player${i}`]);
+        if(pj) grouped[equipo].players.push({ nombre:pj, nacimiento:t3x3HeaderValue(row,[`nacimiento${i}`,`nacimiento ${i}`,`fecha nacimiento ${i}`]), email:t3x3HeaderValue(row,[`email${i}`,`email jugador ${i}`]), telefono:t3x3HeaderValue(row,[`telefono${i}`,`teléfono ${i}`]), dni:t3x3HeaderValue(row,[`dni${i}`,`dni jugador ${i}`]), tutor:t3x3HeaderValue(row,[`tutor${i}`,`tutor ${i}`]), alergias:t3x3HeaderValue(row,[`alergias${i}`,`alergias ${i}`]), observaciones:t3x3HeaderValue(row,[`observaciones${i}`,`notas ${i}`]) });
+      }
+    });
+    let count=0;
+    for(const [nombre, data] of Object.entries(grouped)){
+      const row=data.row, now=new Date().toISOString();
+      let e=t3x3Teams().find(x=>t3x3Norm(x.nombre)===t3x3Norm(nombre));
+      if(!e){ e={ id:t3x3Id('eq'), torneo_id:t3x3ActiveTorneoId, nombre, created_at:now }; t3x3State.equipos.push(e); }
+      Object.assign(e,{ responsable:t3x3HeaderValue(row,['responsable','capitan','capitán','contacto'])||e.responsable||'', email:t3x3HeaderValue(row,['email','correo','email responsable'])||e.email||'', telefono:t3x3HeaderValue(row,['telefono','teléfono','movil','móvil'])||e.telefono||'', estado:e.estado||'Pendiente', origen:'CSV', updated_at:now });
+      for(const p of data.players.filter(p=>p.nombre)){
+        const payload={ id:t3x3Id('jug'), equipo_id:e.id, ...p, created_at:now, updated_at:now };
+        payload.edad=t3x3Age(payload.nacimiento); payload.categoria_detectada=t3x3CategoriaPorEdad(payload.edad);
+        t3x3State.jugadores.push(payload); await t3x3Upsert('jugadores', payload);
+      }
+      e.categoria=t3x3HeaderValue(row,['categoria','categoría']) || t3x3CategoriaEquipo(e.id, e.categoria_override);
+      await t3x3Upsert('equipos', e);
+      count++;
+    }
+    closeModal();
+    renderT3X3();
+    showToast(`✅ ${count} equipos importados`);
+  };
+  reader.readAsText(file);
+}
+function t3x3DescribeFormat(n){
+  if(n<3) return 'Pendiente: mínimo 3 equipos.';
+  if(n===3) return 'Grupo único ida y vuelta, final entre 1º y 2º.';
+  if(n<=5) return 'Grupo único todos contra todos, semifinales y final.';
+  if(n===6) return 'Dos grupos de 3 ida y vuelta, semifinales y final.';
+  if(n===7) return 'Grupo de 4 y grupo de 3 ida y vuelta para el grupo corto, semifinales y final.';
+  return 'Grupos equilibrados de 3 o 4 equipos, fase de grupos y eliminatoria.';
+}
+function t3x3BuildGroups(teams){
+  const n=teams.length, groups=[];
+  if(n<=5) return [teams];
+  let sizes=[];
+  if(n===6) sizes=[3,3];
+  else if(n===7) sizes=[4,3];
+  else {
+    let remaining=n;
+    while(remaining>0){
+      if(remaining===5){ sizes.push(5); remaining=0; }
+      else if(remaining===6){ sizes.push(3,3); remaining=0; }
+      else if(remaining===7){ sizes.push(4,3); remaining=0; }
+      else { sizes.push(4); remaining-=4; }
+    }
+  }
+  let idx=0; sizes.forEach(s=>{ groups.push(teams.slice(idx,idx+s)); idx+=s; });
+  return groups;
+}
+function t3x3RoundRobin(group, repeat=1){
+  const arr=group.slice();
+  if(arr.length%2) arr.push(null);
+  const rounds=[];
+  for(let r=0;r<arr.length-1;r++){
+    for(let i=0;i<arr.length/2;i++){
+      const a=arr[i], b=arr[arr.length-1-i];
+      if(a&&b) rounds.push([a,b]);
+    }
+    arr.splice(1,0,arr.pop());
+  }
+  const out=[];
+  for(let k=0;k<repeat;k++) rounds.forEach(([a,b])=>out.push(k%2?[b,a]:[a,b]));
+  return out;
+}
+function t3x3AddMinutes(time, mins){
+  const [h,m]=String(time||'09:00').split(':').map(Number);
+  const d=new Date(2000,0,1,h||9,m||0); d.setMinutes(d.getMinutes()+mins);
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function t3x3Schedule(matches, fecha, hora, duracion){
+  const pistas=t3x3Pistas().filter(p=>p.activa!==false);
+  matches.forEach((m,i)=>{
+    const slot=Math.floor(i/Math.max(1,pistas.length));
+    m.fecha=fecha; m.hora=t3x3AddMinutes(hora, slot*(Number(duracion)||12)); m.pista_id=pistas[i%Math.max(1,pistas.length)]?.id||null; m.orden=i+1;
+  });
+}
+async function t3x3GenerateSelected(force=false){
+  const cat=document.getElementById('t3x3-comp-cat')?.value||'';
+  const cats=cat?[cat]:t3x3CategoriesInUse();
+  if(!cats.length){ showToast('⚠️ No hay categorías'); return; }
+  for(const c of cats) await t3x3GenerateCategoria(c, force);
+  renderT3X3();
+}
+async function t3x3GenerateCategoria(cat, force=false){
+  const existing=t3x3Matches(cat);
+  if(existing.some(p=>p.estado==='Finalizado') && !force){
+    document.getElementById('modal-title').textContent='Regenerar competición';
+    document.getElementById('modal-body').innerHTML=`<p style="font-size:14px;line-height:1.6;">La categoría ${t3x3Esc(cat)} ya tiene resultados. Regenerar eliminará el calendario de esa categoría.</p>`;
+    document.getElementById('modal-footer').innerHTML=`<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn btn-danger" onclick="closeModal();t3x3GenerateCategoria('${t3x3Esc(cat)}',true)">Regenerar</button>`;
+    document.getElementById('modal-overlay').classList.add('open');
+    return;
+  }
+  const teams=t3x3Teams().filter(e=>(e.categoria||t3x3CategoriaEquipo(e.id,e.categoria_override))===cat && (e.estado||'Pendiente')!=='Baja');
+  if(teams.length<3){ showToast(`⚠️ ${cat}: mínimo 3 equipos`); return; }
+  for(const p of existing){ t3x3State.partidos=t3x3State.partidos.filter(x=>x.id!==p.id); await t3x3Delete('partidos', p.id); }
+  const groups=t3x3BuildGroups(teams);
+  const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  let matches=[];
+  groups.forEach((g,gi)=>{
+    const repeat=g.length===3?2:1;
+    t3x3RoundRobin(g,repeat).forEach(([a,b])=>matches.push({ id:t3x3Id('par'), torneo_id:t3x3ActiveTorneoId, categoria:cat, fase:'Grupo', grupo:letters[gi], ronda:'Liga', equipo_a_id:a.id, equipo_b_id:b.id, estado:'Pendiente', puntos_a:null, puntos_b:null, created_at:new Date().toISOString() }));
+  });
+  if(teams.length===3){
+    matches.push({ id:t3x3Id('par'), torneo_id:t3x3ActiveTorneoId, categoria:cat, fase:'Eliminatoria', ronda:'Final', placeholder_a:'1º Grupo A', placeholder_b:'2º Grupo A', estado:'Pendiente', created_at:new Date().toISOString() });
+  } else {
+    matches.push({ id:t3x3Id('par'), torneo_id:t3x3ActiveTorneoId, categoria:cat, fase:'Eliminatoria', ronda:'Semifinal 1', placeholder_a:groups.length===1?'1º':(groups.length===2?'1º Grupo A':'Ranking 1'), placeholder_b:groups.length===1?'4º':(groups.length===2?'2º Grupo B':'Ranking 4'), estado:'Pendiente', created_at:new Date().toISOString() });
+    matches.push({ id:t3x3Id('par'), torneo_id:t3x3ActiveTorneoId, categoria:cat, fase:'Eliminatoria', ronda:'Semifinal 2', placeholder_a:groups.length===1?'2º':(groups.length===2?'1º Grupo B':'Ranking 2'), placeholder_b:groups.length===1?'3º':(groups.length===2?'2º Grupo A':'Ranking 3'), estado:'Pendiente', created_at:new Date().toISOString() });
+    matches.push({ id:t3x3Id('par'), torneo_id:t3x3ActiveTorneoId, categoria:cat, fase:'Eliminatoria', ronda:'Final', placeholder_a:'Ganador Semifinal 1', placeholder_b:'Ganador Semifinal 2', estado:'Pendiente', created_at:new Date().toISOString() });
+  }
+  t3x3Schedule(matches, document.getElementById('t3x3-comp-fecha')?.value||t3x3Today(), document.getElementById('t3x3-comp-hora')?.value||'09:00', document.getElementById('t3x3-comp-duracion')?.value||12);
+  t3x3State.partidos.push(...matches);
+  for(const m of matches) await t3x3Upsert('partidos', m);
+  showToast(`✅ Calendario generado para ${cat}`);
+}
+function t3x3Clasificaciones(cat){
+  const matches=t3x3Matches(cat).filter(p=>p.fase==='Grupo');
+  const groups={};
+  matches.forEach(p=>{
+    groups[p.grupo]=groups[p.grupo]||{};
+    [p.equipo_a_id,p.equipo_b_id].forEach(id=>{
+      if(id&&!groups[p.grupo][id]) groups[p.grupo][id]={id,nombre:t3x3TeamName(id),pj:0,v:0,d:0,pf:0,pc:0,diff:0};
+    });
+    if(p.estado==='Finalizado' && p.equipo_a_id && p.equipo_b_id){
+      const a=groups[p.grupo][p.equipo_a_id], b=groups[p.grupo][p.equipo_b_id], pa=Number(p.puntos_a)||0, pb=Number(p.puntos_b)||0;
+      a.pj++; b.pj++; a.pf+=pa; a.pc+=pb; b.pf+=pb; b.pc+=pa; a.diff=a.pf-a.pc; b.diff=b.pf-b.pc;
+      if(pa>pb){ a.v++; b.d++; } else if(pb>pa){ b.v++; a.d++; }
+    }
+  });
+  const out={};
+  Object.keys(groups).sort().forEach(g=>{ out[g]=Object.values(groups[g]).sort((a,b)=>b.v-a.v || b.diff-a.diff || b.pf-a.pf || a.nombre.localeCompare(b.nombre)); });
+  return out;
+}
+async function t3x3UpdatePlayoffs(cat){
+  const groupMatches=t3x3Matches(cat).filter(p=>p.fase==='Grupo');
+  if(!groupMatches.length || groupMatches.some(p=>p.estado!=='Finalizado')) return;
+  const classifs=t3x3Clasificaciones(cat);
+  const groups=Object.keys(classifs).sort();
+  const playoffs=t3x3Matches(cat).filter(p=>p.fase==='Eliminatoria');
+  if(groups.length===1){
+    const rows=classifs[groups[0]];
+    playoffs.forEach(p=>{
+      if(p.ronda==='Final' && rows.length===3){ p.equipo_a_id=rows[0]?.id||null; p.equipo_b_id=rows[1]?.id||null; }
+      if(p.ronda==='Semifinal 1'){ p.equipo_a_id=rows[0]?.id||null; p.equipo_b_id=rows[3]?.id||null; }
+      if(p.ronda==='Semifinal 2'){ p.equipo_a_id=rows[1]?.id||null; p.equipo_b_id=rows[2]?.id||null; }
+    });
+  } else if(groups.length===2){
+    const a=classifs[groups[0]], b=classifs[groups[1]];
+    playoffs.forEach(p=>{
+      if(p.ronda==='Semifinal 1'){ p.equipo_a_id=a[0]?.id||null; p.equipo_b_id=b[1]?.id||null; }
+      if(p.ronda==='Semifinal 2'){ p.equipo_a_id=b[0]?.id||null; p.equipo_b_id=a[1]?.id||null; }
+    });
+  } else if(groups.length>2){
+    const ranking=groups.flatMap(g=>classifs[g].map(r=>({...r, group:g}))).sort((a,b)=>b.v-a.v || b.diff-a.diff || b.pf-a.pf || a.nombre.localeCompare(b.nombre));
+    playoffs.forEach(p=>{
+      if(p.ronda==='Semifinal 1'){ p.equipo_a_id=ranking[0]?.id||null; p.equipo_b_id=ranking[3]?.id||null; }
+      if(p.ronda==='Semifinal 2'){ p.equipo_a_id=ranking[1]?.id||null; p.equipo_b_id=ranking[2]?.id||null; }
+    });
+  }
+  const semis=playoffs.filter(p=>p.ronda&&p.ronda.startsWith('Semifinal')&&p.estado==='Finalizado');
+  const final=playoffs.find(p=>p.ronda==='Final');
+  if(final && semis.length>=2){
+    final.equipo_a_id=t3x3Winner(semis[0]);
+    final.equipo_b_id=t3x3Winner(semis[1]);
+  }
+  for(const p of playoffs) await t3x3Upsert('partidos', p);
+}
+function t3x3Winner(p){ return Number(p.puntos_a)>Number(p.puntos_b) ? p.equipo_a_id : p.equipo_b_id; }
+function openT3X3Acta(id){
+  const p=t3x3State.partidos.find(x=>x.id===id); if(!p) return;
+  document.getElementById('modal-title').textContent='Acta digital 3X3';
+  document.getElementById('modal-body').innerHTML=`<div class="t3x3-acta-score">
+    <div><div class="t3x3-card-title">${t3x3Esc(t3x3TeamName(p.equipo_a_id,p.placeholder_a))}</div><div class="t3x3-card-meta">${t3x3Esc(p.categoria)} · ${t3x3Esc(p.ronda||p.fase)}</div></div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;text-align:center;">VS</div>
+    <div style="text-align:right;"><div class="t3x3-card-title">${t3x3Esc(t3x3TeamName(p.equipo_b_id,p.placeholder_b))}</div><div class="t3x3-card-meta">${t3x3Esc(p.fecha||'')} ${t3x3Esc(p.hora||'')}</div></div>
+    <input id="t3-acta-a" type="number" min="0" value="${p.puntos_a ?? ''}">
+    <div></div>
+    <input id="t3-acta-b" type="number" min="0" value="${p.puntos_b ?? ''}">
+  </div>
+  <div class="detail-row"><div class="detail-field"><label>Faltas equipo A</label><input id="t3-acta-fa" type="number" min="0" value="0"></div><div class="detail-field"><label>Faltas equipo B</label><input id="t3-acta-fb" type="number" min="0" value="0"></div></div>
+  <div class="detail-field"><label>Incidencias</label><textarea id="t3-acta-inc" placeholder="Lesiones, retrasos, observaciones..."></textarea></div>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveT3X3Acta('${id}')">Guardar resultado</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+async function saveT3X3Acta(id){
+  const p=t3x3State.partidos.find(x=>x.id===id); if(!p) return;
+  const a=Number(document.getElementById('t3-acta-a')?.value), b=Number(document.getElementById('t3-acta-b')?.value);
+  if(isNaN(a)||isNaN(b)){ showToast('⚠️ Introduce los dos marcadores'); return; }
+  Object.assign(p,{ puntos_a:a, puntos_b:b, estado:'Finalizado', updated_at:new Date().toISOString() });
+  const email=(currentUser?.email||'').toLowerCase();
+  const mon=t3x3Monitores().find(m=>(m.email||'').toLowerCase()===email);
+  const acta={ id:t3x3Id('act'), partido_id:id, monitor_id:mon?.id||null, puntos_a:a, puntos_b:b, faltas_a:Number(document.getElementById('t3-acta-fa')?.value)||0, faltas_b:Number(document.getElementById('t3-acta-fb')?.value)||0, incidencias:document.getElementById('t3-acta-inc')?.value.trim()||'', estado:'Validada', created_at:new Date().toISOString() };
+  t3x3State.actas.push(acta);
+  await t3x3Upsert('actas', acta);
+  await t3x3Upsert('partidos', p);
+  await t3x3UpdatePlayoffs(p.categoria);
+  closeModal();
+  showToast('✅ Acta guardada y calendario actualizado');
+  renderT3X3();
+}
+function openT3X3PistaModal(id=null){
+  const p=id?t3x3State.pistas.find(x=>x.id===id):null;
+  document.getElementById('modal-title').textContent=id?'Editar pista':'Nueva pista';
+  document.getElementById('modal-body').innerHTML=`<div class="detail-row"><div class="detail-field"><label>Nombre</label><input id="t3-pis-nombre" value="${t3x3Esc(p?.nombre||'')}"></div><div class="detail-field"><label>Orden</label><input id="t3-pis-orden" type="number" value="${p?.orden||t3x3Pistas().length+1}"></div></div><label style="display:flex;gap:8px;align-items:center;font-size:13px;"><input id="t3-pis-activa" type="checkbox" ${p?.activa===false?'':'checked'}> Pista activa</label>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveT3X3Pista('${id||''}')">Guardar</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+async function saveT3X3Pista(id=''){
+  const p=id?t3x3State.pistas.find(x=>x.id===id):null, now=new Date().toISOString();
+  const payload={ ...(p||{}), id:id||t3x3Id('pis'), torneo_id:t3x3ActiveTorneoId, nombre:document.getElementById('t3-pis-nombre')?.value.trim()||'Pista', orden:Number(document.getElementById('t3-pis-orden')?.value)||1, activa:document.getElementById('t3-pis-activa')?.checked!==false, updated_at:now, created_at:p?.created_at||now };
+  if(p) Object.assign(p,payload); else t3x3State.pistas.push(payload);
+  await t3x3Upsert('pistas', payload); closeModal(); renderT3X3(); showToast('✅ Pista guardada');
+}
+function openT3X3MonitorModal(id=null){
+  const m=id?t3x3State.monitores.find(x=>x.id===id):null;
+  document.getElementById('modal-title').textContent=id?'Editar monitor':'Nuevo monitor';
+  document.getElementById('modal-body').innerHTML=`<div class="detail-row"><div class="detail-field"><label>Nombre</label><input id="t3-mon-nombre" value="${t3x3Esc(m?.nombre||'')}"></div><div class="detail-field"><label>Email usuario</label><input id="t3-mon-email" type="email" value="${t3x3Esc(m?.email||'')}"></div></div><div class="detail-row"><div class="detail-field"><label>Teléfono</label><input id="t3-mon-tel" value="${t3x3Esc(m?.telefono||'')}"></div><div class="detail-field"><label>Pista</label><select id="t3-mon-pista">${t3x3Pistas().map(p=>`<option value="${p.id}" ${m?.pista_id===p.id?'selected':''}>${t3x3Esc(p.nombre)}</option>`).join('')}</select></div></div>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveT3X3Monitor('${id||''}')">Guardar</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+async function saveT3X3Monitor(id=''){
+  const m=id?t3x3State.monitores.find(x=>x.id===id):null, now=new Date().toISOString();
+  const payload={ ...(m||{}), id:id||t3x3Id('mon'), torneo_id:t3x3ActiveTorneoId, nombre:document.getElementById('t3-mon-nombre')?.value.trim()||'Monitor', email:document.getElementById('t3-mon-email')?.value.trim()||'', telefono:document.getElementById('t3-mon-tel')?.value.trim()||'', pista_id:document.getElementById('t3-mon-pista')?.value||null, activo:true, updated_at:now, created_at:m?.created_at||now };
+  if(m) Object.assign(m,payload); else t3x3State.monitores.push(payload);
+  await t3x3Upsert('monitores', payload); closeModal(); renderT3X3(); showToast('✅ Monitor guardado');
+}
+async function saveT3X3Integracion(){
+  let mapping={};
+  try { mapping=JSON.parse(document.getElementById('t3x3-int-mapping')?.value||'{}'); } catch(_){ showToast('⚠️ El mapeo debe ser JSON válido'); return; }
+  const cfg=t3x3State.integraciones[0] || { id:t3x3Id('int'), torneo_id:t3x3ActiveTorneoId };
+  Object.assign(cfg,{ proveedor:document.getElementById('t3x3-int-provider')?.value||'Manual / CSV', fuente_url:document.getElementById('t3x3-int-url')?.value.trim()||'', mapeo:mapping, estado:'Configurado', updated_at:new Date().toISOString() });
+  if(!t3x3State.integraciones.some(i=>i.id===cfg.id)) t3x3State.integraciones.push(cfg);
+  await t3x3Upsert('integraciones', cfg);
+  showToast('✅ Integración guardada');
+}
+// ════════════════════════════════════════════════════════
 // NAVEGACIÓN
 // ════════════════════════════════════════════════════════
-const TITLES={dashboard:'Pruebas · Inscritos',inscritos:'Pruebas · Inscritos',usuarios:'Administración · Usuarios',integracion:'Pruebas · Integración',pruebas:'Pruebas · Calendario',campus:'Campus Salamanca',mensajes:'Mensajes','mi-ficha':'Mi Ficha',entrenamientos:'Planificador de Entrenamientos',modulos:'Configuración · Módulos'};
-const MODULOS_DISPONIBLES = ['Pruebas Temporada','Campus Salamanca','Campus Madrid','Tecnificación','Escuela','Mensajes','Administración'];
+const TITLES={dashboard:'Pruebas · Inscritos',inscritos:'Pruebas · Inscritos',usuarios:'Administración · Usuarios',integracion:'Pruebas · Integración',pruebas:'Pruebas · Calendario',campus:'Campus Salamanca',tresx3:'3X3 San Viator',mensajes:'Mensajes','mi-ficha':'Mi Ficha',entrenamientos:'Planificador de Entrenamientos',modulos:'Configuración · Módulos'};
+const MODULOS_DISPONIBLES = ['Pruebas Temporada','Campus Salamanca','3X3 San Viator','Campus Madrid','Tecnificación','Escuela','Mensajes','Administración'];
 const PRUEBAS_CATEGORIAS_PERMISOS = ['Benjamín Fútbol','Benjamín masculino Baloncesto','Benjamín femenino Baloncesto','Alevín Fútbol','Alevín masculino Baloncesto','Alevín femenino Baloncesto','Infantil Fútbol','Infantil masculino Baloncesto','Infantil femenino Baloncesto','Cadete Fútbol','Cadete masculino Baloncesto','Cadete femenino Baloncesto','Juvenil Fútbol','Junior masculino Baloncesto','Junior femenino Baloncesto','Aficionado Fútbol','S22 Masculino Baloncesto','Senior masculino Baloncesto','Senior femenino Baloncesto'];
 const CAMPUS_CATEGORIAS = ['Basket 1','Basket 2','Basket 3','Basket 4','Basket 5','Basket 6','Minibasket','Fútbol 1','Fútbol 2','Fútbol 3'];
 function showPanel(name){
   if(name==='dashboard') name='inscritos';
-  const guard = {inscritos:'Pruebas Temporada',pruebas:'Pruebas Temporada',integracion:'Pruebas Temporada',campus:'Campus Salamanca',mensajes:'Mensajes',usuarios:'Administración',modulos:'Administración'};
+  const guard = {inscritos:'Pruebas Temporada',pruebas:'Pruebas Temporada',integracion:'Pruebas Temporada',campus:'Campus Salamanca',tresx3:'3X3 San Viator',mensajes:'Mensajes',usuarios:'Administración',modulos:'Administración'};
   if(guard[name] && !hasModuloAccess(guard[name]) && currentPerfil?.rol!=='admin' && currentPerfil?.rol!=='jugador') { showToast('⛔ No tienes acceso a ese módulo'); return; }
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -1739,7 +2553,13 @@ function showPanel(name){
   panel.classList.add('active');
   document.querySelector('.nav-item[onclick*="\''+name+'\'"]')?.classList.add('active');
   document.getElementById('panel-title').textContent=TITLES[name]||name;
+  const addBtn = document.getElementById('topbar-add-btn');
+  if(addBtn){
+    if(name==='tresx3'){ addBtn.textContent = '+ Equipo 3X3'; addBtn.onclick = () => openT3X3EquipoModal(); }
+    else { addBtn.textContent = '+ Añadir inscrito'; addBtn.onclick = () => openAddModal(); }
+  }
   if(name==='inscritos'){ renderDashboard(); renderView(); }
+  if(name==='tresx3') loadT3X3();
   if(name==='usuarios') loadUsers();
   if(name==='pruebas') renderPruebas();
   if(name==='mensajes') renderMensajes();
@@ -4646,7 +5466,8 @@ let pizarraCtx = null, pizarraDrawing = false, pizarraTool = 'flecha', pizarraCo
 let pizarraHistory = [], pizarraLastX = 0, pizarraLastY = 0;
 
 // Módulos activos en la configuración del club
-let modulosActivos = JSON.parse(localStorage.getItem('sv_modulos_activos') || '["pruebas","campus","mensajes","admin"]');
+let modulosActivos = JSON.parse(localStorage.getItem('sv_modulos_activos') || '["pruebas","campus","3x3","mensajes","admin"]');
+if(!modulosActivos.includes('3x3')) modulosActivos.push('3x3');
 
 const ET_TIPO_STYLE = {
   'Técnico':           {cls:'et-tag-tecnico',     icon:'🎯'},
@@ -5057,6 +5878,7 @@ function showPlanificadorCampus() {
 const MODULOS_CONFIG = [
   { id:'pruebas',         nombre:'Pruebas Temporada', icon:'📅', desc:'Incluye inscritos, calendario e integración de pruebas.' },
   { id:'campus',          nombre:'Campus Salamanca',  icon:'🏕️', desc:'Gestión del campus de verano: participantes, horario, veladas, médico y planificador.' },
+  { id:'3x3',             nombre:'3X3 San Viator',    icon:'🏀', desc:'Inscripciones de equipos, categorías, competición, pistas, monitores y acta digital.' },
   { id:'mensajes',        nombre:'Mensajes',          icon:'💬', desc:'Chat 1 a 1 y canales de grupo por equipo.' },
   { id:'admin',           nombre:'Administración',    icon:'⚙️', desc:'Usuarios, permisos y configuración de módulos.' },
 ];
