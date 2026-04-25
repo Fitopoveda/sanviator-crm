@@ -3921,8 +3921,11 @@ async function loadCampusGastos(force=false){
   }
 }
 async function saveCampusGastoToDB(payload){
+  // La tabla esperada es public.campus_gastos. Si falta alguna columna o una
+  // policy RLS bloquea el insert/update, lanzamos el error real para mostrarlo
+  // en pantalla y no dejar al usuario sin pista.
   const dbPayload = {
-    id: payload.id,
+    id: String(payload.id),
     modulo: 'Campus Salamanca',
     concepto: payload.concepto || '',
     importe: Number(payload.importe) || 0,
@@ -3934,13 +3937,17 @@ async function saveCampusGastoToDB(payload){
     metodo_pago: payload.metodo_pago || '',
     metodo_pago_otro: payload.metodo_pago_otro || '',
     factura_imagen_data: payload.factura_imagen_data || '',
-    factura_imagen_nombre: payload.factura_imagen_nombre || ''
+    factura_imagen_nombre: payload.factura_imagen_nombre || '',
+    updated_at: new Date().toISOString()
   };
   const { data, error } = await sb.from(CAMPUS_GASTOS_TABLE)
     .upsert(dbPayload, { onConflict:'id' })
     .select()
     .single();
-  if(error) throw error;
+  if(error){
+    console.error('Supabase campus_gastos error:', error);
+    throw error;
+  }
   return data || dbPayload;
 }
 function toggleCampusMetodoPagoOtro(){
@@ -4075,7 +4082,7 @@ async function saveCampusGasto(){
   if(metodoPago === 'Otro' && !metodoPagoOtro){ showToast('⚠️ Especifica el otro método de pago'); return; }
   const gastos = getCampusGastos().slice();
   const payload = {
-    id: campusGastoEditingId || (crypto.randomUUID ? crypto.randomUUID() : ('gasto_' + Date.now())),
+    id: campusGastoEditingId || ((window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('gasto_' + Date.now())),
     modulo: 'Campus Salamanca',
     concepto, importe, proveedor, factura, fecha, cuenta, comentario,
     metodo_pago: metodoPago,
@@ -4098,7 +4105,8 @@ async function saveCampusGasto(){
     const idx = gastos.findIndex(g => String(g.id) === String(payload.id));
     if(idx >= 0) gastos[idx] = payload; else gastos.unshift(payload);
     saveCampusGastosLocal(gastos);
-    showToast('⚠️ No se pudo guardar en la base de datos. Se ha guardado solo en este navegador.');
+    const msg = err?.message || err?.details || err?.hint || 'error desconocido';
+    showToast('⚠️ No se pudo guardar en Supabase: ' + msg);
     closeModal();
     await renderCuentasCampus(false);
   }
