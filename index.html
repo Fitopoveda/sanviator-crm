@@ -2858,12 +2858,25 @@ function saveHorarioDia(n,f){const s=JSON.parse(localStorage.getItem('sv_hor_dia
 function getPistaDia(n,eq,t){return localStorage.getItem(`sv_hor_pistas_d${n}_${eq}_${t}`)||HOR_PISTAS_DEFAULT[t]?.[eq]||'—';}
 function savePistaDia(n,eq,t,v){localStorage.setItem(`sv_hor_pistas_d${n}_${eq}_${t}`,v);}
 
-function renderHorarioCampus() {
+async function renderHorarioCampus() {
   const diaNum = parseInt(document.getElementById('hor-dia-sel')?.value||2);
   const equipoFiltro = document.getElementById('hor-equipo-sel')?.value||'';
   const isAdmin = currentPerfil?.rol==='admin'||currentPerfil?.rol==='entrenador';
   const diaInfo = HOR_DIAS.find(d=>d.num===diaNum)||HOR_DIAS[1];
   let filas = getHorarioDia(diaNum);
+  try {
+    const veladasDia = (await getVeladas()).filter(v => veladaDiaNum(v) === diaNum);
+    const filasVeladas = veladasDia.map(v => ({
+      hora: getVeladaHoraInicio(v),
+      hora_fin: getVeladaHoraFin(v),
+      act: 'Velada: ' + (v.nombre || 'Sin nombre'),
+      tipo: 'velada',
+      equipos: normalizeVeladaArray(v.grupos),
+      _fromVelada: true,
+      _veladaId: v.id
+    }));
+    filas = [...filas, ...filasVeladas].sort((a,b) => String(a.hora||'').localeCompare(String(b.hora||'')));
+  } catch(err) { console.warn('No se pudieron integrar las veladas en el horario:', err); }
 
   const hdr = document.getElementById('hor-dia-header');
   if(hdr) hdr.innerHTML = `<div style="display:flex;align-items:center;gap:14px;padding:14px 20px;background:var(--negro);border-radius:10px;color:var(--blanco);margin-bottom:0;">
@@ -2889,21 +2902,22 @@ function renderHorarioCampus() {
         const st = HOR_TIPO_STYLE[f.tipo]||HOR_TIPO_STYLE.ocio;
         const eqTags = (f.equipos?.length?f.equipos.map(e=>`<span style="background:${CAMPUS_EQUIPO_COLORS[e]||'#888'};color:#fff;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;">${e}</span>`).join(''):'');
         const isEntreno = f.tipo==='entreno';
+        const isAutoVelada = !!f._fromVelada;
         return `<div style="display:flex;align-items:stretch;border-bottom:1px solid var(--gris-claro);min-height:52px;">
           <div style="min-width:66px;padding:10px 8px;display:flex;align-items:center;justify-content:center;background:${st.bg}30;border-right:3px solid ${st.bg};">
-            ${isAdmin?`<input type="time" value="${f.hora}" onchange="editHorFila(${diaNum},${realIdx},'hora',this.value)" style="border:none;background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;color:var(--negro);width:62px;outline:none;text-align:center;">`
+            ${isAdmin&&!isAutoVelada?`<input type="time" value="${f.hora}" onchange="editHorFila(${diaNum},${realIdx},'hora',this.value)" style="border:none;background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;color:var(--negro);width:62px;outline:none;text-align:center;">`
             :`<span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;">${f.hora}</span>`}
           </div>
           <div style="width:34px;display:flex;align-items:center;justify-content:center;background:${st.bg};font-size:15px;">${st.icon}</div>
           <div style="flex:1;padding:8px 12px;display:flex;flex-direction:column;justify-content:center;gap:3px;">
-            ${isAdmin?`<input type="text" value="${f.act.replace(/"/g,'&quot;')}" onchange="editHorFila(${diaNum},${realIdx},'act',this.value)" style="border:none;border-bottom:2px solid transparent;background:transparent;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--negro);outline:none;width:100%;" onfocus="this.style.borderBottomColor='var(--amarillo)'" onblur="this.style.borderBottomColor='transparent'">`
+            ${isAdmin&&!isAutoVelada?`<input type="text" value="${f.act.replace(/"/g,'&quot;')}" onchange="editHorFila(${diaNum},${realIdx},'act',this.value)" style="border:none;border-bottom:2px solid transparent;background:transparent;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--negro);outline:none;width:100%;" onfocus="this.style.borderBottomColor='var(--amarillo)'" onblur="this.style.borderBottomColor='transparent'">`
             :`<div style="font-size:13px;font-weight:700;">${f.act}</div>`}
             <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
-              ${isAdmin?`<select onchange="editHorFila(${diaNum},${realIdx},'tipo',this.value)" style="border:1px solid var(--gris-claro);border-radius:4px;padding:2px 5px;font-size:10.5px;font-family:'Barlow',sans-serif;background:${st.bg};color:${st.color};font-weight:700;outline:none;">${Object.entries(HOR_TIPO_STYLE).map(([k,v])=>`<option value="${k}" ${f.tipo===k?'selected':''}>${v.icon} ${k}</option>`).join('')}</select>`:`<span style="background:${st.bg};color:${st.color};border-radius:20px;padding:1px 8px;font-size:10px;font-weight:700;">${st.icon} ${f.tipo}</span>`}
+              ${isAdmin&&!isAutoVelada?`<select onchange="editHorFila(${diaNum},${realIdx},'tipo',this.value)" style="border:1px solid var(--gris-claro);border-radius:4px;padding:2px 5px;font-size:10.5px;font-family:'Barlow',sans-serif;background:${st.bg};color:${st.color};font-weight:700;outline:none;">${Object.entries(HOR_TIPO_STYLE).map(([k,v])=>`<option value="${k}" ${f.tipo===k?'selected':''}>${v.icon} ${k}</option>`).join('')}</select>`:`<span style="background:${st.bg};color:${st.color};border-radius:20px;padding:1px 8px;font-size:10px;font-weight:700;">${st.icon} ${f.tipo}</span>`}
               ${eqTags}
             </div>
           </div>
-          ${isAdmin?`<div style="padding:0 6px;display:flex;align-items:center;gap:3px;">
+          ${isAdmin&&!isAutoVelada?`<div style="padding:0 6px;display:flex;align-items:center;gap:3px;">
             ${isEntreno&&equipoFiltro?`<button onclick="abrirEntrenoDesdeHorario('${equipoFiltro}',${diaNum})" title="Ver/Crear entreno" style="background:#dbeafe;border:1px solid #1e40af;color:#1e40af;border-radius:4px;cursor:pointer;font-size:10px;font-weight:700;padding:3px 6px;white-space:nowrap;">📋 Entreno</button>`:''}
             <button onclick="openEditEquiposActividad(${diaNum},${realIdx})" style="background:none;border:1px solid var(--gris-claro);border-radius:4px;cursor:pointer;font-size:11px;padding:3px 5px;color:var(--gris-medio);" title="Equipos">👥</button>
             <button onclick="deleteHorFila(${diaNum},${realIdx})" style="background:none;border:none;cursor:pointer;color:var(--gris-medio);font-size:17px;padding:0 3px;line-height:1;" onmouseover="this.style.color='var(--rojo)'" onmouseout="this.style.color='var(--gris-medio)'">×</button>
@@ -5682,6 +5696,61 @@ const FRANJAS_VELADA = [
   { id:'tarde', label:'🌅 Tarde (siesta)',  inicio:'15:30', fin:'16:30', color:'#fef3c7', textColor:'#92400e' },
   { id:'noche', label:'🌙 Noche (post-cena)', inicio:'21:45', fin:'23:00', color:'#fce7f3', textColor:'#9d174d' }
 ];
+const TIPOS_VELADA = [
+  { id:'competicion', label:'Competición', color:'#f97316' },
+  { id:'ocio', label:'Ocio', color:'#3b82f6' },
+  { id:'excursion', label:'Excursión', color:'#10b981' },
+  { id:'especial', label:'Especial', color:'#8b5cf6' },
+  { id:'recuperacion', label:'Recuperación', color:'#6b7280' }
+];
+let veladaPdfData = '';
+let veladaPdfNombre = '';
+
+function tipoVeladaInfo(tipo){ return TIPOS_VELADA.find(t => t.id === tipo) || TIPOS_VELADA[1]; }
+function campusDateFromDiaNum(num){
+  const d = HOR_DIAS.find(x => Number(x.num) === Number(num));
+  if(!d) return '2026-07-02';
+  const day = String(Number((d.fecha || '').split(' ')[0] || num)).padStart(2,'0');
+  return `2026-07-${day}`;
+}
+function campusDiaNumFromFecha(fecha){
+  if(!fecha) return null;
+  const parts = String(fecha).split('-').map(Number);
+  if(parts.length >= 3 && parts[1] === 7 && parts[2] >= 1 && parts[2] <= 10) return parts[2];
+  return null;
+}
+function normalizeVeladaArray(v){
+  if(Array.isArray(v)) return v;
+  if(typeof v === 'string') { try { const parsed = JSON.parse(v); return Array.isArray(parsed) ? parsed : []; } catch(_) { return v ? [v] : []; } }
+  return [];
+}
+function getVeladaHoraInicio(v){
+  const franja = FRANJAS_VELADA.find(f => f.id === v.franja) || FRANJAS_VELADA[1];
+  return v.hora_inicio || v.hora || franja.inicio || '21:45';
+}
+function getVeladaHoraFin(v){
+  const franja = FRANJAS_VELADA.find(f => f.id === v.franja) || FRANJAS_VELADA[1];
+  return v.hora_fin || franja.fin || '';
+}
+function veladaDiaNum(v){ return Number(v.dia_num || campusDiaNumFromFecha(v.fecha) || 0); }
+function handleVeladaPdfChange(ev){
+  const file = ev?.target?.files?.[0];
+  if(!file){ veladaPdfData=''; veladaPdfNombre=''; return; }
+  if(file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')){ showToast('⚠️ Sube un archivo PDF'); ev.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    veladaPdfData = reader.result || '';
+    veladaPdfNombre = file.name;
+    const el = document.getElementById('vel-pdf-preview');
+    if(el) el.innerHTML = `<span style="background:#fee2e2;color:#991b1b;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;">📄 ${escHtml(file.name)}</span>`;
+  };
+  reader.readAsDataURL(file);
+}
+function renderVeladaPdfLink(v){
+  if(!v?.pdf_data) return '';
+  const name = escHtml(v.pdf_nombre || 'Descripción velada.pdf');
+  return `<a href="${v.pdf_data}" download="${name}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:#fee2e2;color:#991b1b;text-decoration:none;border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;margin-top:8px;">📄 ${name}</a>`;
+}
 
 window._veladasFiltro = 'todas';
 
@@ -5720,23 +5789,29 @@ async function renderVeladas() {
   }
 
   grid.innerHTML = '';
-  filtradas.forEach(v => {
+  filtradas.sort((a,b) => (veladaDiaNum(a)-veladaDiaNum(b)) || String(getVeladaHoraInicio(a)).localeCompare(String(getVeladaHoraInicio(b)))).forEach(v => {
     const franja = FRANJAS_VELADA.find(f => f.id === v.franja) || FRANJAS_VELADA[1];
-    const monitoresHtml = (v.monitores || []).length
-      ? (v.monitores || []).map(n => `<span style="background:#f3f4f6;font-size:11px;padding:2px 8px;border-radius:20px;margin:2px;">${n}</span>`).join('')
+    const tipo = tipoVeladaInfo(v.tipo_velada || v.tipo);
+    const monitoresHtml = normalizeVeladaArray(v.monitores).length
+      ? normalizeVeladaArray(v.monitores).map(m => `<span style="background:#f3f4f6;font-size:11px;padding:2px 8px;border-radius:20px;margin:2px;">${escHtml(typeof m === 'string' ? m : (m.nombre || m.id || 'Monitor'))}</span>`).join('')
       : '<span style="color:var(--gris-medio);font-size:11px;">Sin monitores asignados</span>';
-    const lugaresHtml = (v.lugares || []).length
-      ? (v.lugares || []).map(l => `<span style="background:#e0f2fe;color:#0369a1;font-size:11px;padding:2px 8px;border-radius:20px;margin:2px;">📍 ${l}</span>`).join('')
+    const gruposHtml = normalizeVeladaArray(v.grupos).length
+      ? normalizeVeladaArray(v.grupos).map(g => `<span style="background:${CAMPUS_EQUIPO_COLORS[g]||'#888'};color:#fff;font-size:11px;padding:2px 8px;border-radius:20px;margin:2px;">${escHtml(g)}</span>`).join('')
+      : '<span style="color:var(--gris-medio);font-size:11px;">Todos / sin grupos definidos</span>';
+    const lugaresHtml = normalizeVeladaArray(v.lugares).length
+      ? normalizeVeladaArray(v.lugares).map(l => `<span style="background:#e0f2fe;color:#0369a1;font-size:11px;padding:2px 8px;border-radius:20px;margin:2px;">📍 ${escHtml(l)}</span>`).join('')
       : '<span style="color:var(--gris-medio);font-size:11px;">Sin lugar</span>';
+    const dia = HOR_DIAS.find(d => d.num === veladaDiaNum(v));
+    const fechaTxt = v.fecha ? new Date(v.fecha + 'T00:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'}) : (dia ? `${dia.dia} ${dia.fecha}` : 'Sin fecha');
 
     const card = document.createElement('div');
-    card.style.cssText = 'background:#fff;border:1px solid var(--gris-claro);border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);';
+    card.style.cssText = `background:#fff;border:1px solid var(--gris-claro);border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-top:4px solid ${tipo.color};`;
     card.innerHTML = `
       <div style="background:${franja.color};padding:12px 16px;border-bottom:1px solid rgba(0,0,0,0.06);">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
           <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:800;">${v.nombre}</div>
-            <div style="font-size:12px;font-weight:700;color:${franja.textColor};">${franja.label} · ${franja.inicio}–${franja.fin}</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:800;">${escHtml(v.nombre || 'Sin nombre')}</div>
+            <div style="font-size:12px;font-weight:700;color:${franja.textColor};">📅 ${escHtml(fechaTxt)} · ${getVeladaHoraInicio(v)}–${getVeladaHoraFin(v) || '—'} · ${franja.label}</div>
           </div>
           ${isAdmin ? `<div style="display:flex;gap:6px;">
             <button data-edit="${v.id}" style="background:rgba(0,0,0,0.08);border:none;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;">✏️</button>
@@ -5745,122 +5820,88 @@ async function renderVeladas() {
         </div>
       </div>
       <div style="padding:14px 16px;">
-        <div style="margin-bottom:8px;">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:4px;">📍 LUGARES</div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;">${lugaresHtml}</div>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:4px;">👥 MONITORES</div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;">${monitoresHtml}</div>
-        </div>
-        ${v.descripcion ? `<div style="margin-top:10px;font-size:12px;color:var(--gris-medio);font-style:italic;">${v.descripcion}</div>` : ''}
-      </div>
-    `;
+        <div style="margin-bottom:8px;"><span style="background:${tipo.color};color:#fff;border-radius:20px;padding:2px 9px;font-size:11px;font-weight:800;text-transform:uppercase;">${escHtml(tipo.label)}</span></div>
+        <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:4px;">📍 LUGARES</div><div style="display:flex;flex-wrap:wrap;gap:4px;">${lugaresHtml}</div></div>
+        <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:4px;">👥 GRUPOS PARTICIPANTES</div><div style="display:flex;flex-wrap:wrap;gap:4px;">${gruposHtml}</div></div>
+        <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:4px;">👨‍🏫 MONITORES</div><div style="display:flex;flex-wrap:wrap;gap:4px;">${monitoresHtml}</div></div>
+        ${v.descripcion ? `<div style="margin-top:10px;font-size:12px;color:var(--gris-medio);font-style:italic;">${escHtml(v.descripcion)}</div>` : ''}
+        ${renderVeladaPdfLink(v)}
+      </div>`;
     card.querySelector('[data-edit]')?.addEventListener('click', () => openEditVelada(v.id));
     card.querySelector('[data-del]')?.addEventListener('click', () => deleteVelada(v.id));
     grid.appendChild(card);
   });
 }
 
-async function openAddVelada() {
-  const { data: monitores } = await sb.from('monitores').select('id,nombre,equipo').order('nombre');
-  const mOpts = (monitores||[]).map(m => `
-    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:4px 0;">
-      <input type="checkbox" value="${m.nombre}" style="width:14px;height:14px;accent-color:var(--amarillo);">
-      <span>${m.nombre}</span>
-      <span style="font-size:11px;color:var(--gris-medio);background:#f3f4f6;padding:1px 6px;border-radius:10px;">${m.equipo||'—'}</span>
-    </label>`).join('');
+async function openAddVelada() { await openVeladaForm(null); }
+async function openEditVelada(id) { await openVeladaForm(id); }
 
-  const lOpts = LUGARES_VELADA.map(l => `
-    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:3px 0;">
-      <input type="checkbox" value="${l}" style="width:14px;height:14px;accent-color:var(--amarillo);"> ${l}
-    </label>`).join('');
-
-  const fOpts = FRANJAS_VELADA.map(f => `<option value="${f.id}">${f.label} (${f.inicio}–${f.fin})</option>`).join('');
-
-  document.getElementById('modal-title').textContent = '🌙 Nueva velada';
-  document.getElementById('modal-body').innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:14px;">
-      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Nombre de la velada *</label>
-        <input id="vel-nombre" class="form-input" placeholder="Ej: Olimpiadas nocturnas" style="width:100%;margin-top:4px;"></div>
-      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Franja horaria *</label>
-        <select id="vel-franja" class="form-input" style="width:100%;margin-top:4px;">${fOpts}</select></div>
-      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Descripción (opcional)</label>
-        <textarea id="vel-desc" class="form-input" placeholder="Breve descripción de la actividad..." style="width:100%;margin-top:4px;height:60px;resize:vertical;"></textarea></div>
-      <div>
-        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:8px;display:block;">📍 Lugar(es)</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;background:#f9fafb;border-radius:8px;padding:10px;max-height:180px;overflow-y:auto;" id="vel-lugares-check">${lOpts}</div>
-      </div>
-      <div>
-        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:8px;display:block;">👥 Monitores asignados</label>
-        <div style="display:flex;flex-direction:column;background:#f9fafb;border-radius:8px;padding:10px;max-height:200px;overflow-y:auto;" id="vel-monitores-check">
-          ${mOpts.length ? mOpts : '<p style="font-size:12px;color:var(--gris-medio);">No hay monitores registrados.</p>'}
-        </div>
-      </div>
-      <button onclick="saveVelada(null)" class="btn btn-primary" style="background:#c0392b;margin-top:4px;">💾 Guardar velada</button>
-    </div>`;
-  openModal();
-}
-
-async function openEditVelada(id) {
-  const { data: v } = await sb.from('veladas').select('*').eq('id', id).single();
-  if (!v) { showToast('❌ Velada no encontrada'); return; }
-  const { data: monitores } = await sb.from('monitores').select('id,nombre,equipo').order('nombre');
-
-  const mOpts = (monitores||[]).map(m => `
-    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:4px 0;">
-      <input type="checkbox" value="${m.nombre}" ${(v.monitores||[]).includes(m.nombre)?'checked':''} style="width:14px;height:14px;accent-color:var(--amarillo);">
-      <span>${m.nombre}</span>
-      <span style="font-size:11px;color:var(--gris-medio);background:#f3f4f6;padding:1px 6px;border-radius:10px;">${m.equipo||'—'}</span>
-    </label>`).join('');
-
-  const lOpts = LUGARES_VELADA.map(l => `
-    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:3px 0;">
-      <input type="checkbox" value="${l}" ${(v.lugares||[]).includes(l)?'checked':''} style="width:14px;height:14px;accent-color:var(--amarillo);"> ${l}
-    </label>`).join('');
-
+async function openVeladaForm(id=null) {
+  const isEdit = !!id;
+  veladaPdfData = '';
+  veladaPdfNombre = '';
+  const [{ data: monitores }, existing] = await Promise.all([
+    sb.from('monitores').select('id,nombre,equipo').order('nombre'),
+    isEdit ? sb.from('veladas').select('*').eq('id', id).single() : Promise.resolve({ data:null })
+  ]);
+  const v = existing?.data || {};
+  if(isEdit && !v.id) { showToast('❌ Velada no encontrada'); return; }
+  veladaPdfData = v.pdf_data || '';
+  veladaPdfNombre = v.pdf_nombre || '';
+  const fechaDefault = v.fecha || campusDateFromDiaNum(v.dia_num || document.getElementById('hor-dia-sel')?.value || 2);
+  const horaInicioDefault = v.hora_inicio || (FRANJAS_VELADA.find(f=>f.id===v.franja)?.inicio || '21:45');
+  const horaFinDefault = v.hora_fin || (FRANJAS_VELADA.find(f=>f.id===v.franja)?.fin || '23:00');
+  const monitoresSel = normalizeVeladaArray(v.monitores).map(x => typeof x === 'string' ? x : (x.nombre || x.id));
+  const gruposSel = normalizeVeladaArray(v.grupos);
+  const lugaresSel = normalizeVeladaArray(v.lugares);
+  const mOpts = (monitores||[]).map(m => `<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:4px 0;"><input type="checkbox" value="${escHtml(m.nombre)}" data-id="${escHtml(m.id)}" ${monitoresSel.includes(m.nombre)||monitoresSel.includes(String(m.id))?'checked':''} style="width:14px;height:14px;accent-color:var(--amarillo);"><span>${escHtml(m.nombre)}</span><span style="font-size:11px;color:var(--gris-medio);background:#f3f4f6;padding:1px 6px;border-radius:10px;">${escHtml(m.equipo||'—')}</span></label>`).join('');
+  const lOpts = LUGARES_VELADA.map(l => `<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:3px 0;"><input type="checkbox" value="${escHtml(l)}" ${lugaresSel.includes(l)?'checked':''} style="width:14px;height:14px;accent-color:var(--amarillo);"> ${escHtml(l)}</label>`).join('');
+  const gOpts = EQUIPOS_HOR.map(g => `<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:3px 0;"><input type="checkbox" value="${escHtml(g)}" ${gruposSel.includes(g)?'checked':''} style="width:14px;height:14px;accent-color:var(--amarillo);"> <span style="background:${CAMPUS_EQUIPO_COLORS[g]||'#888'};color:#fff;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;">${escHtml(g)}</span></label>`).join('');
   const fOpts = FRANJAS_VELADA.map(f => `<option value="${f.id}" ${v.franja===f.id?'selected':''}>${f.label} (${f.inicio}–${f.fin})</option>`).join('');
+  const tOpts = TIPOS_VELADA.map(t => `<option value="${t.id}" ${(v.tipo_velada || v.tipo || 'ocio')===t.id?'selected':''}>${t.label}</option>`).join('');
 
-  document.getElementById('modal-title').textContent = '✏️ Editar velada';
+  document.getElementById('modal-title').textContent = isEdit ? '✏️ Editar velada' : '🌙 Nueva velada';
   document.getElementById('modal-body').innerHTML = `
     <div style="display:flex;flex-direction:column;gap:14px;">
-      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Nombre *</label>
-        <input id="vel-nombre" class="form-input" value="${v.nombre||''}" style="width:100%;margin-top:4px;"></div>
-      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Franja horaria *</label>
-        <select id="vel-franja" class="form-input" style="width:100%;margin-top:4px;">${fOpts}</select></div>
-      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Descripción</label>
-        <textarea id="vel-desc" class="form-input" style="width:100%;margin-top:4px;height:60px;resize:vertical;">${v.descripcion||''}</textarea></div>
-      <div>
-        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:8px;display:block;">📍 Lugar(es)</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;background:#f9fafb;border-radius:8px;padding:10px;max-height:180px;overflow-y:auto;">${lOpts}</div>
-      </div>
-      <div>
-        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:8px;display:block;">👥 Monitores asignados</label>
-        <div style="display:flex;flex-direction:column;background:#f9fafb;border-radius:8px;padding:10px;max-height:200px;overflow-y:auto;">
-          ${mOpts.length ? mOpts : '<p style="font-size:12px;color:var(--gris-medio);">No hay monitores.</p>'}
-        </div>
-      </div>
-      <button onclick="saveVelada('${v.id}')" class="btn btn-primary" style="background:#c0392b;margin-top:4px;">💾 Guardar cambios</button>
+      <div class="detail-row"><div class="detail-field"><label>Nombre de la velada *</label><input id="vel-nombre" type="text" placeholder="Ej: Olimpiadas nocturnas" value="${escHtml(v.nombre||'')}"></div><div class="detail-field"><label>Tipo de velada *</label><select id="vel-tipo">${tOpts}</select></div></div>
+      <div class="detail-row"><div class="detail-field"><label>Fecha *</label><input id="vel-fecha" type="date" value="${escHtml(fechaDefault)}"></div><div class="detail-field"><label>Franja</label><select id="vel-franja" onchange="const f=FRANJAS_VELADA.find(x=>x.id===this.value); if(f){document.getElementById('vel-hora-inicio').value=f.inicio;document.getElementById('vel-hora-fin').value=f.fin;}">${fOpts}</select></div></div>
+      <div class="detail-row"><div class="detail-field"><label>Hora inicio *</label><input id="vel-hora-inicio" type="time" value="${escHtml(horaInicioDefault)}"></div><div class="detail-field"><label>Hora fin</label><input id="vel-hora-fin" type="time" value="${escHtml(horaFinDefault)}"></div></div>
+      <div class="detail-field"><label>Descripción</label><textarea id="vel-desc" placeholder="Breve descripción de la actividad...">${escHtml(v.descripcion||'')}</textarea></div>
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:8px;display:block;">📍 Lugar(es)</label><div id="vel-lugares-check" style="display:grid;grid-template-columns:1fr 1fr;gap:2px;background:#f9fafb;border-radius:8px;padding:10px;max-height:180px;overflow-y:auto;">${lOpts}</div></div>
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:8px;display:block;">👥 Grupos que participan</label><div id="vel-grupos-check" style="display:grid;grid-template-columns:1fr 1fr;gap:2px;background:#f9fafb;border-radius:8px;padding:10px;max-height:180px;overflow-y:auto;">${gOpts}</div></div>
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:8px;display:block;">👨‍🏫 Monitores asignados</label><div id="vel-monitores-check" style="display:flex;flex-direction:column;background:#f9fafb;border-radius:8px;padding:10px;max-height:200px;overflow-y:auto;">${mOpts.length ? mOpts : '<p style="font-size:12px;color:var(--gris-medio);">No hay monitores registrados.</p>'}</div></div>
+      <div class="detail-field"><label>PDF con descripción de la velada</label><input id="vel-pdf" type="file" accept="application/pdf" onchange="handleVeladaPdfChange(event)"><div id="vel-pdf-preview" style="margin-top:8px;">${veladaPdfNombre ? `<span style="background:#fee2e2;color:#991b1b;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;">📄 ${escHtml(veladaPdfNombre)}</span>` : '<span style="font-size:11px;color:var(--gris-medio);">Sin PDF adjunto</span>'}</div></div>
     </div>`;
+  document.getElementById('modal-footer').innerHTML = `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button onclick="saveVelada('${isEdit ? v.id : ''}')" class="btn btn-primary" style="background:#c0392b;">💾 Guardar velada</button>`;
   openModal();
 }
 
 async function saveVelada(id) {
   const nombre = document.getElementById('vel-nombre')?.value.trim();
+  const fecha = document.getElementById('vel-fecha')?.value;
   const franja = document.getElementById('vel-franja')?.value;
+  const tipo_velada = document.getElementById('vel-tipo')?.value;
+  const hora_inicio = document.getElementById('vel-hora-inicio')?.value;
+  const hora_fin = document.getElementById('vel-hora-fin')?.value;
   const descripcion = document.getElementById('vel-desc')?.value.trim();
   if (!nombre) { showToast('⚠️ El nombre es obligatorio'); return; }
-  const lugares = Array.from(document.querySelectorAll('#vel-lugares-check input:checked, [id^="vel-lugares"] input:checked')).map(i => i.value);
-  const monitores = Array.from(document.querySelectorAll('#vel-monitores-check input:checked, [id^="vel-monitores"] input:checked')).map(i => i.value);
-  const payload = { nombre, franja, descripcion, lugares, monitores };
+  if (!fecha) { showToast('⚠️ Indica la fecha'); return; }
+  if (!hora_inicio) { showToast('⚠️ Indica la hora de inicio'); return; }
+  const dia_num = campusDiaNumFromFecha(fecha);
+  if (!dia_num) { showToast('⚠️ La fecha debe estar entre el 1 y el 10 de julio del campus'); return; }
+  const lugares = Array.from(document.querySelectorAll('#vel-lugares-check input:checked')).map(i => i.value);
+  const grupos = Array.from(document.querySelectorAll('#vel-grupos-check input:checked')).map(i => i.value);
+  const monitores = Array.from(document.querySelectorAll('#vel-monitores-check input:checked')).map(i => i.value);
+  const payload = { nombre, fecha, dia_num, franja, hora_inicio, hora_fin, descripcion, tipo_velada, tipo: tipo_velada, lugares, grupos, monitores, pdf_data: veladaPdfData || '', pdf_nombre: veladaPdfNombre || '' };
   let error;
-  if (!id || id === 'null') {
-    ({ error } = await sb.from('veladas').insert(payload));
-  } else {
-    ({ error } = await sb.from('veladas').update(payload).eq('id', id));
-  }
+  if (!id || id === 'null') ({ error } = await sb.from('veladas').insert(payload));
+  else ({ error } = await sb.from('veladas').update(payload).eq('id', id));
   if (error) { showToast('❌ Error: ' + error.message); return; }
-  closeModal(); renderVeladas(); showToast('✅ Velada guardada');
+  closeModal();
+  await renderVeladas();
+  const activeHor = document.getElementById('cs-horario')?.classList.contains('active');
+  if(activeHor) await renderHorarioCampus();
+  showToast('✅ Velada guardada e integrada en el horario');
 }
 
 async function deleteVelada(id) {
@@ -6034,15 +6075,14 @@ async function renderHorarioMonitorDia(sel) {
   const personalizados = personalizadosRaw.map(h => ({ id:h.id, hora:h.hora_inicio || '—', hora_fin:h.hora_fin || '', actividad:h.actividad || '—', lugar:h.lugar || '—', tipo:h.tipo || 'personal', notas:h.notas || '', origen:'personal' }));
 
   const { data: todasVeladas } = await sb.from('veladas').select('*');
-  const veladasMonitor = (todasVeladas || []).filter(v => {
-    const lista = v.monitores || [];
+  const veladasMonitor = (todasVeladas || []).filter(v => veladaDiaNum(v) === diaNum).filter(v => {
+    const lista = normalizeVeladaArray(v.monitores);
     return lista.some(x => {
       if (typeof x === 'string') return x === nombreMon || x === monitorId;
       return String(x?.id || '') === String(monitorId) || String(x?.nombre || '') === String(nombreMon);
     });
   }).map(v => {
-    const franja = FRANJAS_VELADA.find(f => f.id === v.franja) || FRANJAS_VELADA[1];
-    return { hora:v.hora_inicio || franja.inicio || '22:00', hora_fin:v.hora_fin || franja.fin || '', actividad:'🌙 Velada: ' + (v.nombre || '—'), lugar:(v.lugares || []).join(', ') || '—', tipo:'velada', origen:'velada' };
+    return { hora:getVeladaHoraInicio(v), hora_fin:getVeladaHoraFin(v), actividad:'🌙 Velada: ' + (v.nombre || '—'), lugar:normalizeVeladaArray(v.lugares).join(', ') || '—', tipo:'velada', origen:'velada' };
   });
   const reunion = { hora:'00:00', actividad:'👥 Reunión de monitores', lugar:'Sala de reuniones', tipo:'reunion', origen:'general' };
   const toMin = h => { if(!h || h === '—') return 9999; const [hh,mm] = String(h).split(':').map(Number); if(Number.isNaN(hh)) return 9999; return hh === 0 ? 1440 : hh*60+(mm||0); };
