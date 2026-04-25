@@ -4246,22 +4246,8 @@ function saveContenido(eq) {
 }
 
 // MONITORES
-function renderMonitores() {
-  const puestoColors = {Coordinador:'#c0392b',Entrenador:'#c0392b',Ayudante:'#888'};
-  document.getElementById('monitores-grid').innerHTML = CAMPUS_MONITORS
-    .filter(m => m.nombre && m.puesto)
-    .map(m => `
-    <div class="monitor-card">
-      <div class="monitor-avatar">${m.nombre[0]||'?'}</div>
-      <div style="flex:1;">
-        <div style="font-weight:700;font-size:13.5px;">${m.nombre}</div>
-        <div style="font-size:11.5px;color:var(--gris-medio);">${m.puesto} — ${m.equipo||'Sin equipo asignado'}</div>
-      </div>
-      <span style="background:${puestoColors[m.puesto]||'#888'};color:#fff;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700;">${m.puesto}</span>
-    </div>`).join('');
-}
+// renderMonitores -> see async version below
 
-// MÉDICO
 function renderMedico() {
   const q = (document.getElementById('med-search')?.value || '').toLowerCase();
   const eq = document.getElementById('med-equipo')?.value || '';
@@ -5591,6 +5577,175 @@ const HORARIO_COMIDAS = [
 const HORARIO_PISCINA = [
   {hora:'17:00', actividad:'Piscina', lugar:'Piscina', tipo:'piscina'}
 ];
+
+
+// ═══════════════════════════════════════════════════
+// MONITORES — Supabase
+// ═══════════════════════════════════════════════════
+
+const HORARIO_COMIDAS = [
+  {hora:'08:30', actividad:'Desayuno', lugar:'Comedor', tipo:'comida'},
+  {hora:'14:00', actividad:'Almuerzo', lugar:'Comedor', tipo:'comida'},
+  {hora:'21:00', actividad:'Cena', lugar:'Comedor', tipo:'comida'}
+];
+const HORARIO_PISCINA = [
+  {hora:'17:00', actividad:'Piscina', lugar:'Piscina', tipo:'piscina'}
+];
+
+async function getMonitores() {
+  const { data, error } = await sb.from('monitores')
+    .select('*, perfil:perfil_id(id,nombre,email,rol)')
+    .order('nombre');
+  if (error) { console.error('Error monitores:', error); return []; }
+  return data || [];
+}
+
+async function renderMonitores() {
+  const grid = document.getElementById('monitores-grid');
+  if (!grid) return;
+  const isAdmin = currentPerfil?.rol === 'admin';
+  const btnSlot = document.getElementById('btn-add-monitor');
+  if (btnSlot) {
+    btnSlot.innerHTML = '';
+    if (isAdmin) {
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-primary';
+      btn.style.cssText = 'background:var(--amarillo);color:#111;font-weight:700;';
+      btn.textContent = '+ Nuevo monitor';
+      btn.onclick = openAddMonitor;
+      btnSlot.appendChild(btn);
+    }
+  }
+  grid.innerHTML = '<p style="padding:20px;color:var(--gris-medio);">Cargando monitores...</p>';
+  const monitores = await getMonitores();
+  if (!monitores.length) {
+    grid.innerHTML = '<p style="padding:20px;color:var(--gris-medio);">No hay monitores registrados.</p>';
+    return;
+  }
+  grid.innerHTML = '';
+  monitores.forEach(m => {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border:1px solid var(--gris-claro);border-radius:12px;padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);';
+    const inicial = (m.nombre||'?')[0].toUpperCase();
+    const adminBtns = isAdmin ? `
+      <div style="display:flex;gap:5px;">
+        <button data-edit="${m.id}" style="background:none;border:1px solid var(--gris-claro);border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;">✏️</button>
+        <button data-del="${m.id}" style="background:none;border:1px solid #fca5a5;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;color:#dc2626;">🗑️</button>
+      </div>` : '';
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+        <div style="width:42px;height:42px;border-radius:50%;background:var(--negro);color:var(--amarillo);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;flex-shrink:0;">${inicial}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;">${m.nombre}</div>
+          <div style="font-size:11px;color:var(--gris-medio);">📱 ${m.telefono||'—'}</div>
+        </div>
+        ${adminBtns}
+      </div>
+      <div style="margin-bottom:10px;">
+        <span style="background:var(--amarillo);color:#111;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">${m.equipo||'Sin equipo'}</span>
+        ${m.perfil ? `<span style="font-size:11px;color:var(--gris-medio);margin-left:8px;">${m.perfil.nombre||''}</span>` : ''}
+      </div>
+    `;
+    const waNum = (m.telefono||'').replace(/\D/g,'');
+    if (waNum) {
+      const btnWa = document.createElement('a');
+      btnWa.href = 'https://wa.me/34' + waNum;
+      btnWa.target = '_blank';
+      btnWa.className = 'btn btn-sm btn-wa';
+      btnWa.style.cssText = 'width:100%;justify-content:center;margin-bottom:6px;text-decoration:none;display:flex;';
+      btnWa.textContent = '💬 WhatsApp';
+      card.appendChild(btnWa);
+    }
+    const btnHor = document.createElement('button');
+    btnHor.style.cssText = 'width:100%;background:var(--negro);color:#fff;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;';
+    btnHor.textContent = '📅 Ver horario diario';
+    btnHor.addEventListener('click', () => verHorarioMonitor(m.id));
+    card.appendChild(btnHor);
+    card.querySelector('[data-edit]')?.addEventListener('click', () => openEditMonitor(m.id));
+    card.querySelector('[data-del]')?.addEventListener('click', () => deleteMonitor(m.id));
+    grid.appendChild(card);
+  });
+}
+
+async function openAddMonitor() {
+  const { data: perfiles } = await sb.from('perfiles').select('id,nombre,email,rol').order('nombre');
+  const pOpts = (perfiles||[]).map(p => `<option value="${p.id}">${p.nombre} (${p.rol})</option>`).join('');
+  const eOpts = ['Basket 1','Basket 2','Basket 3','Basket 4','Basket 5','Basket 6','Minibasket','Fútbol 1','Fútbol 2','Fútbol 3','Coordinación','RRSS','Apoyo'].map(e => `<option value="${e}">${e}</option>`).join('');
+  document.getElementById('modal-title').textContent = 'Nuevo monitor';
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Vincular a perfil existente (opcional)</label>
+        <select id="mon-perfil-id" class="form-input" style="width:100%;margin-top:4px;" onchange="monitorPerfilChange(this)">
+          <option value="">— Sin vincular —</option>${pOpts}
+        </select></div>
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Nombre completo</label>
+        <input id="mon-nombre" class="form-input" placeholder="Nombre completo" style="width:100%;margin-top:4px;"></div>
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Teléfono</label>
+        <input id="mon-tel" class="form-input" placeholder="Ej: 612345678" style="width:100%;margin-top:4px;"></div>
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Equipo designado</label>
+        <select id="mon-equipo" class="form-input" style="width:100%;margin-top:4px;">
+          <option value="">— Seleccionar —</option>${eOpts}
+        </select></div>
+      <button onclick="saveMonitorNew()" class="btn btn-primary" style="background:var(--amarillo);color:#111;font-weight:700;">💾 Guardar monitor</button>
+    </div>`;
+  openModal();
+}
+
+function monitorPerfilChange(sel) {
+  if (!sel.value) return;
+  const nombre = sel.options[sel.selectedIndex].text.split(' (')[0];
+  const inp = document.getElementById('mon-nombre');
+  if (inp && !inp.value) inp.value = nombre;
+}
+
+async function openEditMonitor(id) {
+  const { data: m } = await sb.from('monitores').select('*, perfil:perfil_id(id,nombre,email,rol)').eq('id', id).single();
+  if (!m) { showToast('❌ Monitor no encontrado'); return; }
+  const eOpts = ['Basket 1','Basket 2','Basket 3','Basket 4','Basket 5','Basket 6','Minibasket','Fútbol 1','Fútbol 2','Fútbol 3','Coordinación','RRSS','Apoyo'].map(e => `<option value="${e}" ${m.equipo===e?'selected':''}>${e}</option>`).join('');
+  document.getElementById('modal-title').textContent = 'Editar monitor';
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      ${m.perfil?`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px;font-size:12px;">🔗 <strong>${m.perfil.nombre}</strong> — ${m.perfil.rol}</div>`:''}
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Nombre</label>
+        <input id="mon-nombre" class="form-input" value="${m.nombre||''}" style="width:100%;margin-top:4px;"></div>
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Teléfono</label>
+        <input id="mon-tel" class="form-input" value="${m.telefono||''}" style="width:100%;margin-top:4px;"></div>
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Equipo</label>
+        <select id="mon-equipo" class="form-input" style="width:100%;margin-top:4px;">
+          <option value="">— Seleccionar —</option>${eOpts}
+        </select></div>
+      <button onclick="saveMonitorEdit('${m.id}')" class="btn btn-primary" style="background:var(--amarillo);color:#111;font-weight:700;">💾 Guardar cambios</button>
+    </div>`;
+  openModal();
+}
+
+async function saveMonitorNew() {
+  const nombre = document.getElementById('mon-nombre').value.trim();
+  const telefono = document.getElementById('mon-tel').value.trim();
+  const equipo = document.getElementById('mon-equipo').value;
+  const perfilId = document.getElementById('mon-perfil-id').value || null;
+  if (!nombre) { showToast('⚠️ Nombre obligatorio'); return; }
+  const { error } = await sb.from('monitores').insert({ nombre, telefono, equipo, perfil_id: perfilId });
+  if (error) { showToast('❌ ' + error.message); return; }
+  closeModal(); renderMonitores(); showToast('✅ Monitor guardado');
+}
+
+async function saveMonitorEdit(id) {
+  const nombre = document.getElementById('mon-nombre').value.trim();
+  const telefono = document.getElementById('mon-tel').value.trim();
+  const equipo = document.getElementById('mon-equipo').value;
+  if (!nombre) { showToast('⚠️ Nombre obligatorio'); return; }
+  const { error } = await sb.from('monitores').update({ nombre, telefono, equipo }).eq('id', id);
+  if (error) { showToast('❌ ' + error.message); return; }
+  closeModal(); renderMonitores(); showToast('✅ Monitor actualizado');
+}
+
+async function deleteMonitor(id) {
+  if (!confirm('¿Eliminar este monitor?')) return;
+  const { error } = await sb.from('monitores').delete().eq('id', id);
+  if (error) { showToast('❌ ' + error.message); return; }
+  renderMonitores(); showToast('🗑️ Eliminado');
+}
 
 const EQUIPOS_MONITOR = ['Basket 1','Basket 2','Basket 3','Basket 4','Basket 5','Basket 6','Minibasket','Fútbol 1','Fútbol 2','Fútbol 3','Coordinación','RRSS','Apoyo'];
 async function verHorarioMonitor(id) {
