@@ -5595,21 +5595,21 @@ const HORARIO_PISCINA = [
   {hora:'17:00', actividad:'Piscina', lugar:'Piscina'}
 ];
 
-function getMonitores() {
-  return JSON.parse(localStorage.getItem('campus_monitores') || '[]');
-}
-function saveMonitores(data) {
-  localStorage.setItem('campus_monitores', JSON.stringify(data));
+// ── Monitores: Supabase-backed ──
+async function getMonitores() {
+  const { data, error } = await sb.from('monitores').select('*, perfil:perfil_id(id, nombre, email, rol)').order('nombre');
+  if (error) { console.error('Error cargando monitores:', error); return []; }
+  return data || [];
 }
 
-function renderMonitores() {
-  const monitores = getMonitores();
+async function renderMonitores() {
   const grid = document.getElementById('monitores-grid');
   if (!grid) return;
   const isAdmin = currentPerfil?.rol === 'admin';
-  // Botón añadir: solo admin
   const btnSlot = document.getElementById('btn-add-monitor');
   if (btnSlot) btnSlot.innerHTML = isAdmin ? '<button class="btn btn-primary" style="background:#1a1a1a;" onclick="openAddMonitor()">+ Nuevo monitor</button>' : '';
+  grid.innerHTML = '<p style="color:var(--gris-medio);font-size:13px;padding:20px;">Cargando monitores...</p>';
+  const monitores = await getMonitores();
   if (!monitores.length) {
     grid.innerHTML = `
       <div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--gris-medio);">
@@ -5619,81 +5619,151 @@ function renderMonitores() {
       </div>`;
     return;
   }
-  grid.innerHTML = monitores.map((m, i) => `
+  grid.innerHTML = monitores.map(m => `
     <div style="background:#fff;border:1px solid var(--gris-claro);border-radius:12px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
-        <div>
+        <div style="flex:1;min-width:0;">
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;">${m.nombre}</div>
           <div style="font-size:12px;color:var(--gris-medio);margin-top:2px;">📱 ${m.telefono || '—'}</div>
+          ${m.perfil ? `<div style="font-size:11px;color:var(--gris-medio);margin-top:2px;">✉️ ${m.perfil.email || ''}</div>` : ''}
           <div style="margin-top:6px;"><span style="background:var(--amarillo);color:#111;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;">${m.equipo || '—'}</span></div>
         </div>
-        ${isAdmin ? `<div style="display:flex;gap:6px;">
-          <button onclick="openEditMonitor(${i})" style="background:none;border:1px solid var(--gris-claro);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;" title="Editar">✏️</button>
-          <button onclick="deleteMonitor(${i})" style="background:none;border:1px solid #fca5a5;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:#dc2626;" title="Eliminar">🗑️</button>
+        ${isAdmin ? `<div style="display:flex;gap:6px;flex-shrink:0;">
+          <button onclick="openEditMonitor('${m.id}')" style="background:none;border:1px solid var(--gris-claro);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;" title="Editar">✏️</button>
+          <button onclick="deleteMonitor('${m.id}')" style="background:none;border:1px solid #fca5a5;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:#dc2626;" title="Eliminar">🗑️</button>
         </div>` : ''}
       </div>
-      <button onclick="verHorarioMonitor(${i})" style="width:100%;background:var(--negro);color:#fff;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px;">📅 Ver horario diario</button>
+      <button onclick="verHorarioMonitor('${m.id}')" style="width:100%;background:var(--negro);color:#fff;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px;">📅 Ver horario diario</button>
     </div>
   `).join('');
 }
 
-function openAddMonitor() {
-  document.getElementById('modal-title').textContent = 'Nuevo monitor';
-  document.getElementById('modal-body').innerHTML = monitorForm({});
-  document.getElementById('modal-overlay').classList.add('active');
-}
-
-function openEditMonitor(i) {
-  const m = getMonitores()[i];
-  document.getElementById('modal-title').textContent = 'Editar monitor';
-  document.getElementById('modal-body').innerHTML = monitorForm(m, i);
-  document.getElementById('modal-overlay').classList.add('active');
-}
-
-function monitorForm(m = {}, idx = null) {
-  const equipoOpts = EQUIPOS_MONITOR.map(e => `<option value="${e}" ${m.equipo===e?'selected':''}>${e}</option>`).join('');
-  const idxAttr = idx !== null ? `data-idx="${idx}"` : '';
-  return `
+async function openAddMonitor() {
+  const perfiles = await sb.from('perfiles').select('id,nombre,email,rol').order('nombre').then(r => r.data || []);
+  const perfilOpts = perfiles.map(p => `<option value="${p.id}">${p.nombre} (${p.email}) — ${p.rol}</option>`).join('');
+  const equipoOpts = EQUIPOS_MONITOR.map(e => `<option value="${e}">${e}</option>`).join('');
+  document.getElementById('modal-title').textContent = '👨‍🏫 Nuevo monitor';
+  document.getElementById('modal-body').innerHTML = `
     <div style="display:flex;flex-direction:column;gap:14px;">
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;font-size:12px;color:#166534;">
+        💡 Puedes vincular este monitor a un perfil existente, o crear uno nuevo dejando el selector vacío.
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Vincular a perfil existente (opcional)</label>
+        <select id="mon-perfil-id" class="form-input" style="width:100%;margin-top:4px;">
+          <option value="">— Nuevo perfil / sin vincular —</option>
+          ${perfilOpts}
+        </select>
+      </div>
+      <div id="mon-perfil-nuevo-fields">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--gris-claro);">O crear perfil nuevo</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div><label style="font-size:11px;color:var(--gris-medio);">Email</label>
+            <input id="mon-email-nuevo" class="form-input" placeholder="email@ejemplo.com" style="width:100%;margin-top:4px;"></div>
+          <div><label style="font-size:11px;color:var(--gris-medio);">Contraseña temporal</label>
+            <input id="mon-pass-nuevo" class="form-input" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;margin-top:4px;"></div>
+        </div>
+      </div>
       <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Nombre completo</label>
-        <input id="mon-nombre" class="form-input" value="${m.nombre||''}" placeholder="Nombre completo" style="width:100%;margin-top:4px;"></div>
+        <input id="mon-nombre" class="form-input" value="" placeholder="Nombre completo" style="width:100%;margin-top:4px;"></div>
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Teléfono</label>
+        <input id="mon-tel" class="form-input" placeholder="Ej: 612 345 678" style="width:100%;margin-top:4px;"></div>
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Equipo designado</label>
+        <select id="mon-equipo" class="form-input" style="width:100%;margin-top:4px;">
+          <option value="">— Seleccionar —</option>${equipoOpts}
+        </select>
+      </div>
+      <button onclick="saveMonitorNew()" class="btn btn-primary" style="margin-top:6px;">💾 Guardar monitor</button>
+    </div>
+  `;
+  // Auto-rellenar nombre al seleccionar perfil existente
+  document.getElementById('mon-perfil-id').addEventListener('change', function() {
+    const selected = perfiles.find(p => p.id === this.value);
+    if (selected) {
+      document.getElementById('mon-nombre').value = selected.nombre;
+      document.getElementById('mon-perfil-nuevo-fields').style.display = 'none';
+    } else {
+      document.getElementById('mon-perfil-nuevo-fields').style.display = '';
+    }
+  });
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+async function openEditMonitor(id) {
+  const { data: m } = await sb.from('monitores').select('*, perfil:perfil_id(id,nombre,email,rol)').eq('id', id).single();
+  if (!m) { showToast('❌ Monitor no encontrado'); return; }
+  const equipoOpts = EQUIPOS_MONITOR.map(e => `<option value="${e}" ${m.equipo===e?'selected':''}>${e}</option>`).join('');
+  document.getElementById('modal-title').textContent = '✏️ Editar monitor';
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      ${m.perfil ? `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px;font-size:12px;">
+        🔗 Vinculado a: <strong>${m.perfil.nombre}</strong> (${m.perfil.email}) — ${m.perfil.rol}
+      </div>` : ''}
+      <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Nombre completo</label>
+        <input id="mon-nombre" class="form-input" value="${m.nombre||''}" style="width:100%;margin-top:4px;"></div>
       <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Teléfono</label>
         <input id="mon-tel" class="form-input" value="${m.telefono||''}" placeholder="Ej: 612 345 678" style="width:100%;margin-top:4px;"></div>
       <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gris-medio);">Equipo designado</label>
-        <select id="mon-equipo" class="form-input" style="width:100%;margin-top:4px;"><option value="">— Seleccionar —</option>${equipoOpts}</select></div>
-      <button onclick="saveMonitor(${idx !== null ? idx : 'null'})" class="btn btn-primary" style="margin-top:6px;">💾 Guardar monitor</button>
+        <select id="mon-equipo" class="form-input" style="width:100%;margin-top:4px;">
+          <option value="">— Seleccionar —</option>${equipoOpts}
+        </select>
+      </div>
+      <button onclick="saveMonitorEdit('${m.id}')" class="btn btn-primary" style="margin-top:6px;">💾 Guardar cambios</button>
     </div>
   `;
+  document.getElementById('modal-overlay').classList.add('active');
 }
 
-function saveMonitor(idx) {
+async function saveMonitorNew() {
   const nombre = document.getElementById('mon-nombre').value.trim();
   const telefono = document.getElementById('mon-tel').value.trim();
   const equipo = document.getElementById('mon-equipo').value;
+  const perfilId = document.getElementById('mon-perfil-id').value;
+  const emailNuevo = document.getElementById('mon-email-nuevo')?.value.trim();
+  const passNuevo = document.getElementById('mon-pass-nuevo')?.value;
   if (!nombre) { showToast('⚠️ El nombre es obligatorio'); return; }
-  const monitores = getMonitores();
-  const monitor = { nombre, telefono, equipo, horarios: [] };
-  if (idx === null || idx === 'null') monitores.push(monitor);
-  else monitores[idx] = { ...monitores[idx], ...monitor };
-  saveMonitores(monitores);
+  let finalPerfilId = perfilId || null;
+  // Si no hay perfil seleccionado y hay email nuevo, crear perfil
+  if (!perfilId && emailNuevo && passNuevo) {
+    showToast('⏳ Creando perfil...');
+    const { data: authData, error: authError } = await sb.auth.admin?.createUser({ email: emailNuevo, password: passNuevo }) || {};
+    if (authError) { showToast('❌ Error creando perfil: ' + authError.message); return; }
+    // Insertar en perfiles
+    const { data: pData } = await sb.from('perfiles').insert({ id: authData?.user?.id, nombre, email: emailNuevo, rol: 'entrenador' }).select().single();
+    finalPerfilId = pData?.id || null;
+  }
+  const { error } = await sb.from('monitores').insert({ nombre, telefono, equipo, perfil_id: finalPerfilId || null });
+  if (error) { showToast('❌ Error: ' + error.message); return; }
   closeModal();
   renderMonitores();
   showToast('✅ Monitor guardado');
 }
 
-function deleteMonitor(i) {
+async function saveMonitorEdit(id) {
+  const nombre = document.getElementById('mon-nombre').value.trim();
+  const telefono = document.getElementById('mon-tel').value.trim();
+  const equipo = document.getElementById('mon-equipo').value;
+  if (!nombre) { showToast('⚠️ El nombre es obligatorio'); return; }
+  const { error } = await sb.from('monitores').update({ nombre, telefono, equipo }).eq('id', id);
+  if (error) { showToast('❌ Error: ' + error.message); return; }
+  closeModal();
+  renderMonitores();
+  showToast('✅ Monitor actualizado');
+}
+
+async function deleteMonitor(id) {
   if (!confirm('¿Eliminar este monitor?')) return;
-  const monitores = getMonitores();
-  monitores.splice(i, 1);
-  saveMonitores(monitores);
+  const { error } = await sb.from('monitores').delete().eq('id', id);
+  if (error) { showToast('❌ Error: ' + error.message); return; }
   renderMonitores();
   showToast('🗑️ Monitor eliminado');
 }
 
-function verHorarioMonitor(i) {
-  const m = getMonitores()[i];
-  const veladas = JSON.parse(localStorage.getItem('campus_veladas') || '[]');
-  const veladasMonitor = veladas.filter(v => (v.monitores || []).includes(m.nombre));
+async function verHorarioMonitor(id) {
+  const { data: m } = await sb.from('monitores').select('*').eq('id', id).single();
+  if (!m) return;
+  const { data: todasVeladas } = await sb.from('veladas').select('*');
+  const veladasMonitor = (todasVeladas || []).filter(v => (v.monitores || []).includes(m.nombre));
 
   // Construir filas del horario
   let filas = [];
@@ -5745,19 +5815,19 @@ function verHorarioMonitor(i) {
 
 const LUGARES_VELADA = ['Auditorio','F7','F5','Pabellón','Pista tenis','Sala recreativa','Aire libre','Piscina','Padel','Basket Exterior','Sala 1','Sala 2','Sala 3','Punto de reuniones'];
 
-function getVeladas() {
-  return JSON.parse(localStorage.getItem('campus_veladas') || '[]');
-}
-function saveVeladas(data) {
-  localStorage.setItem('campus_veladas', JSON.stringify(data));
+async function getVeladas() {
+  const { data, error } = await sb.from('veladas').select('*').order('nombre');
+  if (error) { console.error('Error veladas:', error); return []; }
+  return data || [];
 }
 
-function renderVeladas() {
-  const veladas = getVeladas();
+async function renderVeladas() {
   const grid = document.getElementById('veladas-grid');
   if (!grid) return;
+  grid.innerHTML = '<p style="color:var(--gris-medio);font-size:13px;padding:16px;">Cargando veladas...</p>';
+  const veladas = await getVeladas();
   if (!veladas.length) {
-    grid.innerHTML = '<p style="color:var(--gris-medio);font-size:13px;">No hay veladas registradas.</p>';
+    grid.innerHTML = '<p style="color:var(--gris-medio);font-size:13px;padding:16px;">No hay veladas registradas.</p>';
     return;
   }
   grid.innerHTML = veladas.map((v, i) => `
