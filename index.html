@@ -5636,8 +5636,14 @@ function openCampusDetail(id) {
           `:'—';})()}
         </div>
       </div>
+      <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">🏷️ Equipo</div>
+        <div style="font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span class="cp-badge equipo-color" data-campus-equipo-id="${p.id}" style="background:${color}">${campusEquipoActual}</span>
+          ${(currentPerfil?.rol === 'admin' || currentPerfil?.rol === 'entrenador') ? `<button type="button" style="cursor:pointer;font-size:12px;color:var(--azul);border:1px solid var(--azul);background:#fff;border-radius:6px;padding:4px 8px;font-weight:700;" onclick="editCampusEquipo(${p.id})">✏️ Editar equipo</button>` : ''}
+        </div>
+      </div>
       <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris-medio);font-weight:700;">🛏️ Nº Habitación</div>
-        <div style="font-weight:600;display:flex;align-items:center;gap:6px;">
+        <div style="font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           <span id="hab-val-${p.id}">${(()=>{const h=JSON.parse(localStorage.getItem('sv_campus_habitaciones')||'{}');return h[p.id]||'—';})()}</span>
           <span style="cursor:pointer;font-size:11px;color:var(--azul);border:1px solid var(--azul);border-radius:4px;padding:1px 5px;" onclick="editHabitacion(${p.id})">✏️ Editar</span>
         </div>
